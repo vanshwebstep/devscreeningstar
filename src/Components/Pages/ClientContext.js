@@ -33,7 +33,7 @@ export const ClientProvider = ({ children }) => {
     
             const admin_id = admin.id;
             console.log('myadminid',admin_id)
-            const url = `https://api.screeningstar.co.in/admin/add-client-listings?admin_id=${admin_id}&_token=${storedToken}`;
+            const url = `http://localhost:5000/admin/add-client-listings?admin_id=${admin_id}&_token=${storedToken}`;
     
             // Fetch data from the API
             const response = await fetch(url, { method: "GET", redirect: "follow" });

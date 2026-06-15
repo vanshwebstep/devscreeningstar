@@ -86,7 +86,7 @@ const ViewModules = () => {
       return;
     }
 
-    const url = `https://api.screeningstar.co.in/email-template/module/template/update`;
+    const url = `http://localhost:5000/email-template/module/template/update`;
 
     const requestBody = {
       id,
@@ -152,7 +152,7 @@ const ViewModules = () => {
       return;
     }
 
-    const url = `https://api.screeningstar.co.in/email-template/module/templates?admin_id=${admin_id}&_token=${storedToken}&module=${module}`;
+    const url = `http://localhost:5000/email-template/module/templates?admin_id=${admin_id}&_token=${storedToken}&module=${module}`;
 
     try {
       const response = await fetch(url);

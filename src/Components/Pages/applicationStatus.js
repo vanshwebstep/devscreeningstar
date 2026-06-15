@@ -56,7 +56,7 @@ const ApplicationStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/report-master/application-tracker?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/report-master/application-tracker?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 return response.json().then((result) => {
                     // Check if the API response status is false

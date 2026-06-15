@@ -68,7 +68,7 @@ const BusinessDevelopmentBulk = () => {
 
 
         const branch_token = localStorage.getItem("branch_token");
-        const url = `https://api.screeningstar.co.in/internal-storage/ex-employment/list?admin_id=${adminId}&_token=${token}`;
+        const url = `http://localhost:5000/internal-storage/ex-employment/list?admin_id=${adminId}&_token=${token}`;
 
         try {
             let response;
@@ -151,7 +151,7 @@ const BusinessDevelopmentBulk = () => {
 
 
             const response = await fetch(
-                "https://api.screeningstar.co.in/internal-storage/daily-activity-tracker/bulk/create",
+                "http://localhost:5000/internal-storage/daily-activity-tracker/bulk/create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

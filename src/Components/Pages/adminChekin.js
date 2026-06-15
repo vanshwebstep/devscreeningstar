@@ -189,7 +189,7 @@ const AdminChekin = () => {
                 .join('');
         }
 
-        const baseUrl = `https://api.screeningstar.co.in/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
+        const baseUrl = `http://localhost:5000/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
 
         // Initialize URLSearchParams for parameters
         const parameters = new URLSearchParams();
@@ -300,7 +300,7 @@ const AdminChekin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -460,7 +460,7 @@ const AdminChekin = () => {
             // console.log("Payload:", raw);
 
             const response = await axios.post(
-                "https://api.screeningstar.co.in/utils/image-to-base",
+                "http://localhost:5000/utils/image-to-base",
                 raw,
                 { headers }
             );
@@ -1020,7 +1020,7 @@ const AdminChekin = () => {
         const previousY = barY + companyBarHeight;
         const startY = previousY + 7;
 
-        if (generate_report_type == 'CONFIDENTIAL BACKGROUND SCREENING REPORT') {
+        if (generate_report_type?.toUpperCase() == 'CONFIDENTIAL BACKGROUND SCREENING REPORT') {
             headerTableData = [
                 ["REFERENCE ID", String(applicationInfo.application_id).toUpperCase(), "DATE OF BIRTH", formatDate(applicationInfo.dob) || "N/A"],
                 ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date, true) || "N/A"],
@@ -1028,7 +1028,7 @@ const AdminChekin = () => {
                 // ["VERIFICATION PURPOSE", (applicationInfo.verification_purpose || "EMPLOYMENT").toUpperCase(), "VERIFICATION STATUS", (applicationInfo.final_verification_status || "N/A").toUpperCase()],
                 ["REPORT TYPE", (applicationInfo.report_type || "EMPLOYMENT").replace(/_/g, " ").toUpperCase(), "REPORT STATUS", (applicationInfo.report_status || "N/A").toUpperCase()]
             ];
-        } else if (generate_report_type == 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+        } else if (generate_report_type?.toUpperCase() == 'VENDOR CONFIDENTIAL SCREENING REPORT') {
             headerTableData = [
                 ["REFERENCE ID", String(applicationInfo.application_id).toUpperCase(), "DATE OF INCORPORATION", formatDate(applicationInfo.dob) || "N/A"],
                 ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date, true) || "N/A"],
@@ -1237,7 +1237,24 @@ const AdminChekin = () => {
         const marginTop = 8;
         const nextContentYPosition = newYPosition + rectHeight + marginTop;
         doc.setFont('TimesNewRoman');
+        const getHeadingFromJson = (jsonString) => {
+            if (!jsonString) return null;
 
+            try {
+                // ✅ Clean string (important)
+                const cleaned = jsonString
+                    .replace(/\n/g, '')       // remove new lines
+                    .replace(/\r/g, '')
+                    .trim();
+
+                const parsed = JSON.parse(cleaned);
+
+                return parsed?.heading || null;
+            } catch (err) {
+                console.log("❌ JSON Parse Error:", err, jsonString);
+                return null;
+            }
+        };
         doc.autoTable({
             head: [
                 [
@@ -1288,7 +1305,7 @@ const AdminChekin = () => {
                 ]
             ],
             body: servicesData
-                .filter(service => service?.annexureData?.status) // Filter out rows with no status
+                // .filter(service => service?.annexureData?.status) // Filter out rows with no status
                 .map(service => {
                     const colorMapping = {
                         Yellow: 'yellow',
@@ -1298,9 +1315,141 @@ const AdminChekin = () => {
                         Orange: 'orange',
                         Pink: 'pink',
                     };
+                    const annexure = Array.isArray(service?.annexureData)
+                        ? service.annexureData[0]
+                        : service?.annexureData;
 
-                    const rawStatus = service?.annexureData?.status || "Not Verified";
+                    const getPdfColor = (color) => {
+                        const map = {
+                            red: [255, 0, 0],
+                            green: [0, 128, 0],
+                            yellow: [255, 193, 7],
+                            orange: [255, 165, 0],
+                            blue: [0, 0, 255],
+                            pink: [255, 105, 180],
+                            gray: [128, 128, 128],
+                            black: [0, 0, 0],
+                        };
 
+                        return map[color] || [0, 0, 0];
+                    };
+                    const getSurepassStatus = (service) => {
+                        let services = service?.screeningstar_response;
+
+                        console.log("🚀 services:", services);
+
+                        if (!services) {
+                            return { label: "PENDING", color: "black" };
+                        }
+
+                        // normalize to array
+                        if (!Array.isArray(services)) {
+                            services = [services];
+                        }
+
+                        let hasValidationError = false;
+                        let hasInvalid = false;
+                        let hasError = false;
+                        let hasSuccess = false;
+                        let hasPrefilled = false;
+
+                        services.forEach((item) => {
+                            // ✅ Track prefilled
+                            if (item.is_prefilled) {
+                                hasPrefilled = true;
+                            } else {
+                                return; // skip but don't break whole logic
+                            }
+
+                            const res = item.response_json;
+                            if (!res) return;
+
+                            // ✅ SUCCESS
+                            if (res.success === true && res.status_code === 200) {
+                                hasSuccess = true;
+                            }
+
+                            // ❌ VALIDATION ERROR
+                            if (
+                                res.message === "Input payload validation failed" ||
+                                res.errors
+                            ) {
+                                hasValidationError = true;
+                            }
+
+                            // ❌ INVALID
+                            if (res.message?.toLowerCase().includes("invalid")) {
+                                hasInvalid = true;
+                            }
+
+                            // ❌ GENERAL ERROR
+                            if (
+                                res.message?.toLowerCase().includes("verification failed") ||
+                                res.status_code >= 500 ||
+                                (res.success === false && res.status_code === 422 && !res.message)
+                            ) {
+                                hasError = true;
+                            }
+                        });
+
+                        // 🎯 PRIORITY LOGIC (IMPORTANT)
+
+                        // ❌ If no prefilled → managed by API
+                        if (!hasPrefilled) {
+                            return { label: "MANAGED BY SUREPASS API", color: "gray" };
+                        }
+
+                        // ❌ Fail cases (highest priority)
+                        if (hasInvalid || hasError || hasValidationError) {
+                            return { label: "FAILED", color: "red" };
+                        }
+
+                        // ✅ Success
+                        if (hasSuccess) {
+                            return { label: "VERIFIED", color: "green" };
+                        }
+
+                        // 🟡 Default fallback
+                        return { label: "MANAGED BY SUREPASS API", color: "black" };
+                    };
+
+                    const serviceTypeRaw =
+                        service?.service_type ||
+                        (service?.valuePitchStatus ? "valuepitch" : "");
+                    const serviceTypes = serviceTypeRaw
+                        .split(',')
+                        .map(s => s.trim().toLowerCase());
+                    let rawStatus = "Not Verified";
+                    console.log('myservicetyoe is = serviceTypes', serviceTypes)
+                    console.log('myservicetyoe of service', service)
+
+                    // const serviceType = service?.service_type || "";
+                    // const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase())
+                    // ================= VALUEPITCH =================
+                    if (serviceTypes.includes("valuepitch")) {
+
+                        const vpStatus = service?.valuePitchStatus;
+                        const vpReport = service?.valuePitchReport;
+
+                        if (
+                            vpStatus?.statusCode === 201 &&
+                            vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                            vpReport?.report
+                        ) {
+                            rawStatus = vpReport.report; // ✅ GREEN / RED
+                        } else {
+                            rawStatus = "Managed By ValuePitch API";
+                        }
+                    }
+                    if (serviceTypes.includes("surepass")) {
+                        const sp = getSurepassStatus(service);
+                        rawStatus = sp.label;  // ✅ don't return early
+                    }
+                    // ================= DEFAULT =================
+                    else if (annexure?.status) {
+                        rawStatus = annexure.status;
+                    }
+                    console.log("Raw status for service:", service);
                     // Convert raw status to readable text
                     let statusContent = rawStatus
                         .replace(/_/g, ' ') // Replace underscores with spaces
@@ -1324,53 +1473,98 @@ const AdminChekin = () => {
                             break; // Stop after first match
                         }
                     }
+
                     console.log('displayTextsfssdss', service?.annexureData);
                     return [
                         {
-                            content: service?.reportFormJson?.json
-                                ? JSON.parse(service.reportFormJson.json)?.heading
-                                : null,
-                            styles: {
-                                halign: 'left',
-                            },
-                        },
-                        {
-                            content:
-                                service?.annexureData &&
-                                    Object.keys(service.annexureData).find(
-                                        key =>
-                                            key.endsWith('info_source') ||
-                                            key.endsWith('information_source') ||
-                                            key.startsWith('info_source') ||
-                                            key.startsWith('information_source')
-                                    )
-                                    ? service.annexureData[
-                                    Object.keys(service.annexureData).find(
-                                        key =>
-                                            key.endsWith('info_source') ||
-                                            key.endsWith('information_source') ||
-                                            key.startsWith('info_source') ||
-                                            key.startsWith('information_source')
-                                    )
-                                    ]
-                                    : null,
+                            content: getHeadingFromJson(service?.reportFormJson?.json) || "N/A",
                             styles: {
                                 halign: 'left',
                             },
                         },
                         {
                             content: (() => {
-                                const annexure = service?.annexureData || {};
+                                const serviceTypeRaw =
+                                    service?.service_type ||
+                                    (service?.valuePitchStatus ? "valuepitch" : "");
+                                const serviceTypes = serviceTypeRaw
+                                    .split(',')
+                                    .map(s => s.trim().toLowerCase());
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+
+                                    const vpReport = service?.valuePitchReport;
+
+                                    if (vpReport?.job_name) {
+                                        return vpReport.job_name
+                                            .split(":")[0]                // remove time
+                                            .replace(/_/g, ' ')          // underscores → spaces
+                                            .replace(/\b\w/g, c => c.toUpperCase());
+                                    }
+                                    return "Managed By ValuePitch API";
+                                }
+
+
+                                // ================= DEFAULT =================
+                                const annexure = Array.isArray(service?.annexureData)
+                                    ? service.annexureData[0]
+                                    : service?.annexureData;
+
+                                if (annexure) {
+                                    const key = Object.keys(annexure).find(
+                                        key =>
+                                            key.endsWith('info_source') ||
+                                            key.endsWith('information_source') ||
+                                            key.startsWith('info_source') ||
+                                            key.startsWith('information_source')
+                                    );
+                                    return key ? annexure[key] : "N/A";
+                                }
+
+                                return "N/A";
+                            })(),
+                        },
+                        {
+                            content: (() => {
+                                const serviceTypeRaw =
+                                    service?.service_type ||
+                                    (service?.valuePitchStatus ? "valuepitch" : "");
+                                const serviceTypes = serviceTypeRaw
+                                    .split(',')
+                                    .map(s => s.trim().toLowerCase());
+
+                                const formatDate = (dateStr) => {
+                                    const date = new Date(dateStr);
+                                    if (isNaN(date)) return "N/A";
+                                    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+                                };
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+                                    const vpReport = service?.valuePitchReport;
+
+                                    if (vpReport?.dateOfVerification) {
+                                        return formatDate(vpReport.dateOfVerification);
+                                    }
+
+                                    return "N/A";
+                                }
+
+                                // ================= DEFAULT =================
+                                const annexure = Array.isArray(service?.annexureData)
+                                    ? service.annexureData[0]
+                                    : service?.annexureData || {};
+
                                 const matchKey = Object.keys(annexure).find(key =>
                                     key.includes('date_of_verification')
                                 );
+
                                 if (matchKey && annexure[matchKey]) {
-                                    return new Date(annexure[matchKey])
-                                        .toLocaleDateString('en-GB')
-                                        .replace(/\//g, '-');
-                                } else {
-                                    return 'N/A';
+                                    return formatDate(annexure[matchKey]);
                                 }
+
+                                return "N/A";
                             })(),
                             styles: {
                                 fontWeight: 'bold',
@@ -1378,11 +1572,80 @@ const AdminChekin = () => {
                             },
                         },
                         {
-                            content: formatStatus(displayText).toUpperCase(),
+                            content: (() => {
+                                const serviceType = service?.service_type || "";
+                                const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+                                    const vpStatus = service?.valuePitchStatus;
+                                    const vpReport = service?.valuePitchReport;
+
+                                    // ✅ Report Ready
+                                    if (
+                                        vpStatus?.statusCode === 201 &&
+                                        vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                        vpReport?.report
+                                    ) {
+                                        return vpReport.report.toUpperCase(); // GREEN / RED etc.
+                                    }
+
+                                    // ❌ Not Ready
+                                    return "MANAGED BY VALUEPITCH API";
+                                }
+
+                                // ================= SUREPASS =================
+                                if (serviceTypes.includes("surepass")) {
+                                    const sp = getSurepassStatus(service);
+                                    return sp.label;
+                                }
+
+                                // ================= DEFAULT =================
+                                return formatStatus(displayText).toUpperCase();
+                            })(),
                             styles: {
                                 fontStyle: 'bold',
                                 font: 'TimesNewRomanBold',
-                                textColor: textColorr,
+                                textColor: (() => {
+                                    const serviceType = service?.service_type || "";
+                                    const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
+
+                                    // ================= VALUEPITCH =================
+                                    if (serviceTypes.includes("valuepitch")) {
+                                        const vpStatus = service?.valuePitchStatus;
+                                        const vpReport = service?.valuePitchReport;
+
+                                        if (
+                                            vpStatus?.statusCode === 201 &&
+                                            vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                            vpReport?.report
+                                        ) {
+                                            const color = vpReport.report.toLowerCase();
+
+                                            const colorMapping = {
+                                                green: 'green',
+                                                red: 'red',
+                                                yellow: 'yellow',
+                                                orange: 'orange',
+                                                pink: 'pink',
+                                                blue: 'blue',
+                                            };
+
+                                            return colorMapping[color] || 'black';
+                                        }
+
+                                        return 'black';
+                                    }
+
+                                    // ================= SUREPASS =================
+                                    if (serviceTypes.includes("surepass")) {
+                                        const sp = getSurepassStatus(service);
+                                        return getPdfColor(sp.color); // ✅ RGB color
+                                    }
+
+                                    // ================= DEFAULT =================
+                                    return textColorr;
+                                })(),
                             },
                         },
                     ];
@@ -1475,67 +1738,208 @@ const AdminChekin = () => {
                         });
                     });
 
-                    const tableData = serviceData
-                        .map((data, index) => {
+                    const serviceTypeRaw =
+                        service?.service_type ||
+                        (service?.valuePitchStatus ? "valuepitch" : "");
+                    const serviceTypes = serviceTypeRaw
+                        .split(',')
+                        .map(s => s.trim().toLowerCase());
 
-                            if (!data || !data.values) {
-                                console.log("Skipped: data or data.values is missing");
-                                return null;
-                            }
+                    let tableData = [];
+                    let vpReport = null;
+                    if (serviceTypes.includes("valuepitch")) {
+                        const vpStatus = service?.valuePitchStatus;
 
-                            const name = data.values.name;
-                            // console.log("Extracted name:", name);
+                        // ✅ Report Ready
+                        if (
+                            vpStatus?.statusCode === 201 &&
+                            vpStatus?.statusMsg?.toLowerCase().includes("ready")
+                        ) {
+                            vpReport = service?.valuePitchReport || {};
+                            console.log('vpReport', vpReport)
+                            tableData = [
+                                ["Name", vpReport?.name || "N/A"],
+                                ["Report", vpReport?.report || "N/A"],
+                                ["Address", vpReport?.addresses?.[0]?.address || "N/A"],
+                                ["Date Of Verification",
+                                    vpReport?.dateOfVerification
+                                        ? new Date(vpReport.dateOfVerification)
+                                            .toLocaleDateString('en-GB')
+                                            .replace(/\//g, '-')
+                                        : "N/A"
+                                ],
+                                ["Report URL", ""],
+                            ];
+                        }
 
-                            if (!name || name.startsWith("annexure")) {
-                                console.log("Skipped: name is invalid or starts with 'annexure'");
-                                return null;
-                            }
+                        // ❌ Report Not Ready
+                        else if (vpStatus?.statusMsg) {
+                            tableData = [
+                                [vpStatus.statusMsg]
+                            ];
+                        }
+                    }
 
-                            const isVerifiedExist = data.values.isVerifiedExist;
-                            const rawValue = data.values[name];
-                            const verified = data.values[`verified_${name}`];
+                    // ================= SUREPASS =================
+                    // ================= SUREPASS =================
+                    else if (serviceTypes.includes("surepass")) {
+                        const sp = service?.screeningstar_response;
 
-                            // fallback: if rawValue is undefined but verified is present, use verified as value
+                        if (!sp || !sp.is_prefilled) {
+                            tableData = [
+                                ["Status", "Managed by Surepass API"]
+                            ];
+                        } else {
+                            const res = sp.response_json || {};
+                            const req = sp.request_json || {};
 
-                            const finalValue = rawValue !== undefined ? rawValue : verified;
-
-                            if (name == 'additional_fee_police_verification_pa') {
-
-                            }
-
-                            const formatDate = (dateStr) => {
-                                const date = new Date(dateStr);
-                                if (isNaN(date)) {
-                                    console.log("Invalid date string:", dateStr);
-                                    return dateStr;
-                                }
-                                const day = String(date.getDate()).padStart(2, '0');
-                                const month = String(date.getMonth() + 1).padStart(2, '0');
-                                const year = date.getFullYear();
-                                const formatted = `${day}-${month}-${year}`;
-                                console.log("Formatted date:", formatted);
-                                return formatted;
+                            // 🔥 STATUS
+                            const getStatus = () => {
+                                if (res?.success === true || res?.status_code === 200) return "SUCCESS";
+                                if (res?.status_code >= 500) return "SERVER ERROR";
+                                if (res?.errors || res?.success === false) return "FAILED";
+                                return "PENDING";
                             };
 
-                            const formattedValue =
-                                typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                                    ? formatDate(finalValue)
-                                    : finalValue;
+                            const formatKey = (key) =>
+                                key?.replace(/_/g, " ")
+                                    ?.replace(/\b\w/g, c => c.toUpperCase());
 
-                            const formattedVerified =
-                                typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
-                                    ? formatDate(verified)
-                                    : verified;
+                            const cleanValue = (value) => {
+                                if (value === null || value === undefined) return "N/A";
+                                if (typeof value === "boolean") return value ? "Yes" : "No";
+                                return value.toString();
+                            };
 
-                            const result = formattedVerified
-                                ? [data.label, formattedValue, formattedVerified]
-                                : [data.label, formattedValue];
+                            const cleanText = (text) => {
+                                return String(text)
+                                    .replace(/[^\x00-\x7F]/g, "")
+                                    .replace(/\s+/g, " ")
+                                    .trim();
+                            };
 
-                            console.log("Mapped result:", result);
+                            // 🔥 RECURSIVE FUNCTION
+                            const buildRows = (obj) => {
+                                let rows = [];
 
-                            return result;
-                        })
-                        .filter((item) => item !== null);
+                                Object.entries(obj).forEach(([key, value]) => {
+                                    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+                                        // ✅ FIX: section header → only ONE column
+                                        rows.push([formatKey(key)]);
+                                        rows = rows.concat(buildRows(value));
+                                    }
+                                    else if (Array.isArray(value)) {
+                                        value.forEach((item, idx) => {
+                                            if (typeof item === "object") {
+                                                rows = rows.concat(buildRows(item));
+                                            } else {
+                                                rows.push([`${formatKey(key)} ${idx + 1}`, cleanValue(item)]);
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        rows.push([cleanText(formatKey(key)), cleanValue(value)]);
+                                    }
+                                });
+
+                                return rows;
+                            };
+
+                            // ================= BUILD TABLE =================
+                            tableData = [
+                                ["Status", getStatus()],
+                            ];
+
+                            if (res?.message) {
+                                tableData.push(["Message", res.message]);
+                            }
+
+                            if (res?.message_code) {
+                                tableData.push(["Code", formatKey(res.message_code)]);
+                            }
+
+                            // 🔥 REQUEST DATA
+                            tableData.push(["Request Data"]); // ✅ FIXED
+                            tableData = tableData.concat(buildRows(req));
+
+                            // 🔥 RESPONSE DATA
+                            if (res && Object.keys(res).length) {
+                                tableData.push(["Response Data"]); // ✅ FIXED
+                                tableData = tableData.concat(buildRows(res));
+                            }
+
+                            // ❌ ERRORS
+                            if (res?.errors) {
+                                tableData.push(["Errors"]); // ✅ FIXED
+                                tableData = tableData.concat(buildRows(res.errors));
+                            }
+                        }
+                    }
+
+                    // ================= DEFAULT =================
+                    else {
+                        tableData = serviceData
+                            .map((data, index) => {
+
+                                if (!data || !data.values) {
+                                    console.log("Skipped: data or data.values is missing");
+                                    return null;
+                                }
+
+                                const name = data.values.name;
+                                // console.log("Extracted name:", name);
+
+                                if (!name || name.startsWith("annexure")) {
+                                    console.log("Skipped: name is invalid or starts with 'annexure'");
+                                    return null;
+                                }
+
+                                const isVerifiedExist = data.values.isVerifiedExist;
+                                const rawValue = data.values[name];
+                                const verified = data.values[`verified_${name}`];
+
+                                // fallback: if rawValue is undefined but verified is present, use verified as value
+
+                                const finalValue = rawValue !== undefined ? rawValue : verified;
+
+                                if (name == 'additional_fee_police_verification_pa') {
+
+                                }
+
+                                const formatDate = (dateStr) => {
+                                    const date = new Date(dateStr);
+                                    if (isNaN(date)) {
+                                        console.log("Invalid date string:", dateStr);
+                                        return dateStr;
+                                    }
+                                    const day = String(date.getDate()).padStart(2, '0');
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                    const year = date.getFullYear();
+                                    const formatted = `${day}-${month}-${year}`;
+                                    console.log("Formatted date:", formatted);
+                                    return formatted;
+                                };
+
+                                const formattedValue =
+                                    typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
+                                        ? formatDate(finalValue)
+                                        : finalValue;
+
+                                const formattedVerified =
+                                    typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
+                                        ? formatDate(verified)
+                                        : verified;
+
+                                const result = formattedVerified
+                                    ? [data.label, formattedValue, formattedVerified]
+                                    : [data.label, formattedValue];
+
+                                console.log("Mapped result:", result);
+
+                                return result;
+                            })
+                            .filter((item) => item !== null);
+                    }
 
 
                     if (tableData.length > 0) {
@@ -1592,8 +1996,19 @@ const AdminChekin = () => {
 
                                     const isColourCodeRow = row[0] === "Colour Code:";
 
+                                    // ✅ AFTER
                                     if (isTwoColumnBody) {
-                                        // Use only 2 columns in body
+                                        // Single column row (like "Report is Not Ready")
+                                        if (row.length === 1) {
+                                            return [
+                                                {
+                                                    content: changeLabel(row[0], generate_report_type),
+                                                    colSpan: 2,
+                                                    styles: { halign: "center", fontStyle: "bold" }
+                                                }
+                                            ];
+                                        }
+
                                         return [
                                             { content: changeLabel(row[0], generate_report_type), styles: { halign: "left", fontStyle: "bold" } },
                                             {
@@ -1603,6 +2018,15 @@ const AdminChekin = () => {
                                         ];
                                     } else {
                                         // Normal 3-column body
+                                        if (row.length === 1) {
+                                            return [
+                                                {
+                                                    content: changeLabel(row[0], generate_report_type),
+                                                    colSpan: 3,
+                                                    styles: { halign: "center", fontStyle: "bold" }
+                                                }
+                                            ];
+                                        }
                                         return row.length === 2
                                             ? [
                                                 { content: changeLabel(row[0], generate_report_type), styles: { halign: "left", fontStyle: "bold" } },
@@ -1651,6 +2075,36 @@ const AdminChekin = () => {
                                 textColor: [0, 0, 0],
                                 fontSize: 10,
                                 halign: "left"
+                            },
+                            didDrawCell: (data) => {
+                                if (
+                                    data.section === 'body' &&
+                                    data.column.index === 1 &&
+                                    data.row.raw?.[0]?.content === 'Report URL'  // ✅ label se identify karo
+                                ) {
+                                    const { x, y, width, height } = data.cell;
+                                    const linkText = "Click here to view";
+
+                                    doc.setFontSize(10);
+                                    doc.setFont("times");
+                                    doc.setTextColor(0, 0, 255);
+
+                                    const textX = x + 2;
+                                    const textY = y + height / 2 + 1.5;
+
+                                    doc.textWithLink(linkText, textX, textY, {
+                                        url: vpReport?.reportUrl
+                                    });
+
+                                    // Underline
+                                    const textWidth = doc.getTextWidth(linkText);
+                                    doc.setDrawColor(0, 0, 255);
+                                    doc.setLineWidth(0.3);
+                                    doc.line(textX, textY + 0.8, textX + textWidth, textY + 0.8);
+
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.setDrawColor(46, 93, 172);
+                                }
                             },
                             bodyStyles: { textColor: [0, 0, 0] },
                             margin: { horizontal: 10 }
@@ -1701,8 +2155,7 @@ const AdminChekin = () => {
 
 
 
-
-
+                        // ✅ Report URL - clickable link add karo
 
                         yPosition = doc.lastAutoTable.finalY + 10;
 
@@ -2152,6 +2605,107 @@ const AdminChekin = () => {
         setLoadingGenrate(null);
     }
 
+    const handleExportToJSON = () => {
+        const isQCPending = (item) =>
+            item.overall_status === "completed" && item.is_verify !== "yes";
+
+        const isNotReady = (item) => item.overall_status !== "completed";
+
+        const nonCompleted = filteredData.filter(
+            (item) => isNotReady(item) || isQCPending(item)
+        );
+
+        if (nonCompleted.length === 0) {
+            Swal.fire("No Records Found", "No non-completed or QC pending records are available for export.", "info");
+            return;
+        }
+
+        const exportData = nonCompleted.map((item, index) => {
+            const parseDocuments = (raw) => {
+                if (!raw || typeof raw !== "string" || raw.trim() === "") return [];
+                return raw.split(",").map((url) => url.trim()).filter(Boolean);
+            };
+
+            const initiationDate = item.initiation_date ? new Date(item.initiation_date) : null;
+            const reportDate = item.report_date ? new Date(item.report_date) : null;
+            const deadlineDate = item.deadline_date ? new Date(item.deadline_date) : null;
+
+            const completedIn =
+                initiationDate && reportDate
+                    ? Math.floor((reportDate - initiationDate) / (1000 * 60 * 60 * 24))
+                    : null;
+
+            const daysDelayed =
+                reportDate && deadlineDate && reportDate > deadlineDate
+                    ? Math.floor((reportDate - deadlineDate) / (1000 * 60 * 60 * 24))
+                    : 0;
+
+            return {
+                sl_no: index + 1,
+                application_id: item.application_id || null,
+                name: item.name || null,
+                employee_id: item.employee_id || null,
+                sub_client: item.sub_client || null,
+                location: item.location || null,
+                check_id: item.check_id || null,
+                ticket_id: item.ticket_id || null,
+                case_id: item.case_id || null,
+                batch_no: item.batch_no || null,
+                overall_status: item.overall_status || null,
+                report_type: item.report_type || null,
+                initiation_date: formatDate(item.initiation_date),
+                interim_date: formatDate(item.interim_date),
+                deadline_date: formatDate(item.deadline_date),
+                report_date: formatDate(item.report_date),
+                completed_in_days: completedIn,
+                days_delayed: daysDelayed,
+                report_generated_by: item.report_generated_by_name || null,
+                qc_done_by: item.qc_done_by_name || null,
+                is_highlight: item.is_highlight === 1,
+                is_verify: item.is_verify || null,
+                first_insufficiency_marks: formatJsonForExcel(item.first_insufficiency_marks),
+                first_insuff_date: formatDate(item.first_insuff_date, true),
+                first_insuff_reopened_date: formatDate(item.first_insuff_reopened_date),
+                second_insufficiency_marks: formatJsonForExcel(item.second_insufficiency_marks),
+                second_insuff_date: formatDate(item.second_insuff_date, true),
+                second_insuff_reopened_date: item.second_insuff_reopened_date || null,
+                third_insufficiency_marks: formatJsonForExcel(item.third_insufficiency_marks),
+                third_insuff_date: formatDate(item.third_insuff_date, true),
+                third_insuff_reopened_date: item.third_insuff_reopened_date || null,
+                delay_reason: formatJsonForExcel(item.delay_reason),
+                attach_documents: parseDocuments(item.attach_documents),
+                report_completed_status: item.report_completed_status || null,
+            };
+        });
+
+        // ✅ Parent wrapper with branch/company meta
+        const exportPayload = {
+            exported_at: new Date().toISOString(),
+            branch_name: branchName,
+            company_name: companyName,
+            tat_days: adminTAT,
+            customer_emails: customerEmails,
+            total_records: exportData.length,
+            records: exportData,
+        };
+
+        const jsonString = JSON.stringify(exportPayload, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `applications-export-${branchName}-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        Swal.fire(
+            "Exported Successfully",
+            `${exportData.length} record(s) exported successfully.`,
+            "success"
+        );
+    };
 
     useEffect(() => {
         fetchData();
@@ -2678,7 +3232,7 @@ const AdminChekin = () => {
             redirect: "follow",
         };
 
-        const url = `https://api.screeningstar.co.in/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
+        const url = `http://localhost:5000/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
 
         fetch(url, requestOptions)
             .then((response) => {
@@ -2736,7 +3290,7 @@ const AdminChekin = () => {
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `https://api.screeningstar.co.in/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `http://localhost:5000/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {
@@ -2852,12 +3406,21 @@ const AdminChekin = () => {
                 <div className='md:flex justify-between items-baseline mb-6 '>
                     <div className=" text-left">
                         <div className='flex items-center gap-5'>
-                            <button
-                                className="bg-green-500 hover:scale-105  hover:bg-green-600 text-white px-6 py-2 rounded"
-                                onClick={handleExportToExcel}
-                            >
-                                Export to Excel
-                            </button>
+                            <div className="flex items-center gap-5">
+                                <button
+                                    className="bg-green-500 hover:scale-105  hover:bg-green-600 text-white px-6 py-2 rounded"
+                                    onClick={handleExportToExcel}
+                                >
+                                    Export to Excel
+                                </button>
+
+                                <button
+                                    className="bg-purple-500 hover:scale-105 hover:bg-purple-600 text-white px-6 py-2 rounded"
+                                    onClick={handleExportToJSON}
+                                >
+                                    Export Non-Completed JSON
+                                </button>
+                            </div>
 
                             {selectedRows.length > 0 &&
                                 filteredData.filter(
@@ -3133,6 +3696,7 @@ const AdminChekin = () => {
                                                             </div>
                                                         </td>
                                                         <td className="border border-black px-4 py-2">{data.employee_id || 'NIL'}</td>
+
                                                         <td className="border border-black px-4 py-2">
                                                             {data.interim_date
                                                                 ? new Date(data.interim_date).toLocaleDateString('en-GB').replace(/\//g, '-')

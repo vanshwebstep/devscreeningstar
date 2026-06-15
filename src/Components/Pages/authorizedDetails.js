@@ -54,7 +54,7 @@ const AuthorizedDetails = () => {
     }
 
     // Construct the URL with query parameters
-    const url = `https://api.screeningstar.co.in/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `http://localhost:5000/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -136,8 +136,8 @@ const AuthorizedDetails = () => {
     };
 
     const url = isEditing
-      ? `https://api.screeningstar.co.in/authorized-detail/update`
-      : `https://api.screeningstar.co.in/authorized-detail/create`;
+      ? `http://localhost:5000/authorized-detail/update`
+      : `http://localhost:5000/authorized-detail/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -219,7 +219,7 @@ const AuthorizedDetails = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setDeletingId(id);
-        fetch(`https://api.screeningstar.co.in/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`http://localhost:5000/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             const newToken = result.token || result._token || storedToken || "";

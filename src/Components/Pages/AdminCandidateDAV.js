@@ -67,7 +67,7 @@ const CandidateDAV = () => {
         const adminData = JSON.parse(localStorage.getItem('admin'));
         const admin_id = adminData?.id;
 
-        fetch(`https://api.screeningstar.co.in/candidate-master-tracker/dav-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${token}`)
+        fetch(`http://localhost:5000/candidate-master-tracker/dav-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${token}`)
             .then(res => res.json())
             .then(result => {
                 setLoading(false);  // Set loading to false when the request is complete.

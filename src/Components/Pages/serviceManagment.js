@@ -19,6 +19,7 @@ const ServiceManagement = () => {
   const [serviceTitlesAndIds, setServiceTitlesAndIds] = useState([]);
   const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
+  const [service_type, setServiceType] = useState([]);
   const [hsn_code, setHSNCode] = useState("");
   const [isFormReady, setIsFormReady] = useState(true);
   const [service_code, setServiceCode] = useState("");
@@ -31,18 +32,18 @@ const ServiceManagement = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const storedToken = localStorage.getItem("_token");
-     const tableScrollRef = useRef(null);
-    const topScrollRef = useRef(null);
-    const [scrollWidth, setScrollWidth] = useState("100%");
+  const tableScrollRef = useRef(null);
+  const topScrollRef = useRef(null);
+  const [scrollWidth, setScrollWidth] = useState("100%");
 
-    // 🔹 Sync scroll positions
-    const syncScroll = (e) => {
-        if (e.target === topScrollRef.current) {
-            tableScrollRef.current.scrollLeft = e.target.scrollLeft;
-        } else {
-            topScrollRef.current.scrollLeft = e.target.scrollLeft;
-        }
-    };
+  // 🔹 Sync scroll positions
+  const syncScroll = (e) => {
+    if (e.target === topScrollRef.current) {
+      tableScrollRef.current.scrollLeft = e.target.scrollLeft;
+    } else {
+      topScrollRef.current.scrollLeft = e.target.scrollLeft;
+    }
+  };
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
@@ -59,7 +60,7 @@ const ServiceManagement = () => {
 
     try {
       const response = await axios.get(
-        `https://api.screeningstar.co.in/service/list?admin_id=${admin_id}&_token=${storedToken}`
+        `http://localhost:5000/service/list?admin_id=${admin_id}&_token=${storedToken}`
       );
 
       const result = response.data;
@@ -124,7 +125,7 @@ const ServiceManagement = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/service-group/list?${queryParams}`,
+        `http://localhost:5000/service-group/list?${queryParams}`,
         {
           method: "GET",
           redirect: "follow",
@@ -214,6 +215,7 @@ const ServiceManagement = () => {
       id: editingServiceId,
       title: serviceName,
       description: description,
+      service_type: service_type.join(","), // Convert array to comma-separated string
       group_id: groupId,
       hsn_code: hsn_code,
       service_code: service_code,
@@ -222,8 +224,8 @@ const ServiceManagement = () => {
     });
 
     const apiUrl = editingServiceId
-      ? "https://api.screeningstar.co.in/service/update"
-      : "https://api.screeningstar.co.in/service/create";
+      ? "http://localhost:5000/service/update"
+      : "http://localhost:5000/service/create";
 
     const requestOptions = {
       method: editingServiceId ? "PUT" : "POST",
@@ -240,6 +242,7 @@ const ServiceManagement = () => {
         // Reset form fields after successful submission
         setServiceName("");
         setDescription("");
+        setServiceType("");
         setHSNCode("");
         setServiceCode("");
         fetchServices();
@@ -294,7 +297,7 @@ const ServiceManagement = () => {
         const storedToken = localStorage.getItem("_token");
         try {
           const response = await axios.delete(
-            `https://api.screeningstar.co.in/service/delete`,
+            `http://localhost:5000/service/delete`,
             {
               params: { id, admin_id, _token: storedToken },
             }
@@ -347,7 +350,7 @@ const ServiceManagement = () => {
       return;
     }
 
-    const apiUrl = `https://api.screeningstar.co.in/service/is-service-code-unique?service_code=${encodeURIComponent(
+    const apiUrl = `http://localhost:5000/service/is-service-code-unique?service_code=${encodeURIComponent(
       value
     )}&admin_id=${admin_id}&_token=${storedToken}`;
 
@@ -388,6 +391,12 @@ const ServiceManagement = () => {
     setGroupId(service.group_id || "");
     setServiceName(service.title || "");
     setDescription(service.description || "");
+  
+     setServiceType(
+    service.service_type
+      ? service.service_type.split(",")
+      : []
+  );
     setHSNCode(service.hsn_code || "");
     setServiceCode(service.service_code || "");
     setEditingServiceId(service.id);
@@ -439,6 +448,19 @@ const ServiceManagement = () => {
     setSearchTerm(e.target.value);
     setCurrentPage(1)
   };
+
+  const serviceTypeNames = {
+    "valuepitch": "Value Pitch",
+    "manual": "Manual",
+    // "surepass": "SurePass",
+
+  };
+const selectedLabels = Array.isArray(service_type)
+  ? service_type.map((item) => serviceTypeNames[item]).join(", ")
+  : "";
+
+  console.log(selectedLabels);
+
   return (
     <div className="">
 
@@ -484,6 +506,24 @@ const ServiceManagement = () => {
                   placeholder="Description"
                   className="w-full rounded-md p-2.5 border bg-[#f7f6fb] border-gray-300"
                 />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+
+                <SelectSearch
+  options={Object.entries(serviceTypeNames).map(([value, name]) => ({
+    value,
+    name
+  }))}
+  value={service_type}
+  name="service_type"
+  required
+  placeholder="Choose Service Type"
+  onChange={(value) =>
+    setServiceType(Array.isArray(value) ? value : [value])
+  }
+  search
+  multiple
+/>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <input
@@ -592,7 +632,7 @@ const ServiceManagement = () => {
                         Service Description
                       </th>
                       <th className="uppercase border border-black  px-4 py-2">HSN Code</th>
-
+                      <th className="uppercase border border-black  px-4 py-2">Service Type</th>
                       <th className="uppercase border border-black  px-4 py-2">Actions</th>
                     </tr>
                   </thead>
@@ -637,6 +677,9 @@ const ServiceManagement = () => {
                             </td>
                             <td className="border border-black  px-4 py-2">
                               {service.hsn_code}
+                            </td>
+                            <td className="border border-black  px-4 py-2">
+                              {service.service_type}
                             </td>
                             <td className="border border-black  px-4 py-2">
                               <button

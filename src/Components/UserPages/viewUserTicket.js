@@ -46,10 +46,10 @@ const ViewUserTicket = () => {
         };
         let url;
         if (branchData?.type == "sub_user" && branchData.id) {
-            url = `https://api.screeningstar.co.in/branch/ticket/view?ticket_number=${ticketNumber}&branch_id=${branch_id}&_token=${branch_token}&sub_user_id=${branchData.id}`;
+            url = `http://localhost:5000/branch/ticket/view?ticket_number=${ticketNumber}&branch_id=${branch_id}&_token=${branch_token}&sub_user_id=${branchData.id}`;
         }
         else {
-            url = `https://api.screeningstar.co.in/branch/ticket/view?ticket_number=${ticketNumber}&branch_id=${branch_id}&_token=${branch_token}`
+            url = `http://localhost:5000/branch/ticket/view?ticket_number=${ticketNumber}&branch_id=${branch_id}&_token=${branch_token}`
         }
 
         try {
@@ -146,7 +146,7 @@ const ViewUserTicket = () => {
             };
 
 
-            const response = await fetch('https://api.screeningstar.co.in/branch/ticket/chat', requestOptions);
+            const response = await fetch('http://localhost:5000/branch/ticket/chat', requestOptions);
 
             if (response.ok) {
                 setFormData({ message: '' });

@@ -127,7 +127,7 @@ const ClientManager = () => {
         const branchInfo = JSON.parse(localStorage.getItem("branch"));
         const { customer_id, id: branch_id } = branchInfo;
         const branch_token = localStorage.getItem("branch_token");
-        const url = `https://api.screeningstar.co.in/branch/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
+        const url = `http://localhost:5000/branch/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
 
         try {
             let response;
@@ -312,7 +312,7 @@ const ClientManager = () => {
                 const branch_token = localStorage.getItem("branch_token");
                 const fileCount = Object.keys(files).length;
                 // console.log('files - - - ', files, 'count', fileCount)
-
+               
                 const serviceData = JSON.stringify(selectedServiceIds);
 
                 for (const [index, [key, value]] of Object.entries(files).entries()) {
@@ -339,7 +339,7 @@ const ClientManager = () => {
                     }
 
                     try {
-                        await axios.post(`https://api.screeningstar.co.in/branch/client-application/upload`, customerLogoFormData, {
+                        await axios.post(`http://localhost:5000/branch/client-application/upload`, customerLogoFormData, {
                             headers: {
                                 "Content-Type": "multipart/form-data",
                             },
@@ -354,13 +354,11 @@ const ClientManager = () => {
         };
 
         const fileCount = Object.keys(files).length;
-
+ const validReportTypes = [
+                    "CONFIDENTIAL BACKGROUND SCREENING REPORT",
+                    "VENDOR CONFIDENTIAL SCREENING REPORT"
+                ];
         // console.log(`formData - `, formData);
-
-        const validReportTypes = [
-            "CONFIDENTIAL BACKGROUND SCREENING REPORT",
-            "VENDOR CONFIDENTIAL SCREENING REPORT"
-        ];
 
         let payload = {
             client_application_id: formData.id,
@@ -374,7 +372,6 @@ const ClientManager = () => {
             location: formData.location,
             batch_number: formData.batchNumber,
             sub_client: formData.subClient,
-            photo: formData.photo,
             services: selectedServiceIds,
             package: formData.package,
             gender: formData.gender,
@@ -384,7 +381,6 @@ const ClientManager = () => {
             ticket_id: formData.ticket_id,
             sub_client: formData.sub_client,
             photo: formData.photo,
-
             generate_report_type: validReportTypes.includes(formData.generate_report_type)
                 ? formData.generate_report_type
                 : "CONFIDENTIAL BACKGROUND SCREENING REPORT",
@@ -401,8 +397,8 @@ const ClientManager = () => {
 
 
         const apiUrl = handleEditClick
-            ? "https://api.screeningstar.co.in/branch/client-application/update"
-            : "https://api.screeningstar.co.in/branch/client-application/create";
+            ? "http://localhost:5000/branch/client-application/update"
+            : "http://localhost:5000/branch/client-application/create";
 
         const method = handleEditClick ? "PUT" : "POST";
 
@@ -512,9 +508,9 @@ const ClientManager = () => {
                 let url;
                 if (branchData?.type === "sub_user") {
                     const sub_user_id = branchData?.id ?? null;
-                    url = `https://api.screeningstar.co.in/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
+                    url = `http://localhost:5000/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
                 } else {
-                    url = `https://api.screeningstar.co.in/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+                    url = `http://localhost:5000/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
                 }
 
                 fetch(`${url}`, requestOptions)

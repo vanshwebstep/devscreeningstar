@@ -90,7 +90,7 @@ const CandidateManager = () => {
     setLoading(true);
     const { customer_id, id: branch_id } = branchData;
     const branch_token = localStorage.getItem("branch_token");
-    const url = `https://api.screeningstar.co.in/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branchData?.branch_id}&_token=${branch_token}`;
+    const url = `http://localhost:5000/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branchData?.branch_id}&_token=${branch_token}`;
 
     try {
       let response;
@@ -273,8 +273,8 @@ const CandidateManager = () => {
     };
 
     const apiUrl = handleEditClick
-      ? "https://api.screeningstar.co.in/branch/candidate-application/update"
-      : "https://api.screeningstar.co.in/branch/candidate-application/create";
+      ? "http://localhost:5000/branch/candidate-application/update"
+      : "http://localhost:5000/branch/candidate-application/create";
 
     try {
       const response = await fetch(apiUrl, {
@@ -460,9 +460,9 @@ const CandidateManager = () => {
         let url
         if (branchData?.type === "sub_user") {
           const sub_user_id = branchData?.id ?? null;
-          url = `https://api.screeningstar.co.in/branch/candidate-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`
+          url = `http://localhost:5000/branch/candidate-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`
         } else {
-          url = `https://api.screeningstar.co.in/branch/candidate-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`
+          url = `http://localhost:5000/branch/candidate-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`
         }
         fetch(`${url}`, requestOptions)
           .then((response) => response.json())

@@ -113,7 +113,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
+        `http://localhost:5000/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
         {
           method: "GET",
           redirect: "follow",
@@ -215,7 +215,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await axios.post(
-        `https://api.screeningstar.co.in/invoice-master/send-data`,
+        `http://localhost:5000/invoice-master/send-data`,
         raw,
         {
           headers: {
@@ -291,7 +291,7 @@ const GenerateInvoice = () => {
     try {
       console.log("Sending fetch request...");
       const response = await fetch(
-        `https://api.screeningstar.co.in/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
+        `http://localhost:5000/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
         requestOptions
       );
       const data = await response.json();
@@ -434,7 +434,7 @@ const GenerateInvoice = () => {
     const firstColumnWidth = (pageWidth - 2 * leftMargin) * 0.25; // 25% of available width
     const secondColumnWidth = (pageWidth - 2 * leftMargin) * 0.50; // 50% of available width
     const thirdColumnWidth = (pageWidth - 2 * leftMargin) * 0.25; // 25% of available width
-    const logoBase64 = "https://webstepdev.com/screeningstarAssets/screeningLogoNew.png";
+    const logoBase64 = "/screeningLogoNew.png";
     doc.rect(leftMargin, topMargin, firstColumnWidth, columnHeight); // Add border around first column
     doc.addImage(
       logoBase64,
@@ -561,7 +561,7 @@ const GenerateInvoice = () => {
     // Third column (QR Code)
     const thirdColumnX = secondColumnX + secondColumnWidth; // Correct position for third column
     const qrCodeBase64 =
-      "https://webstepdev.com/screeningstarAssets/screeningstarqr-9654317.png"; // Replace with your base64-encoded image or a URL
+      "/screeningstarqr-9654317.webp"; // Replace with your base64-encoded image or a URL
     doc.rect(thirdColumnX, topMargin, thirdColumnWidth, columnHeight); // Add border around third column
 
     // Set image size to 60px by 60px
@@ -1364,7 +1364,7 @@ const GenerateInvoice = () => {
     // Add Stamp and Signature
     const stampYPosition = notesYPosition + (notes.length * 5) + 10;
     doc.addImage(
-      "https://webstepdev.com/screeningstarAssets/tags-9654471.png",
+      "/stampsign.png",
       "PNG",
       margin + 5,
       stampYPosition,

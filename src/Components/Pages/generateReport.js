@@ -78,10 +78,12 @@ const GenerateReport = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
     const [scrollWidth, setScrollWidth] = useState("100%");
-function formatDateSafe(dateValue) {
-  const date = new Date(dateValue);
-  return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
-}
+const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
+
+    function formatDateSafe(dateValue) {
+        const date = new Date(dateValue);
+        return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+    }
     // 🔹 Sync scroll positions
     const syncScroll = (e) => {
         if (e.target === topScrollRef.current) {
@@ -371,7 +373,7 @@ function formatDateSafe(dateValue) {
             };
 
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -485,7 +487,7 @@ function formatDateSafe(dateValue) {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || localStorage.getItem("_token") || '';
@@ -555,7 +557,7 @@ function formatDateSafe(dateValue) {
                             : (prevFormData?.updated_json?.insuffDetails?.initiation_date
                                 ? new Date(prevFormData.updated_json.insuffDetails.initiation_date).toISOString().split('T')[0]
                                 : ''),
-                         dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob),
+                        dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob),
                         marital_status: cmtData.marital_status || prevFormData.updated_json.marital_status || '',
                         insuff: cmtData.insuff || prevFormData.updated_json.insuff || '',
                         address: {
@@ -798,7 +800,7 @@ function formatDateSafe(dateValue) {
 
 
         // Construct the URL with query parameters
-        const url = `https://api.screeningstar.co.in/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `http://localhost:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',
@@ -912,7 +914,7 @@ function formatDateSafe(dateValue) {
 
             try {
                 const response = await axios.post(
-                    "https://api.screeningstar.co.in/client-master-tracker/upload",
+                    "http://localhost:5000/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -1107,7 +1109,10 @@ function formatDateSafe(dateValue) {
                                 //console.log(`Added status to annexure[${category}]:`, annexure[category].status);
                             }
 
-                            return { annexure };
+                            return {
+                                annexure,
+                                service_id: serviceData.service_id
+                            };
                         }
 
                         //console.log(`Skipping service at index ${index} due to serviceStatus being false`);
@@ -1119,10 +1124,15 @@ function formatDateSafe(dateValue) {
 
                 //console.log("Submission Data:", submissionData);
                 const rawFilteredSubmissionData = submissionData.filter((item) => item !== null);
-                const filteredSubmissionData = rawFilteredSubmissionData.reduce(
-                    (acc, item) => ({ ...acc, ...item.annexure }),
-                    {}
-                );
+                const filteredSubmissionData = rawFilteredSubmissionData.reduce((acc, item) => {
+                    Object.keys(item.annexure).forEach((key) => {
+                        acc[key] = {
+                            ...item.annexure[key],
+                            service_id: item.service_id
+                        };
+                    });
+                    return acc;
+                }, {});
 
                 Object.keys(filteredSubmissionData).forEach((key) => {
                     const data = filteredSubmissionData[key];
@@ -1220,7 +1230,7 @@ function formatDateSafe(dateValue) {
                     body: raw,
                 };
                 const response = await fetch(
-                    `https://api.screeningstar.co.in/client-master-tracker/generate-report`,
+                    `http://localhost:5000/client-master-tracker/generate-report`,
                     requestOptions
                 );
 
@@ -1308,7 +1318,9 @@ function formatDateSafe(dateValue) {
         return label;
     }
 
-
+    const colorNames = [
+        'red', 'green', 'blue', 'yellow', 'pink', 'purple', 'orange', 'black', 'white', 'gray', 'brown', 'cyan', 'magenta'
+    ];
     const handlePreview = useCallback(async (e) => {
         //console.log("Preview triggered");
         e.preventDefault();
@@ -1414,9 +1426,7 @@ function formatDateSafe(dateValue) {
             //console.log("Modified Form Data:", modifiedFormData);
             //console.log(applicantImage)
             // Array of common color names
-            const colorNames = [
-                'red', 'green', 'blue', 'yellow', 'pink', 'purple', 'orange', 'black', 'white', 'gray', 'brown', 'cyan', 'magenta'
-            ];
+
 
             // Function to check for color names
             const checkColorInStatus = (status) => {
@@ -2598,6 +2608,107 @@ function formatDateSafe(dateValue) {
             },
         }));
     };
+    console.log("servicesDataInfo:", servicesDataInfo);
+    const isValuePitch = (sd) => {
+        console.log("isValuePitch:", sd);
+        return sd.service_type?.toLowerCase().split(",").map(t => t.trim()).includes("valuepitch");
+    };
+    const isAlreadySubmitted = (sd) =>
+        isValuePitch(sd) && sd.screeningstar_response?.statusCode === 200 && sd.verifyId;
+    const reportColorClass = (status) => {
+        // Check if any color name is in the status
+        for (let color of colorNames) {
+            if (status.toLowerCase().includes(color)) {
+                return color;  // Return the found color name
+            }
+        }
+        return status;  // Return the original status if no color name is found
+    };
+    const isReportReady = (sd) => sd.valuePitchReport?.statusCode === 201;
+
+    const addresses = [
+        {
+            address: [
+                // Permanent
+                formData.updated_json?.permanent_address?.permanent_address,
+                formData.updated_json?.permanent_address?.permanent_address_landmark,
+                formData.updated_json?.permanent_address?.permanent_address_state,
+                formData.updated_json?.permanent_address?.permanent_address_pin_code,
+
+                // Current
+                formData.updated_json?.address?.address,
+                formData.updated_json?.address?.address_landmark,
+                formData.updated_json?.address?.address_state,
+            ]
+                .filter((val) => val && val.toString().trim() !== "")
+                .join(" "),
+
+            periodOfStay: [
+                formData.updated_json?.permanent_address?.permanent_sender_name,
+                formData.updated_json?.permanent_address?.permanent_receiver_name,
+            ]
+                .filter((val) => val && val.toString().trim() !== "")
+                .join(" - "),
+        },
+    ];
+    const handleValuePitchSubmit = useCallback(async (serviceData, dbTable) => {
+        const adminData = JSON.parse(localStorage.getItem("admin"));
+        const token = localStorage.getItem("_token");
+        setValuePitchSubmitLoading(dbTable);
+        const subJson = {};
+        const formJson = JSON.parse(serviceData.reportFormJson.json);
+        formJson.rows.forEach(row => {
+            row.inputs.forEach(input => {
+                if (input.type !== "file") {
+                    subJson[input.name] = serviceData.annexureData?.[input.name] || "";
+                }
+            });
+        });
+
+        const raw = JSON.stringify({
+            admin_id: adminData?.id,
+            _token: token,
+            branch_id: branchid,
+            customer_id: branchInfo.customer_id,
+            application_id: applicationId,
+            service_id: serviceData.service_id,
+            db_table: dbTable,
+            // ✅ annexure me sirf ye hi rahe
+            annexure: {
+                [dbTable]: subJson,
+            },
+            // ✅ ye sab ab bahar
+            name_of_applicant: formData.client_applicant_name,
+            father_name: formData.updated_json?.father_name,
+            dob: formData.updated_json?.dob,
+            applicantId: applicationRefID,
+            addresses: addresses,
+        });
+
+        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-valuepitch`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: raw,
+        });
+        const result = await res.json();
+
+        if (result.token) localStorage.setItem("_token", result.token);
+        Swal.fire(result.status ? "Success!" : "Error", result.message, result.status ? "success" : "error");
+        await fetchApplicationData();
+
+        await fetchAdminList();
+        setValuePitchSubmitLoading(null);
+    }, [branchid, branchInfo, applicationId]);
+
+
+
+
+
+
+
+
+
+
     useEffect(() => {
         if (tableScrollRef.current) {
             setScrollWidth(tableScrollRef.current.scrollWidth + "px");
@@ -3152,7 +3263,12 @@ function formatDateSafe(dateValue) {
                                                     console.error(`Error parsing reportFormJson.json for service ID ${serviceData?.service_id}:`, e);
                                                     return null; // Skip this entry if JSON is invalid
                                                 }
+                                                const isScreeningStarLocked =
+                                                    serviceData?.service_type === "valuepitch" &&
+                                                    serviceData?.screeningstar_response?.status === true;
 
+                                                const statusMsg =
+                                                    serviceData?.screeningstar_response?.data?.statusMsg || "";
                                                 const dbTableHeading = formJson?.heading || '';
                                                 const dbTable = formJson?.db_table || '';
                                                 let annexureData = serviceData?.annexureData || {};
@@ -3176,75 +3292,205 @@ function formatDateSafe(dateValue) {
                                                         {selectedStatuses[index] !== "nil" && (
                                                             <>
                                                                 <div className="border mt-12 rounded-t-md">
+
+                                                                    {/* Heading */}
                                                                     {dbTableHeading && (
                                                                         <div className="bg-[#c1dff2] border border-black rounded-t-md p-4">
-                                                                            <h3 className="text-center text-2xl font-semibold ">
+                                                                            <h3 className="text-center text-2xl font-semibold">
                                                                                 {dbTableHeading}
                                                                             </h3>
                                                                         </div>
                                                                     )}
-                                                                    <div className="border-[#c1dff2] border overflow-scroll border-t-0 rounded-md">
-                                                                        <div className="table-container rounded-lg">
-                                                                            {/* Top Scroll */}
-                                                                            <div className="top-scroll" ref={topScrollRef} onScroll={syncScroll}>
-                                                                                <div className="top-scroll-inner" style={{ width: scrollWidth }} />
-                                                                            </div>
 
-                                                                            {/* Actual Table Scroll */}
-                                                                            <div className="table-scroll rounded-lg" ref={tableScrollRef} onScroll={syncScroll}>
-
-                                                                                <table className="w-full table-auto">
-                                                                                    <thead>
-                                                                                        <tr className="bg-gray-100 whitespace-nowrap">
-                                                                                            {formJson.headers.map((header, idx) => (
-                                                                                                <th
-                                                                                                    key={idx}
-                                                                                                    className="py-2 px-4 border  border-gray-300 text-left"
-                                                                                                >
-                                                                                                    {header}
-                                                                                                </th>
-                                                                                            ))}
-                                                                                        </tr>
-                                                                                    </thead>
-                                                                                    <tbody>
-                                                                                        {formJson.rows.map((row, idx) => (
-                                                                                            <tr key={idx} className="odd:bg-gray-50 w-full">
-                                                                                                <td
-                                                                                                    className="py-2 px-4  border md:w-1/3 whitespace-nowrap border-gray-300"
-                                                                                                    ref={(el) => (inputRefs.current["annexure"] = el)}
-                                                                                                >
-                                                                                                    {changeLabel(row.label)}
-                                                                                                </td>
-
-                                                                                                {row.inputs.length === 1 ? (
-
-                                                                                                    <td
-                                                                                                        colSpan={formJson.headers.length - 1}
-                                                                                                        className="py-2 px-4 border md:w-1/3 border-gray-300"
-                                                                                                    >
-
-
-                                                                                                        {renderInput(index, dbTable, row.inputs[0], annexureImagesSplitArr, row.label, 0)}
-
-
-                                                                                                    </td>
-                                                                                                ) : (
-                                                                                                    row.inputs.map((input, i) => (
-                                                                                                        <td key={i} className="py-2 px-4 md:w-1/3 border border-gray-300">
-                                                                                                            {renderInput(index, dbTable, input, annexureImagesSplitArr, row.label, i)}
-                                                                                                        </td>
-                                                                                                    ))
-                                                                                                )}
-                                                                                            </tr>
-                                                                                        ))}
-                                                                                    </tbody>
-                                                                                </table>
-                                                                            </div>
+                                                                    {/* 🔥 CONDITION */}
+                                                                    {isScreeningStarLocked ? (
+                                                                        // ✅ BIG MESSAGE INSTEAD OF TABLE
+                                                                        <div className="p-10 text-center border border-t-0">
+                                                                            <p className="text-2xl font-bold text-green-700">
+                                                                                {statusMsg || "Case Submitted Successfully"}
+                                                                            </p>
                                                                         </div>
-                                                                        {errors[`annexure_${index}`] && (
-                                                                            <p className="text-red-500 text-sm">{errors[`annexure_${index}`]}</p>
-                                                                        )}
-                                                                    </div>
+                                                                    ) : (
+                                                                        // ✅ NORMAL TABLE
+                                                                        <div className="border-[#c1dff2] border overflow-scroll border-t-0 rounded-md">
+                                                                            <div className="table-container rounded-lg">
+
+                                                                                <div className="top-scroll" ref={topScrollRef} onScroll={syncScroll}>
+                                                                                    <div className="top-scroll-inner" style={{ width: scrollWidth }} />
+                                                                                </div>
+
+                                                                                <div className="table-scroll rounded-lg" ref={tableScrollRef} onScroll={syncScroll}>
+                                                                                    <table className="w-full table-auto">
+                                                                                        <thead>
+                                                                                            <tr className="bg-gray-100 whitespace-nowrap">
+                                                                                                {formJson.headers.map((header, idx) => (
+                                                                                                    <th key={idx} className="py-2 px-4 border border-gray-300 text-left">
+                                                                                                        {header}
+                                                                                                    </th>
+                                                                                                ))}
+                                                                                            </tr>
+                                                                                        </thead>
+
+                                                                                        <tbody>
+                                                                                            {formJson.rows.map((row, idx) => {
+                                                                                                // ✅ Filter inputs based on valuepitch
+                                                                                                const filteredInputs = row.inputs.filter(input => {
+                                                                                                    if (isValuePitch(serviceData)) {
+                                                                                                        return input.type === "file"; // 👈 only file inputs
+                                                                                                    }
+                                                                                                    return true;
+                                                                                                });
+
+                                                                                                // ✅ Hide row if no inputs left (for valuepitch)
+                                                                                                if (filteredInputs.length === 0) return null;
+
+                                                                                                return (
+                                                                                                    <tr key={idx} className="odd:bg-gray-50 w-full">
+                                                                                                        <td className="py-2 px-4 border md:w-1/3 whitespace-nowrap border-gray-300">
+                                                                                                            {changeLabel(row.label)}
+                                                                                                        </td>
+
+                                                                                                        {filteredInputs.length === 1 ? (
+                                                                                                            <td colSpan={formJson.headers.length - 1} className="py-2 px-4 border">
+                                                                                                                {renderInput(
+                                                                                                                    index,
+                                                                                                                    dbTable,
+                                                                                                                    filteredInputs[0],
+                                                                                                                    annexureImagesSplitArr,
+                                                                                                                    row.label,
+                                                                                                                    0
+                                                                                                                )}
+                                                                                                            </td>
+                                                                                                        ) : (
+                                                                                                            filteredInputs.map((input, i) => (
+                                                                                                                <td key={i} className="py-2 px-4 border">
+                                                                                                                    {renderInput(
+                                                                                                                        index,
+                                                                                                                        dbTable,
+                                                                                                                        input,
+                                                                                                                        annexureImagesSplitArr,
+                                                                                                                        row.label,
+                                                                                                                        i
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                            ))
+                                                                                                        )}
+                                                                                                    </tr>
+                                                                                                );
+                                                                                            })}
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </div>
+                                                                            {isReportReady(serviceData) && (
+                                                                                <div className="mt-5 border-2 border-gray-200 rounded-2xl bg-white shadow-md overflow-hidden">
+
+                                                                                    {/* Top Header */}
+                                                                                    <div className="flex items-center justify-between px-6 py-4 bg-gray-100 border-b">
+                                                                                        <div className="flex items-center gap-4">
+                                                                                            <span className={`px-4 py-1.5 text-sm font-bold rounded-full ${reportColorClass(serviceData.valuePitchReport.report)}`}>
+                                                                                                {serviceData.valuePitchReport.report}
+                                                                                            </span>
+                                                                                            <span className="text-base font-semibold text-gray-700">
+                                                                                                {serviceData.valuePitchReport.statusMsg}
+                                                                                            </span>
+                                                                                        </div>
+
+                                                                                        {serviceData.valuePitchReport.reportUrl && (
+                                                                                            <a
+                                                                                                href={serviceData.valuePitchReport.reportUrl}
+                                                                                                target="_blank"
+                                                                                                className="text-sm font-semibold text-blue-600 hover:text-blue-800 underline"
+                                                                                            >
+                                                                                                Download PDF
+                                                                                            </a>
+                                                                                        )}
+                                                                                    </div>
+
+                                                                                    {/* Main Content - Single Row Boxes */}
+                                                                                    <div className="grid grid-cols-3 gap-5 p-6">
+
+                                                                                        {/* Name Box */}
+                                                                                        <div className="border-2 rounded-xl p-4 bg-gray-50">
+                                                                                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                                                                                Name
+                                                                                            </p>
+                                                                                            <p className="text-lg font-bold text-gray-900">
+                                                                                                {serviceData.valuePitchReport.name || "-"}
+                                                                                            </p>
+                                                                                        </div>
+
+                                                                                        {/* Verified On */}
+                                                                                        <div className="border-2 rounded-xl p-4 bg-gray-50">
+                                                                                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                                                                                Verified On
+                                                                                            </p>
+                                                                                            <p className="text-lg font-bold text-gray-900">
+                                                                                                {formatDate(serviceData.valuePitchReport.dateOfVerification)}
+                                                                                            </p>
+                                                                                        </div>
+
+                                                                                        {/* Addresses */}
+                                                                                        <div className="border-2 rounded-xl p-4 bg-gray-50">
+                                                                                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                                                                                                Addresses
+                                                                                            </p>
+                                                                                            <p className="text-sm font-semibold text-gray-800 leading-relaxed">
+                                                                                                {serviceData.valuePitchReport.addresses?.length
+                                                                                                    ? serviceData.valuePitchReport.addresses.map(a => a.address).join(" • ")
+                                                                                                    : "-"}
+                                                                                            </p>
+                                                                                        </div>
+
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {isValuePitch(serviceData) && (
+                                                                                <div className="flex flex-col gap-3 mt-4 p-4 border rounded-xl bg-white shadow-sm">
+
+                                                                                    {/* Status */}
+                                                                                    {isReportReady(serviceData) ? (
+                                                                                        <div className="flex justify-between items-center">
+                                                                                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                                                                                                Report Ready
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    ) : isAlreadySubmitted(serviceData) ? (
+                                                                                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm font-medium text-center">
+                                                                                            Your case has been submitted: {serviceData.valuePitchStatus?.statusMsg}
+                                                                                        </div>
+                                                                                    ) : null}
+
+                                                                                    {/* Action Button */}
+                                                                                    {!isAlreadySubmitted(serviceData) && !isReportReady(serviceData) && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => handleValuePitchSubmit(serviceData, dbTable)}
+                                                                                            className="w-full max-w-fit mx-auto py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition duration-200 shadow-sm"
+                                                                                        >
+                                                                                            {valuePitchSubmitLoading === dbTable ? (
+                                                                                                <span className="flex items-center">
+                                                                                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.266 5.883 3.367 7.967l2.633-2.633z"></path>
+                                                                                                    </svg>
+                                                                                                    Submitting...
+                                                                                                </span>
+                                                                                            ) : (
+                                                                                                "Trigger Valuepitch Api"
+                                                                                            )}
+                                                                                        </button>
+                                                                                    )}
+
+                                                                                </div>
+                                                                            )}
+                                                                            {errors[`annexure_${index}`] && (
+                                                                                <p className="text-red-500 text-sm">{errors[`annexure_${index}`]}</p>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+
                                                                 </div>
                                                             </>
                                                         )}

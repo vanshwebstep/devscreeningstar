@@ -102,7 +102,7 @@ const CustomerTrash = () => {
       redirect: "follow",
     };
 
-    fetch("https://api.screeningstar.co.in/branch/update", requestOptions)
+    fetch("http://localhost:5000/branch/update", requestOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((data) => {
@@ -165,7 +165,7 @@ const CustomerTrash = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/trashed/customer/list?admin_id=${admin_id}&_token=${storedToken}`,
+        `http://localhost:5000/trashed/customer/list?admin_id=${admin_id}&_token=${storedToken}`,
         { method: "GET", redirect: "follow" }
       );
       const data = await response.json();
@@ -250,7 +250,7 @@ const CustomerTrash = () => {
       setActiveId(id);
       try {
         const response = await fetch(
-          `https://api.screeningstar.co.in/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `http://localhost:5000/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           {
             method: "GET",
             redirect: "follow",
@@ -305,7 +305,7 @@ const CustomerTrash = () => {
         };
 
         // Perform the DELETE request to delete the customer
-        fetch(`https://api.screeningstar.co.in/trashed/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`http://localhost:5000/trashed/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.text())
           .then((result) => {
             const newToken = result.token || result._token || '';
@@ -357,7 +357,7 @@ const CustomerTrash = () => {
         };
 
         // Perform the DELETE request to delete the customer
-        fetch(`https://api.screeningstar.co.in/trashed/customer/restore/?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`http://localhost:5000/trashed/customer/restore/?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.text())
           .then((result) => {
             const newToken = result.token || result._token || '';
@@ -403,7 +403,7 @@ const CustomerTrash = () => {
         throw new Error("Admin ID or Token not found in localStorage");
       }
 
-      const url = `https://api.screeningstar.co.in/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
+      const url = `http://localhost:5000/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -469,7 +469,7 @@ const CustomerTrash = () => {
           redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/branch/delete?id=${branch.id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/branch/delete?id=${branch.id}&admin_id=${adminId}&_token=${token}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             setShowModal(false);
@@ -618,7 +618,7 @@ const CustomerTrash = () => {
       redirect: "follow",
     };
 
-    fetch("https://api.screeningstar.co.in/branch/update", requestOptions)
+    fetch("http://localhost:5000/branch/update", requestOptions)
       .then((response) => response.json())
       .then((result) => {
         if (result.k) {

@@ -203,7 +203,7 @@ function formatDateSafe(dateValue) {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 // Check if result is valid
@@ -333,7 +333,7 @@ function formatDateSafe(dateValue) {
             };
 
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -496,7 +496,7 @@ function formatDateSafe(dateValue) {
 
             try {
                 const response = await axios.post(
-                    "https://api.screeningstar.co.in/client-master-tracker/upload",
+                    "http://localhost:5000/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -592,7 +592,7 @@ function formatDateSafe(dateValue) {
                 };
 
                 const response = await fetch(
-                    `https://api.screeningstar.co.in/data-management/submit`,
+                    `http://localhost:5000/data-management/submit`,
                     requestOptions
                 );
 

@@ -84,7 +84,7 @@ const DataCheckin = () => {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/data-management/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/data-management/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 setLoading(false);
@@ -119,7 +119,7 @@ const DataCheckin = () => {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/data-management/list?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/data-management/list?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || '';
@@ -154,7 +154,7 @@ const DataCheckin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${reportDownload}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${reportDownload}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
