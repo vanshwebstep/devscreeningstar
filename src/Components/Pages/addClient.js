@@ -177,7 +177,7 @@ const AddClient = () => {
 
             try {
                 await axios.post(
-                    `http://localhost:5000/customer/upload`,
+                    `https://devscreeningnode.onrender.com/customer/upload`,
                     customerLogoFormData,
                     {
                         headers: {
@@ -587,7 +587,7 @@ const AddClient = () => {
 
             // Make the API call
             const response = await fetch(
-                "http://localhost:5000/customer/create",
+                "https://devscreeningnode.onrender.com/customer/create",
                 requestOptions
             );
 

@@ -98,7 +98,7 @@ const ClientSpoc = () => {
       return;
     }
 
-    const url = `http://localhost:5000/client-spoc/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://devscreeningnode.onrender.com/client-spoc/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -166,7 +166,7 @@ const ClientSpoc = () => {
       setError((prevErrors) => ({ ...prevErrors, [emailField]: null }));
 
       // Make the API call to check if the email exists
-      fetch("http://localhost:5000/client-spoc/check-email-exists", {
+      fetch("https://devscreeningnode.onrender.com/client-spoc/check-email-exists", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, admin_id, _token: storedToken }),
@@ -230,8 +230,8 @@ const ClientSpoc = () => {
 
     // Determine URL based on whether it's editing or creating
     const url = isEditing
-      ? `http://localhost:5000/client-spoc/update`
-      : `http://localhost:5000/client-spoc/create`;
+      ? `https://devscreeningnode.onrender.com/client-spoc/update`
+      : `https://devscreeningnode.onrender.com/client-spoc/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -301,7 +301,7 @@ const ClientSpoc = () => {
       if (willDelete) {
         setDeletingId(id); // Set the deleting ID
         fetch(
-          `http://localhost:5000/client-spoc/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://devscreeningnode.onrender.com/client-spoc/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           {
             method: "DELETE",
             redirect: "follow",

@@ -54,7 +54,7 @@ const AuthorizedDetails = () => {
     }
 
     // Construct the URL with query parameters
-    const url = `http://localhost:5000/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://devscreeningnode.onrender.com/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -136,8 +136,8 @@ const AuthorizedDetails = () => {
     };
 
     const url = isEditing
-      ? `http://localhost:5000/authorized-detail/update`
-      : `http://localhost:5000/authorized-detail/create`;
+      ? `https://devscreeningnode.onrender.com/authorized-detail/update`
+      : `https://devscreeningnode.onrender.com/authorized-detail/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -219,7 +219,7 @@ const AuthorizedDetails = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setDeletingId(id);
-        fetch(`http://localhost:5000/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             const newToken = result.token || result._token || storedToken || "";

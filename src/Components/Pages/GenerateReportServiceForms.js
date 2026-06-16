@@ -304,7 +304,7 @@ const GenerateReportServiceForm = () => {
             redirect: "follow",
         };
     
-        fetch("http://localhost:5000/json-form/generate-report/update", requestOptions)
+        fetch("https://devscreeningnode.onrender.com/json-form/generate-report/update", requestOptions)
             .then((response) => response.json().catch(() => ({}))) // Prevent JSON parsing errors
             .then((result) => {
                 console.log("Submission Response:", result);

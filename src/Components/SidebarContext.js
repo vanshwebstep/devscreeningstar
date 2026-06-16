@@ -48,6 +48,13 @@ export const SidebarProvider = ({ children }) => {
       href: "/admin-documents",
     }
   ]
+  const valuePitchTab = [
+    {
+      name: "ValuePitch Manager",
+      key: "ValuePitchManager",
+      href: "/admin-valuepitch-manager",
+    }
+  ]
   const leaveManagement = [
     {
       name: "Leave Management",
@@ -151,7 +158,7 @@ export const SidebarProvider = ({ children }) => {
       name: "Invoice Master ",
       key: "enterSaleData",
       href: "/admin-invoice-master"
-    },{
+    }, {
       name: "Expense Master ",
       key: "expenseMaster",
       href: "/admin-expense-master"
@@ -167,7 +174,7 @@ export const SidebarProvider = ({ children }) => {
       href: "/admin-client-credentials"
     }
   ];
- const IntegrationServices = [
+  const IntegrationServices = [
     {
       name: "Integration Services",
 
@@ -207,7 +214,7 @@ export const SidebarProvider = ({ children }) => {
       key: "BusinessDevelopmentActivity",
       href: "/admin-BusinessDevelopmentActivity"
     },
-    
+
   ];
   const clientApplicationTrashed = [
     {
@@ -594,7 +601,7 @@ export const SidebarProvider = ({ children }) => {
       } else if (section === "Trash Applications") {
         localStorage.setItem('inHome', 'no');
         tabs = trashapplications;
-      }else if (section === "Universities") {
+      } else if (section === "Universities") {
         localStorage.setItem('inHome', 'no');
         tabs = universities;
       }
@@ -666,7 +673,11 @@ export const SidebarProvider = ({ children }) => {
       } else if (section === "APPLICATION DOCUMENT") {
         localStorage.setItem('inHome', 'no');
         tabs = documenttabs;
-      } else if (section === "Leave Management") {
+      } else if (section === "ValuePitch Manager") {
+        localStorage.setItem('inHome', 'no');
+        tabs = valuePitchTab;
+      }
+      else if (section === "Leave Management") {
         localStorage.setItem('inHome', 'no');
         tabs = leaveManagement;
       }

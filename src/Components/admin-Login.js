@@ -87,7 +87,7 @@ const AdminLogin = () => {
 
     try {
       // Make the POST request to login
-      const response = await axios.post('http://localhost:5000/admin/login', loginData);
+      const response = await axios.post('https://devscreeningnode.onrender.com/admin/login', loginData);
       const result = response.data;
 
       if (result.status) {
@@ -176,7 +176,7 @@ const AdminLogin = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/admin/verify-two-factor', requestOptions);
+      const response = await fetch('https://devscreeningnode.onrender.com/admin/verify-two-factor', requestOptions);
       const result = await response.json();
 
       if (result.status) {

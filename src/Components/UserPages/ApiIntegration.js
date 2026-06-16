@@ -16,7 +16,7 @@ export default function ApiIntegration() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `http://localhost:5000/branch/access-token?branch_id=${branch_id}&_token=${branch_token}&customer_id=${customer_id}`,
+        `https://devscreeningnode.onrender.com/branch/access-token?branch_id=${branch_id}&_token=${branch_token}&customer_id=${customer_id}`,
         { method: "GET", headers: { "Content-Type": "application/json" } }
       );
 
@@ -46,7 +46,7 @@ export default function ApiIntegration() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `http://localhost:5000/branch/access-token/generate?branch_id=${branch_id}&_token=${branch_token}&customer_id=${customer_id}`,
+        `https://devscreeningnode.onrender.com/branch/access-token/generate?branch_id=${branch_id}&_token=${branch_token}&customer_id=${customer_id}`,
         { method: "GET", headers: { "Content-Type": "application/json" } }
       );
 

@@ -65,7 +65,7 @@ const AdminCandidateCheckin = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/candidate-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/candidate-master-tracker/applications-by-branch?branch_id=${branch_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then(response => {
                 return response.json().then(result => {
                     const newToken = result._token || result.token || token;
@@ -147,7 +147,7 @@ const AdminCandidateCheckin = () => {
         };
 
         try {
-            const url = `http://localhost:5000/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`;
+            const url = `https://devscreeningnode.onrender.com/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`;
             console.log("🌐 Fetching URL:", url);
 
             const res = await fetch(url, requestOptions);
@@ -915,7 +915,7 @@ const AdminCandidateCheckin = () => {
         }
         setLoadingRow(rowId); // Set the loading row ID
         // Construct the URL dynamically with query parameters
-        const url = `http://localhost:5000/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
+        const url = `https://devscreeningnode.onrender.com/candidate-master-tracker/send?application_id=${applicationID}&branch_id=${branch_id}&customer_id=${customer_id}&admin_id=${adminId}&_token=${token}`;
 
         const requestOptions = {
             method: "GET",
@@ -992,7 +992,7 @@ const AdminCandidateCheckin = () => {
 
         try {
             const response = await axios.post(
-                "http://localhost:5000/utils/image-to-base",
+                "https://devscreeningnode.onrender.com/utils/image-to-base",
                 { image_urls: imageUrls },
                 { headers: { "Content-Type": "application/json" } }
             );

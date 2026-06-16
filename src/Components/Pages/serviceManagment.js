@@ -60,7 +60,7 @@ const ServiceManagement = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/service/list?admin_id=${admin_id}&_token=${storedToken}`
+        `https://devscreeningnode.onrender.com/service/list?admin_id=${admin_id}&_token=${storedToken}`
       );
 
       const result = response.data;
@@ -125,7 +125,7 @@ const ServiceManagement = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/service-group/list?${queryParams}`,
+        `https://devscreeningnode.onrender.com/service-group/list?${queryParams}`,
         {
           method: "GET",
           redirect: "follow",
@@ -224,8 +224,8 @@ const ServiceManagement = () => {
     });
 
     const apiUrl = editingServiceId
-      ? "http://localhost:5000/service/update"
-      : "http://localhost:5000/service/create";
+      ? "https://devscreeningnode.onrender.com/service/update"
+      : "https://devscreeningnode.onrender.com/service/create";
 
     const requestOptions = {
       method: editingServiceId ? "PUT" : "POST",
@@ -297,7 +297,7 @@ const ServiceManagement = () => {
         const storedToken = localStorage.getItem("_token");
         try {
           const response = await axios.delete(
-            `http://localhost:5000/service/delete`,
+            `https://devscreeningnode.onrender.com/service/delete`,
             {
               params: { id, admin_id, _token: storedToken },
             }
@@ -350,7 +350,7 @@ const ServiceManagement = () => {
       return;
     }
 
-    const apiUrl = `http://localhost:5000/service/is-service-code-unique?service_code=${encodeURIComponent(
+    const apiUrl = `https://devscreeningnode.onrender.com/service/is-service-code-unique?service_code=${encodeURIComponent(
       value
     )}&admin_id=${admin_id}&_token=${storedToken}`;
 

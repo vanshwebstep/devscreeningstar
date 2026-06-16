@@ -51,7 +51,7 @@ const PrepareReport = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/report-master/prepare-report?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/report-master/prepare-report?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 return response.json().then((result) => {
                     // Check if the API response status is false

@@ -413,7 +413,7 @@ const TeamManagementGenerateReport = () => {
         const token = localStorage.getItem("_token");
 
         fetch(
-            `http://localhost:5000/team-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`
+            `https://devscreeningnode.onrender.com/team-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`
         )
             .then((response) => response.json())
             .then((result) => {
@@ -611,7 +611,7 @@ const TeamManagementGenerateReport = () => {
             }
 
             const uploadPromise = axios.post(
-                "http://localhost:5000/team-management/upload",
+                "https://devscreeningnode.onrender.com/team-management/upload",
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             )
@@ -737,7 +737,7 @@ const TeamManagementGenerateReport = () => {
             });
 
             const response = await fetch(
-                "http://localhost:5000/team-management/generate-report",
+                "https://devscreeningnode.onrender.com/team-management/generate-report",
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -804,7 +804,7 @@ const TeamManagementGenerateReport = () => {
     const fetchImageToBase = async (imageUrls) => {
         try {
             const response = await axios.post(
-                "http://localhost:5000/utils/image-to-base",
+                "https://devscreeningnode.onrender.com/utils/image-to-base",
                 { image_urls: imageUrls },
                 { headers: { "Content-Type": "application/json" } }
             );

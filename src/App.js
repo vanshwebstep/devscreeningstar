@@ -17,6 +17,7 @@ import AddClient from "./Components/Pages/addClient";
 import ScreeningstarAdmin from "./Components/Pages/screeningstarAdmin";
 import CreateInvoice from "./Components/Pages/createInvoice";
 import AdminManager from "./Components/Pages/adminManager";
+import ValuePitchManager from "./Components/Pages/valuepitchManager";
 import ReportMaster from "./Components/Pages/reportMaster";
 import ClientCredentials from "./Components/Pages/clientCredentials";
 import IntegrationServices from "./Components/Pages/IntegrationServices"
@@ -38,6 +39,7 @@ import AuthorizedDetails from "./Components/Pages/authorizedDetails";
 import ExistingUsers from "./Components/Pages/existingUsers";
 import ApplicationStatus from "./Components/Pages/applicationStatus";
 import AdminChekin from "./Components/Pages/adminChekin";
+import ValuePitchChekin from "./Components/Pages/valuepitchChekin.js";
 import GenerateReport from "./Components/Pages/generateReport.js";
 import GenerateReportServiceForm from "./Components/Pages/GenerateReportServiceForms.js";
 import DataGenerateReport from "./Components/Pages/DataGenerateReport.js";
@@ -195,6 +197,7 @@ const Layout = () => {
               <Route path="/admin-screeningstar-admin" element={<ScreeningstarAdmin />} />
               <Route path="/admin-create-invoice" element={<CreateInvoice />} />
               <Route path="/admin-admin-manager" element={<AdminManager />} />
+              <Route path="/admin-valuepitch-manager" element={<ValuePitchManager />} />
               <Route path="/admin-candidate-manager" element={<AdminCandidateManager />} />
               <Route path="/admin-CandidateBGV" element={<CandidateBGV />} />
               <Route path="/admin-CandidateDAV" element={<CandidateDAV />} />
@@ -234,6 +237,7 @@ const Layout = () => {
               <Route path="/admin-chekin" element={<AdminChekin />} />
               <Route path="/admin-CandidateCheckin" element={<AdminCandidateCheckin />} />
               <Route path="/admin-DataCheckin" element={<DataCheckin />} />
+              <Route path="/admin-valuepitch-checkin" element={<ValuePitchChekin />} />
               <Route path="/admin-user-history" element={<UserHistory />} />
               <Route path="/admin-ViewUser" element={<ViewUser />} />
               <Route path="/admin-createTicket" element={<CreateAdminTicket />} />

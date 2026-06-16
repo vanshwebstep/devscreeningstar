@@ -13,29 +13,30 @@ import PDFuserGirl from "../../imgs/PDFuserGirl.png"
 import isoLogo from "../../imgs/iso.png"
 import isoLogo2 from "../../imgs/iso2.png"
 import screeningStarLogo from "../../imgs/screeningLogoNew.png"
-import logo3 from "../../imgs/logo-3.png"
-import logo4 from "../../imgs/logo-4.png"
-import logo5 from "../../imgs/logo-5.png"
-import logo6 from "../../imgs/logo-6.png"
-import logo9 from "../../imgs/logo-8.png"
-import aadhaarIcon from "../../imgs/aadhaarIcon.png"
-import logo8 from "../../imgs/logo8.png"
-import emblemIcon from "../../imgs/emblemIcon.png";
+import logo3 from "../../imgs/3.png"
+import logo4 from "../../imgs/4.png"
+import logo5 from "../../imgs/5.png"
+import logo6 from "../../imgs/6.png"
+import logo9 from "../../imgs/8.png"
+import aadhaarIcon from "../../imgs/1.png"
+import logo8 from "../../imgs/7.png"
+import emblemIcon from "../../imgs/2.png";
 import colored from "../../imgs/colored.png";
 import greenShield from "../../imgs/greenShield.png";
 import yellowShield from "../../imgs/yellowShield.png";
 import orangeShield from "../../imgs/orangeShield.png";
 import emailIconGreen from "../../imgs/emailIconGreen.png";
 import Signature from "../../imgs/Signature.png";
-
 import Default from "../../imgs/default.png"
 import { useApiLoading } from '../ApiLoadingContext';
 import JSZip from 'jszip';
 import imageCompression from "browser-image-compression";
 import { FaFlag } from 'react-icons/fa';
 import { FaChevronLeft } from 'react-icons/fa';
-const AdminChekin = () => {
+const ValuePitchChekin = () => {
 
+    const [servicesHeadings, setServicesHeadings] = useState([]);
+    const [viewServices, setViewServices] = useState(false);
 
     const [activeId, setActiveId] = useState(null);
     const [selectedValue, setSelectedValue] = useState("");
@@ -47,6 +48,8 @@ const AdminChekin = () => {
     const [loadingIndex, setLoadingIndex] = useState(null);
     const [servicesDataInfo, setServicesDataInfo] = useState('');
     const [expandedRow, setExpandedRow] = useState({ index: '', headingsAndStatuses: [] });
+    const [headingsAndStatuses, setHeadingsAndStatuses] = useState([]);
+
     const navigate = useNavigate();
     const location = useLocation();
     const [adminTAT, setAdminTAT] = useState('');
@@ -63,19 +66,57 @@ const AdminChekin = () => {
     const [isBulkDownloading, setIsBulkDownloading] = useState(false);
 
     const [viewLoading, setViewLoading] = useState(false);
+    const tableScrollRef = useRef(null);
+    const topScrollRef = useRef(null);
+    const [scrollWidth, setScrollWidth] = useState("100%");
 
+    // 🔹 Sync scroll positions
+    const syncScroll = (e) => {
+        if (e.target === topScrollRef.current) {
+            tableScrollRef.current.scrollLeft = e.target.scrollLeft;
+        } else {
+            topScrollRef.current.scrollLeft = e.target.scrollLeft;
+        }
+    };
 
     const [isHighlightLoading, setIsHighlightLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(null);
     const [loadingGenrate, setLoadingGenrate] = useState(null);
     const [filterData, setFilterData] = useState([]);
 
+    const changeLabelStatus = (label) => {
+        const mapping = {
+            "overall": "application_count",
+            "pending": "pending_application_count",
+            "qc pending": "qc_pending_count",
+            "completed": "completed_application_count",
+            "wip": "wip_application_count",
+            "insuff": "insuff_application_count",
+            "stopcheck": "stopcheck_application_count",
+            "not doable": "not_doable_application_count",
+            "candidate denied": "candidate_denied_application_count"
+        };
+
+        if (!label) return null;
+
+        let normalized = label.toLowerCase().replace(/_/g, ' ').trim();
+        if (mapping[normalized]) {
+            return mapping[normalized];
+        }
+
+        const reversed = Object.entries(mapping).find(([key, value]) => value === label);
+        if (reversed) {
+            return reversed[0];
+        }
+
+        return null;
+    };
 
 
 
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const optionsPerPage = [10, 50, 100, 200,500,1000];
+    const optionsPerPage = [10, 50, 100, 200, 500, 1000];
     const totalPages = Math.ceil(data.length / rowsPerPage);
     const colorNames = ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink'];
     const getColorStyle = (status) => {
@@ -102,6 +143,29 @@ const AdminChekin = () => {
     const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem('_token');
 
+    function getStatusByServiceId(annexures, serviceId) {
+        if (!Array.isArray(annexures)) {
+            return 'NIL';
+        }
+
+        // Match with service_id instead of serviceId
+        const annexure = annexures.find(item => String(item.service_id) === String(serviceId));
+
+        if (!annexure) {
+            return 'NIL';
+        }
+
+        console.log('✅ Match found:', annexure);
+
+        // Prefer annexureData.status if it exists
+        if (annexure.annexureData && 'status' in annexure.annexureData) {
+            console.log('📤 Returning annexureData.status:', annexure.annexureData.status);
+            return annexure.annexureData.status || 'INITIATED';
+        }
+
+        return 'INITIATED';
+    }
+
     // Fetch data from the main API
     const fetchData = useCallback((filterStatus = null) => {
         // console.log('flsts', filterStatus)
@@ -125,7 +189,7 @@ const AdminChekin = () => {
                 .join('');
         }
 
-        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
+        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/applications-by-branch-valuepitch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
 
         // Initialize URLSearchParams for parameters
         const parameters = new URLSearchParams();
@@ -147,6 +211,51 @@ const AdminChekin = () => {
                     deadline_date: customer.deadline_date ? customer.deadline_date : customer.new_deadline_date
                 }));
                 setData(updatedCustomers || []);
+                const applicationData = result.customers;
+
+                const allHeadings = applicationData.flatMap(customer => {
+                    if (!customer.annexureResults) {
+                        console.log('Missing annexureResults for customer:', customer.id);
+                        return [];
+                    }
+
+                    return customer.annexureResults.flatMap(item => {
+                        if (!item.reportFormJson || !item.reportFormJson.json) {
+                            console.log('Missing or invalid reportFormJson for service_id:', item.service_id);
+                            return [];
+                        }
+
+                        try {
+                            const parsedJson = JSON.parse(item.reportFormJson.json);
+                            return [{
+                                id: item.service_id,
+                                heading: parsedJson.heading || []
+                            }];
+                        } catch (e) {
+                            console.log('Failed to parse JSON for item:', item);
+                            return [];
+                        }
+                    });
+                });
+
+
+                // ✅ Deduplicate the headings
+                const uniqueHeadingsMap = new Map();
+
+                allHeadings.forEach(({ id, heading }) => {
+                    if (!uniqueHeadingsMap.has(id)) {
+                        uniqueHeadingsMap.set(id, heading);
+                    }
+                });
+
+                const uniqueHeadings = Array.from(uniqueHeadingsMap, ([id, heading]) => ({ id, heading }));
+
+
+                console.log('Unique Headings:', uniqueHeadings);
+                setServicesHeadings(uniqueHeadings);
+
+
+
 
                 const newToken = result.token || result._token || token;
                 if (newToken) {
@@ -515,7 +624,7 @@ const AdminChekin = () => {
 
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
-
+            doc.setFillColor(255);
             const leftText = 'ISO QTY MGT - 9001:2015';
             const centerText = `PAGE ${i} OF ${totalPages}`;
             const rightText = '(ISO) IMSS - 27001:2013';
@@ -537,7 +646,7 @@ const AdminChekin = () => {
 
             // Draw top border of footer
 
-            doc.setDrawColor(62, 118, 165);
+            doc.setDrawColor(46, 93, 172);
 
             // #3d75a6
             doc.setLineWidth(0.4);
@@ -564,6 +673,27 @@ const AdminChekin = () => {
 
 
 
+
+    function changeLabel(label, generate_report_type) {
+
+        if (generate_report_type !== 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+            return label;
+        }
+
+        const labelChangeAsPerVendorOrBGV = {
+            "name of the applicant:": "Name of the Organization:",
+            "date of birth:": "Date of Incorporation:",
+            "applicant details": "ORGANISATION DETAILS"
+        };
+
+        if (label && typeof label === "string" && label.trim() !== "") {
+            const lowerLabel = label.trim().toLowerCase();
+            if (labelChangeAsPerVendorOrBGV.hasOwnProperty(lowerLabel)) {
+                return labelChangeAsPerVendorOrBGV[lowerLabel];
+            }
+        }
+        return label;
+    }
 
     const generatePDF = async (index, maindata, returnInBlob = false) => {
         let isFirstLoad = true;
@@ -639,14 +769,15 @@ const AdminChekin = () => {
         let yPosition;
         const centerX = pageWidth / 2;
         const sideMargin = 10;
-        const cyan = [85, 179, 194];
-
+        const cyan = [67, 133, 246];
+        //    const cyan = [67, 133, 246];  /*  Green  */
+        // const cyan = [252, 187, 5];   /*Yellow  */
+        // const cyan = [231, 65, 54];  /*Red  */
+        // const cyan = [67, 133, 246]; /* Blue  */
         const profileSize = 50;
-        const profileY = 45;
-        const nameFontSize = 34;
-        const companyBarHeight = 15;
+        const profileY = 55;
+        const nameFontSize = 16;
 
-        // === 1. LOGO ===
         const screeningLogo = screeningStarLogo;
         const customLogo =
             applicationInfo?.custom_template === "yes" && applicationInfo?.custom_logo?.trim()
@@ -659,9 +790,10 @@ const AdminChekin = () => {
         const mainTitle = applicationInfo?.generate_report_type || "CONFIDENTIAL BACKGROUND SCREENING REPORT";
 
         const titleY = 39;
-        doc.setFillColor(...cyan); // [85, 179, 194]
-        doc.setDrawColor(62, 118, 165);
-        doc.setLineWidth(0.4); // Default thin line
+        doc.setFillColor(...cyan); // [67, 133, 246]
+        doc.setDrawColor(46, 93, 172);
+        // Default thin line
+
 
 
         doc.rect(10, titleY, pageWidth - 20, 15, "FD"); // Now border will show
@@ -669,17 +801,18 @@ const AdminChekin = () => {
 
         doc.setFont("TimesNewRoman", "bold");
         doc.setFontSize(11);
-        doc.setTextColor(0);
+        doc.setTextColor(255);
 
         doc.text(mainTitle, centerX, titleY + 9, { align: "center" });
 
         // === 3. PROFILE PHOTO (rounded)
-        let profilePhoto = applicationInfo.gender === "Female" ? PDFuserGirl : PDFuser;
+        let profilePhoto = applicationInfo.gender === "Female" ? '/no-image.png' : '/no-image.png';
+        let isProfileExist = false;
         if (applicationInfo?.photo) {
             const imgUrl = await fetchImageToBase(applicationInfo.photo.trim());
             profilePhoto = imgUrl?.[0]?.base64 || profilePhoto;
+            isProfileExist = true;
         }
-
         doc.setFillColor(255);
 
 
@@ -687,52 +820,156 @@ const AdminChekin = () => {
         // === 4. NAME (centered below profile)
 
         const nameText = applicationInfo.name || "Name";
-        const nameY = profileY + 45;
+        const nameY = profileY + 55;
         doc.setFontSize(nameFontSize);
-        doc.setTextColor(0);
         doc.setFont("TimesNewRoman", "bold");
-        const lines = doc.splitTextToSize(nameText, 120); // 100 is max width
-        doc.text(lines, centerX + 20, nameY, { align: "center" });
-        // === 5. COMPANY NAME BAR (adaptive split based on name and company)
-        const barY = nameY + 20;
-        const companyFontSize = 15;
-        doc.setFontSize(companyFontSize);
+        doc.setTextColor(0, 0, 0); // text color white
 
-        const totalAvailable = pageWidth - 20;
-        const profileImageWidth = 45;
-        const imageX = 30;
+        // Split text into lines
+        const lines = doc.splitTextToSize(nameText, 100);
+        const lineHeight = nameFontSize * 0.3528; // approximate line height in mm
+        const textHeight = lines.length * lineHeight;
 
-        // === Measure text widths
-        const companyTextWidth = doc.getTextWidth(companyName) + 40; // padding
-        const rightBarMinWidth = Math.max(companyTextWidth, totalAvailable / 2);
-        const leftBarWidth = totalAvailable - rightBarMinWidth;
-        const rightBarWidth = totalAvailable - leftBarWidth;
+        // Optional: add slight shadow for blur effect
+        doc.setDrawColor(0, 0, 0, 0.1); // light shadow
+        doc.setFillColor(255); // blue background   onchange
 
-        // === Draw Left Bar (from x=10)
-        doc.setFillColor(...cyan);
-        doc.rect(10, barY, leftBarWidth, companyBarHeight, "F");
+        // Draw rounded rectangle with slight blur/shadow effect
+        const rectX = centerX + 20 - 60; // adjust for center
+        const rectY = nameY - lineHeight;
+        const rectWidth = 120;
+        const rectHeightt = textHeight + 4;
+        const borderRadius = 3; // small rounded corners
 
-        // === Draw Right Bar (next to left bar)
-        doc.setFillColor(145, 203, 215);
-        doc.rect(10 + leftBarWidth, barY, rightBarWidth, companyBarHeight, "F");
+        doc.roundedRect(rectX, rectY, rectWidth, rectHeightt, borderRadius, borderRadius, 'F');
 
-        // === Draw Profile Image (on top of left bar)
-        const roundedImage = await getRoundedImage(profilePhoto, 100);
-        doc.addImage(roundedImage, "PNG", imageX, profileY + 30, profileImageWidth, profileImageWidth);
+        // Draw text on top
 
-        // === Company Name Text (centered in right bar)
+        const barY = nameY + 10;
+        // === Company Name Rendering (centered in right bar)
+        const companyFontSize = 14;
         doc.setFontSize(companyFontSize);
         doc.setTextColor(255);
         doc.setFont("TimesNewRoman", "bold");
-        doc.text(
-            companyName,
-            10 + leftBarWidth + rightBarWidth / 2,
-            barY + 9,
-            { align: "center" }
-        );
+
+        // Split text to fit inside the right bar width
 
 
+        // Draw text centered
 
+        doc.setFontSize(companyFontSize);
+
+        // ---------------------------
+        // Layout & sizing (constants)
+        // ---------------------------
+        const margin = 10;
+        const totalAvailable = pageWidth - 20; // pageWidth minus left & right page margins
+        const profileImageWidth = 45;
+        const imageX = 35;
+
+        // === decide bar widths
+        const rightBarMinWidth = Math.max(totalAvailable / 2); // your logic; this yields half
+        const leftBarWidth = totalAvailable - rightBarMinWidth;
+        const rightBarWidth = totalAvailable - leftBarWidth;
+
+        // vertical positions
+        const paddingY = 9;      // vertical padding inside bars
+        const barX = margin;     // left-most X for bars
+        // barY is assumed provided above in your code
+
+        // ---------------------------
+        // Company name wrapping + height
+        // ---------------------------
+        doc.setFontSize(companyFontSize);
+        doc.setFont("TimesNewRoman", "bold");
+
+        // Wrap the company name into the right bar width (leave horizontal padding)
+        const horizontalPadding = 10;
+        const wrappedRight = doc.splitTextToSize(companyName, rightBarWidth - horizontalPadding * 2);
+
+        // Convert font size (pt) to approximate mm line height (your previous factor)
+        const companyLineHeight = companyFontSize * 0.3528;
+        const companyTextHeight = wrappedRight.length * companyLineHeight;
+
+        // Height of the combined bar area used for vertical centering
+        const companyBarHeight = companyTextHeight + paddingY * 2 - 4;
+
+        // ---------------------------
+        // Draw bars (left + right) and border
+        // ---------------------------
+        doc.setFillColor(...cyan);
+        doc.rect(barX, barY, leftBarWidth, companyBarHeight, "F");
+
+        doc.setFillColor(161, 194, 250);
+        doc.rect(barX + leftBarWidth, barY, rightBarWidth, companyBarHeight, "F");
+
+        const borderColorr = [67, 133, 246];
+        const borderThickness = 1.5;
+        doc.setLineWidth(borderThickness);
+        doc.setDrawColor(...borderColorr);
+
+        // ---------------------------
+        // Images (status + profile)
+        // ---------------------------
+        const statusImages = {
+            GREEN: "/green.png",
+            RED: "/red.png",
+            YELLOW: "/yellow.png",
+            ORANGE: "/orange.png",
+        };
+
+        const status = (applicationInfo.final_verification_status || "").toUpperCase();
+        const statusImage = statusImages[status];
+        if (statusImage) {
+            // place status image inside right bar near top (adjust coordinates to taste)
+            doc.addImage(statusImage, "PNG", barX + leftBarWidth + 20, profileY + 13, 67, 40);
+        } else {
+            doc.text("No status image available", barX + leftBarWidth + 10, barY + 12);
+        }
+
+        const roundedImage = profilePhoto;
+        try {
+            if (profilePhoto) {
+                doc.addImage(profilePhoto, "PNG", imageX, profileY + 15, 40, 40);
+            }
+        } catch (err) {
+            console.warn("Profile image is missing or corrupted → skipping image.");
+        }
+
+
+        // ---------------------------
+        // Compute center positions
+        // ---------------------------
+        // center X of right bar (absolute page coordinates)
+        const rightBarCenterX = barX + leftBarWidth + (rightBarWidth / 2);
+
+        // center X of left bar (if you need to center text in left bar)
+        const leftBarCenterX = barX + leftBarWidth / 2;
+
+        // Compute vertical center Y for text inside the bar
+        // We want the vertical center of the text block to sit in the center of the bar.
+        const companyTextY = barY + 1 + (companyBarHeight / 2) - (companyTextHeight / 2) + companyLineHeight / 2;
+        // note: for jsPDF, y is baseline for a line — we added half a line to better align
+
+        // ---------------------------
+        // Draw company name centered in the RIGHT bar
+        // ---------------------------
+        doc.setFontSize(companyFontSize);
+        doc.setTextColor(255);
+
+        // Use the wrappedRight content and draw it centered at rightBarCenterX
+        // doc.text can take an array (multiline) and an options object { align: "center" }
+        doc.text(wrappedRight, rightBarCenterX, companyTextY, { align: "center" });
+
+        // ---------------------------
+        // Example: if you also want a centered label inside LEFT bar (optional)
+        // ---------------------------
+        const wrappedLeft = doc.splitTextToSize(lines, leftBarWidth - horizontalPadding * 2);
+        const leftTextHeight = wrappedLeft.length * companyLineHeight;
+        const leftTextY = barY + 1 + (companyBarHeight / 2) - (leftTextHeight / 2) + companyLineHeight / 2;
+        doc.text(wrappedLeft, leftBarCenterX, leftTextY, { align: "center" });
+
+        doc.setLineWidth(0.5);
         doc.autoTable({
             body: headerTableDataOne,
             startY: 54,
@@ -742,7 +979,7 @@ const AdminChekin = () => {
                 cellPadding: 2,
                 textColor: [0, 0, 0],
                 lineWidth: 0.2,
-                lineColor: [62, 118, 165],
+                lineColor: [67, 133, 246],
                 overflow: 'visible',
             },
             columnStyles: {
@@ -760,12 +997,12 @@ const AdminChekin = () => {
             },
             theme: 'grid',
             headStyles: {
-                fillColor: [85, 179, 194],
+                fillColor: [67, 133, 246],
 
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
             },
-            tableLineColor: [62, 118, 165],
+            tableLineColor: [67, 133, 246],
             tableLineWidth: 0.2,
             margin: { left: sideMargin, right: sideMargin, bottom: 20 },
             didParseCell: function (data) {
@@ -783,18 +1020,18 @@ const AdminChekin = () => {
         const previousY = barY + companyBarHeight;
         const startY = previousY + 7;
 
-        if (generate_report_type == 'CONFIDENTIAL BACKGROUND SCREENING REPORT') {
+        if (generate_report_type?.toUpperCase() == 'CONFIDENTIAL BACKGROUND SCREENING REPORT') {
             headerTableData = [
                 ["REFERENCE ID", String(applicationInfo.application_id).toUpperCase(), "DATE OF BIRTH", formatDate(applicationInfo.dob) || "N/A"],
-                ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date) || "N/A"],
+                ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date, true) || "N/A"],
                 ["VERIFICATION INITIATED", formatDate(applicationInfo.initiation_date).toUpperCase() || "N/A", "FINAL REPORT DATE", formatDate(applicationInfo.report_date) || "N/A"],
-                ["VERIFICATION PURPOSE", (applicationInfo.verification_purpose || "EMPLOYMENT").toUpperCase(), "VERIFICATION STATUS", (applicationInfo.final_verification_status || "N/A").toUpperCase()],
+                // ["VERIFICATION PURPOSE", (applicationInfo.verification_purpose || "EMPLOYMENT").toUpperCase(), "VERIFICATION STATUS", (applicationInfo.final_verification_status || "N/A").toUpperCase()],
                 ["REPORT TYPE", (applicationInfo.report_type || "EMPLOYMENT").replace(/_/g, " ").toUpperCase(), "REPORT STATUS", (applicationInfo.report_status || "N/A").toUpperCase()]
             ];
-        } else if (generate_report_type == 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+        } else if (generate_report_type?.toUpperCase() == 'VENDOR CONFIDENTIAL SCREENING REPORT') {
             headerTableData = [
-                ["REFERENCE ID", String(applicationInfo.application_id).toUpperCase(), "INCORPORATED DATE", formatDate(applicationInfo.dob) || "N/A"],
-                ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date) || "N/A"],
+                ["REFERENCE ID", String(applicationInfo.application_id).toUpperCase(), "DATE OF INCORPORATION", formatDate(applicationInfo.dob) || "N/A"],
+                ["EMPLOYEE ID", String(applicationInfo.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(applicationInfo.first_insuff_reopened_date, true) || "N/A"],
                 ["VERIFICATION INITIATED", formatDate(applicationInfo.initiation_date).toUpperCase() || "N/A", "FINAL REPORT DATE", formatDate(applicationInfo.report_date) || "N/A"],
                 // This row has only 2 cells (spans full row)
                 ["VERIFICATION STATUS", (applicationInfo.final_verification_status || "N/A").toUpperCase(), "REPORT STATUS", (applicationInfo.report_status || "N/A").toUpperCase()],
@@ -842,18 +1079,19 @@ const AdminChekin = () => {
                 cellPadding: 2,
                 textColor: [0, 0, 0],
                 lineWidth: 0.2,
-                lineColor: [0, 140, 163],
+                lineColor: [67, 133, 246],
             },
             theme: 'grid',
             headStyles: {
-                fillColor: [62, 118, 165],
+                fillColor: [67, 133, 246],
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
             },
-            tableLineColor: [62, 118, 165],
+            tableLineColor: [67, 133, 246],
             tableLineWidth: 0.2,
             margin: { left: sideMargin, right: sideMargin, bottom: 20 }
         });
+
         // === Calculate finalY after tables ===
         const { finalY } = doc.lastAutoTable || { finalY: 10 };
 
@@ -863,41 +1101,49 @@ const AdminChekin = () => {
         const imageRowY = ysPosition; // Push it down a bit after table
 
         // === Draw background rectangle for image row ===
-        doc.setFillColor(85, 179, 194);
-
-        doc.rect(10, imageRowY, pageWidth - 20, imageRowHeight, 'F');
-
+        doc.setFillColor(67, 133, 246);
         // === Load and place image icons with custom sizes ===
         const images = [
-            { src: aadhaarIcon, width: 16, height: 11 }, // +5 width
+            { src: aadhaarIcon, width: 12, height: 10 }, // +5 width
             { src: emblemIcon, width: 9, height: 11 },
             { src: logo3, width: 12, height: 11 },
-            { src: logo4, width: 11, height: 11 },
+            { src: logo4, width: 12, height: 13 },
             { src: logo5, width: 13, height: 11 },
             { src: logo6, width: 11, height: 11 },
-            { src: logo8, width: 13, height: 12 },
-            { src: logo9, width: 11, height: 11 },
-            // Add more with custom sizes if needed
-        ];
+            { src: logo8, width: 13, height: 14 },
+            { src: logo9, width: 12, height: 13 },
 
-        const gap = 10;       // Spacing between icons
-        const startX = 19;    // Starting x position
+        ];
+        const gap = 12.3; // spacing between circles
+        const startX = 10;
         let currentX = startX;
-        const iconY = imageRowY + (imageRowHeight - 11) / 2; // Vertically center assuming max height = 11
+        const circleRadius = 10; // adjust based on max img size
+        const iconY = imageRowY + imageRowHeight / 2; // vertical center
 
         images.forEach((img) => {
-            doc.addImage(img.src, 'PNG', currentX, iconY, img.width, img.height);
-            currentX += img.width + gap;
-        });
+            const centerX = currentX + circleRadius;
+            const centerY = iconY + 4;
 
-        const afterImageBoxY = imageRowY + imageRowHeight + 5; // Add 10 for some spacing
+            // Draw white filled circle with black border
+            doc.setFillColor(255, 255, 255);   // white fill
+            doc.setDrawColor(67, 133, 246);         // black border
+            doc.circle(centerX, centerY, circleRadius, "FD"); // Fill + Draw
+
+            // Place the image inside (centered in circle)
+            const imgX = centerX - img.width / 2;
+            const imgY = centerY - img.height / 2;
+            doc.addImage(img.src, "PNG", imgX, imgY, img.width, img.height);
+
+            currentX += circleRadius * 1.2 + gap; // move to next circle
+        });
+        const afterImageBoxY = imageRowY + imageRowHeight + 10; // Add 10 for some spacing
 
 
 
         const imageArray = [colored, yellowShield, orangeShield, greenShield];
 
         doc.autoTable({
-            startY: afterImageBoxY,
+            startY: afterImageBoxY + 3,
             head: [
                 [
                     {
@@ -908,8 +1154,8 @@ const AdminChekin = () => {
                             fontSize: 11,
                             font: "TimesNewRomanBold",
                             fontStyle: 'bold',
-                            textColor: [0, 0, 0],
-                            fillColor: [85, 179, 194],
+                            textColor: [255],
+                            fillColor: [67, 133, 246],
                         }
                     }
                 ],
@@ -945,7 +1191,7 @@ const AdminChekin = () => {
                 lineWidth: 0.2,
                 textColor: [0, 0, 0],
                 fontStyle: 'bold',
-                lineColor: [62, 118, 165],
+                lineColor: [67, 133, 246],
             },
             headStyles: {
                 textColor: [0, 0, 0],
@@ -957,20 +1203,20 @@ const AdminChekin = () => {
         });
 
         addFooter(doc);
-
+        console.log('servicesData', servicesData);
         doc.addPage();
         let newYPosition = 5;
         const SummaryTitle = "SUMMARY OF THE VERIFICATION CONDUCTED";
-        const backgroundColor = '#55B3C2';
+        const backgroundColor = (67, 133, 246);
         const borderColor = '#3d75a6';
         const xsPosition = 10;
-
+        doc.setTextColor(255);
         const fullWidth = pageWidth - 20;
         const rectHeight = 13;
 
         // Set background color and border for the rectangle
-        doc.setFillColor(85, 179, 194);
-        doc.setDrawColor(62, 118, 165);
+        doc.setFillColor(67, 133, 246);
+        doc.setDrawColor(46, 93, 172);
         doc.setLineWidth(0.4);
         doc.rect(xsPosition, newYPosition + 10, fullWidth, rectHeight, 'FD');
 
@@ -991,7 +1237,24 @@ const AdminChekin = () => {
         const marginTop = 8;
         const nextContentYPosition = newYPosition + rectHeight + marginTop;
         doc.setFont('TimesNewRoman');
+        const getHeadingFromJson = (jsonString) => {
+            if (!jsonString) return null;
 
+            try {
+                // ✅ Clean string (important)
+                const cleaned = jsonString
+                    .replace(/\n/g, '')       // remove new lines
+                    .replace(/\r/g, '')
+                    .trim();
+
+                const parsed = JSON.parse(cleaned);
+
+                return parsed?.heading || null;
+            } catch (err) {
+                console.log("❌ JSON Parse Error:", err, jsonString);
+                return null;
+            }
+        };
         doc.autoTable({
             head: [
                 [
@@ -1042,7 +1305,7 @@ const AdminChekin = () => {
                 ]
             ],
             body: servicesData
-                .filter(service => service?.annexureData?.status) // Filter out rows with no status
+                // .filter(service => service?.annexureData?.status) // Filter out rows with no status
                 .map(service => {
                     const colorMapping = {
                         Yellow: 'yellow',
@@ -1052,9 +1315,141 @@ const AdminChekin = () => {
                         Orange: 'orange',
                         Pink: 'pink',
                     };
+                    const annexure = Array.isArray(service?.annexureData)
+                        ? service.annexureData[0]
+                        : service?.annexureData;
 
-                    const rawStatus = service?.annexureData?.status || "Not Verified";
+                    const getPdfColor = (color) => {
+                        const map = {
+                            red: [255, 0, 0],
+                            green: [0, 128, 0],
+                            yellow: [255, 193, 7],
+                            orange: [255, 165, 0],
+                            blue: [0, 0, 255],
+                            pink: [255, 105, 180],
+                            gray: [128, 128, 128],
+                            black: [0, 0, 0],
+                        };
 
+                        return map[color] || [0, 0, 0];
+                    };
+                    const getSurepassStatus = (service) => {
+                        let services = service?.screeningstar_response;
+
+                        console.log("🚀 services:", services);
+
+                        if (!services) {
+                            return { label: "PENDING", color: "black" };
+                        }
+
+                        // normalize to array
+                        if (!Array.isArray(services)) {
+                            services = [services];
+                        }
+
+                        let hasValidationError = false;
+                        let hasInvalid = false;
+                        let hasError = false;
+                        let hasSuccess = false;
+                        let hasPrefilled = false;
+
+                        services.forEach((item) => {
+                            // ✅ Track prefilled
+                            if (item.is_prefilled) {
+                                hasPrefilled = true;
+                            } else {
+                                return; // skip but don't break whole logic
+                            }
+
+                            const res = item.response_json;
+                            if (!res) return;
+
+                            // ✅ SUCCESS
+                            if (res.success === true && res.status_code === 200) {
+                                hasSuccess = true;
+                            }
+
+                            // ❌ VALIDATION ERROR
+                            if (
+                                res.message === "Input payload validation failed" ||
+                                res.errors
+                            ) {
+                                hasValidationError = true;
+                            }
+
+                            // ❌ INVALID
+                            if (res.message?.toLowerCase().includes("invalid")) {
+                                hasInvalid = true;
+                            }
+
+                            // ❌ GENERAL ERROR
+                            if (
+                                res.message?.toLowerCase().includes("verification failed") ||
+                                res.status_code >= 500 ||
+                                (res.success === false && res.status_code === 422 && !res.message)
+                            ) {
+                                hasError = true;
+                            }
+                        });
+
+                        // 🎯 PRIORITY LOGIC (IMPORTANT)
+
+                        // ❌ If no prefilled → managed by API
+                        if (!hasPrefilled) {
+                            return { label: "MANAGED BY SUREPASS API", color: "gray" };
+                        }
+
+                        // ❌ Fail cases (highest priority)
+                        if (hasInvalid || hasError || hasValidationError) {
+                            return { label: "FAILED", color: "red" };
+                        }
+
+                        // ✅ Success
+                        if (hasSuccess) {
+                            return { label: "VERIFIED", color: "green" };
+                        }
+
+                        // 🟡 Default fallback
+                        return { label: "MANAGED BY SUREPASS API", color: "black" };
+                    };
+
+                    const serviceTypeRaw =
+                        service?.service_type ||
+                        (service?.valuePitchStatus ? "valuepitch" : "");
+                    const serviceTypes = serviceTypeRaw
+                        .split(',')
+                        .map(s => s.trim().toLowerCase());
+                    let rawStatus = "Not Verified";
+                    console.log('myservicetyoe is = serviceTypes', serviceTypes)
+                    console.log('myservicetyoe of service', service)
+
+                    // const serviceType = service?.service_type || "";
+                    // const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase())
+                    // ================= VALUEPITCH =================
+                    if (serviceTypes.includes("valuepitch")) {
+
+                        const vpStatus = service?.valuePitchStatus;
+                        const vpReport = service?.valuePitchReport;
+
+                        if (
+                            vpStatus?.statusCode === 201 &&
+                            vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                            vpReport?.report
+                        ) {
+                            rawStatus = vpReport.report; // ✅ GREEN / RED
+                        } else {
+                            rawStatus = "Managed By ValuePitch API";
+                        }
+                    }
+                    if (serviceTypes.includes("surepass")) {
+                        const sp = getSurepassStatus(service);
+                        rawStatus = sp.label;  // ✅ don't return early
+                    }
+                    // ================= DEFAULT =================
+                    else if (annexure?.status) {
+                        rawStatus = annexure.status;
+                    }
+                    console.log("Raw status for service:", service);
                     // Convert raw status to readable text
                     let statusContent = rawStatus
                         .replace(/_/g, ' ') // Replace underscores with spaces
@@ -1079,52 +1474,97 @@ const AdminChekin = () => {
                         }
                     }
 
+                    console.log('displayTextsfssdss', service?.annexureData);
                     return [
                         {
-                            content: service?.reportFormJson?.json
-                                ? JSON.parse(service.reportFormJson.json)?.heading
-                                : null,
-                            styles: {
-                                halign: 'left',
-                            },
-                        },
-                        {
-                            content:
-                                service?.annexureData &&
-                                    Object.keys(service.annexureData).find(
-                                        key =>
-                                            key.endsWith('info_source') ||
-                                            key.endsWith('information_source') ||
-                                            key.startsWith('info_source') ||
-                                            key.startsWith('information_source')
-                                    )
-                                    ? service.annexureData[
-                                    Object.keys(service.annexureData).find(
-                                        key =>
-                                            key.endsWith('info_source') ||
-                                            key.endsWith('information_source') ||
-                                            key.startsWith('info_source') ||
-                                            key.startsWith('information_source')
-                                    )
-                                    ]
-                                    : null,
+                            content: getHeadingFromJson(service?.reportFormJson?.json) || "N/A",
                             styles: {
                                 halign: 'left',
                             },
                         },
                         {
                             content: (() => {
-                                const annexure = service?.annexureData || {};
+                                const serviceTypeRaw =
+                                    service?.service_type ||
+                                    (service?.valuePitchStatus ? "valuepitch" : "");
+                                const serviceTypes = serviceTypeRaw
+                                    .split(',')
+                                    .map(s => s.trim().toLowerCase());
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+
+                                    const vpReport = service?.valuePitchReport;
+
+                                    if (vpReport?.job_name) {
+                                        return vpReport.job_name
+                                            .split(":")[0]                // remove time
+                                            .replace(/_/g, ' ')          // underscores → spaces
+                                            .replace(/\b\w/g, c => c.toUpperCase());
+                                    }
+                                    return "Managed By ValuePitch API";
+                                }
+
+
+                                // ================= DEFAULT =================
+                                const annexure = Array.isArray(service?.annexureData)
+                                    ? service.annexureData[0]
+                                    : service?.annexureData;
+
+                                if (annexure) {
+                                    const key = Object.keys(annexure).find(
+                                        key =>
+                                            key.endsWith('info_source') ||
+                                            key.endsWith('information_source') ||
+                                            key.startsWith('info_source') ||
+                                            key.startsWith('information_source')
+                                    );
+                                    return key ? annexure[key] : "N/A";
+                                }
+
+                                return "N/A";
+                            })(),
+                        },
+                        {
+                            content: (() => {
+                                const serviceTypeRaw =
+                                    service?.service_type ||
+                                    (service?.valuePitchStatus ? "valuepitch" : "");
+                                const serviceTypes = serviceTypeRaw
+                                    .split(',')
+                                    .map(s => s.trim().toLowerCase());
+
+                                const formatDate = (dateStr) => {
+                                    const date = new Date(dateStr);
+                                    if (isNaN(date)) return "N/A";
+                                    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+                                };
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+                                    const vpReport = service?.valuePitchReport;
+
+                                    if (vpReport?.dateOfVerification) {
+                                        return formatDate(vpReport.dateOfVerification);
+                                    }
+
+                                    return "N/A";
+                                }
+
+                                // ================= DEFAULT =================
+                                const annexure = Array.isArray(service?.annexureData)
+                                    ? service.annexureData[0]
+                                    : service?.annexureData || {};
+
                                 const matchKey = Object.keys(annexure).find(key =>
                                     key.includes('date_of_verification')
                                 );
+
                                 if (matchKey && annexure[matchKey]) {
-                                    return new Date(annexure[matchKey])
-                                        .toLocaleDateString('en-GB')
-                                        .replace(/\//g, '-');
-                                } else {
-                                    return 'N/A';
+                                    return formatDate(annexure[matchKey]);
                                 }
+
+                                return "N/A";
                             })(),
                             styles: {
                                 fontWeight: 'bold',
@@ -1132,11 +1572,80 @@ const AdminChekin = () => {
                             },
                         },
                         {
-                            content: formatStatus(displayText).toUpperCase(),
+                            content: (() => {
+                                const serviceType = service?.service_type || "";
+                                const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
+
+                                // ================= VALUEPITCH =================
+                                if (serviceTypes.includes("valuepitch")) {
+                                    const vpStatus = service?.valuePitchStatus;
+                                    const vpReport = service?.valuePitchReport;
+
+                                    // ✅ Report Ready
+                                    if (
+                                        vpStatus?.statusCode === 201 &&
+                                        vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                        vpReport?.report
+                                    ) {
+                                        return vpReport.report.toUpperCase(); // GREEN / RED etc.
+                                    }
+
+                                    // ❌ Not Ready
+                                    return "MANAGED BY VALUEPITCH API";
+                                }
+
+                                // ================= SUREPASS =================
+                                if (serviceTypes.includes("surepass")) {
+                                    const sp = getSurepassStatus(service);
+                                    return sp.label;
+                                }
+
+                                // ================= DEFAULT =================
+                                return formatStatus(displayText).toUpperCase();
+                            })(),
                             styles: {
                                 fontStyle: 'bold',
                                 font: 'TimesNewRomanBold',
-                                textColor: textColorr,
+                                textColor: (() => {
+                                    const serviceType = service?.service_type || "";
+                                    const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
+
+                                    // ================= VALUEPITCH =================
+                                    if (serviceTypes.includes("valuepitch")) {
+                                        const vpStatus = service?.valuePitchStatus;
+                                        const vpReport = service?.valuePitchReport;
+
+                                        if (
+                                            vpStatus?.statusCode === 201 &&
+                                            vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                            vpReport?.report
+                                        ) {
+                                            const color = vpReport.report.toLowerCase();
+
+                                            const colorMapping = {
+                                                green: 'green',
+                                                red: 'red',
+                                                yellow: 'yellow',
+                                                orange: 'orange',
+                                                pink: 'pink',
+                                                blue: 'blue',
+                                            };
+
+                                            return colorMapping[color] || 'black';
+                                        }
+
+                                        return 'black';
+                                    }
+
+                                    // ================= SUREPASS =================
+                                    if (serviceTypes.includes("surepass")) {
+                                        const sp = getSurepassStatus(service);
+                                        return getPdfColor(sp.color); // ✅ RGB color
+                                    }
+
+                                    // ================= DEFAULT =================
+                                    return textColorr;
+                                })(),
                             },
                         },
                     ];
@@ -1151,7 +1660,7 @@ const AdminChekin = () => {
                 halign: 'center',
                 valign: 'middle',
                 lineWidth: 0.2,
-                lineColor: [62, 118, 165],
+                lineColor: [67, 133, 246],
                 textColor: [0, 0, 0],
             },
             theme: 'grid',
@@ -1163,7 +1672,7 @@ const AdminChekin = () => {
                 halign: 'center',
                 valign: 'middle',
             },
-            tableLineColor: [62, 118, 165],
+            tableLineColor: [67, 133, 246],
             tableLineWidth: 0.2,
             font: "TimesNewRoman",
             textColor: [0, 0, 0],
@@ -1229,74 +1738,208 @@ const AdminChekin = () => {
                         });
                     });
 
-                    const tableData = serviceData
-                        .map((data, index) => {
+                    const serviceTypeRaw =
+                        service?.service_type ||
+                        (service?.valuePitchStatus ? "valuepitch" : "");
+                    const serviceTypes = serviceTypeRaw
+                        .split(',')
+                        .map(s => s.trim().toLowerCase());
 
-                            if (!data || !data.values) {
-                                console.log("Skipped: data or data.values is missing");
-                                return null;
-                            }
+                    let tableData = [];
+                    let vpReport = null;
+                    if (serviceTypes.includes("valuepitch")) {
+                        const vpStatus = service?.valuePitchStatus;
 
-                            const name = data.values.name;
-                            // console.log("Extracted name:", name);
+                        // ✅ Report Ready
+                        if (
+                            vpStatus?.statusCode === 201 &&
+                            vpStatus?.statusMsg?.toLowerCase().includes("ready")
+                        ) {
+                            vpReport = service?.valuePitchReport || {};
+                            console.log('vpReport', vpReport)
+                            tableData = [
+                                ["Name", vpReport?.name || "N/A"],
+                                ["Report", vpReport?.report || "N/A"],
+                                ["Address", vpReport?.addresses?.[0]?.address || "N/A"],
+                                ["Date Of Verification",
+                                    vpReport?.dateOfVerification
+                                        ? new Date(vpReport.dateOfVerification)
+                                            .toLocaleDateString('en-GB')
+                                            .replace(/\//g, '-')
+                                        : "N/A"
+                                ],
+                                ["Report URL", ""],
+                            ];
+                        }
 
-                            if (!name || name.startsWith("annexure")) {
-                                console.log("Skipped: name is invalid or starts with 'annexure'");
-                                return null;
-                            }
+                        // ❌ Report Not Ready
+                        else if (vpStatus?.statusMsg) {
+                            tableData = [
+                                [vpStatus.statusMsg]
+                            ];
+                        }
+                    }
 
-                            const isVerifiedExist = data.values.isVerifiedExist;
-                            const rawValue = data.values[name];
-                            const verified = data.values[`verified_${name}`];
+                    // ================= SUREPASS =================
+                    // ================= SUREPASS =================
+                    else if (serviceTypes.includes("surepass")) {
+                        const sp = service?.screeningstar_response;
 
-                            // fallback: if rawValue is undefined but verified is present, use verified as value
+                        if (!sp || !sp.is_prefilled) {
+                            tableData = [
+                                ["Status", "Managed by Surepass API"]
+                            ];
+                        } else {
+                            const res = sp.response_json || {};
+                            const req = sp.request_json || {};
 
-                            const finalValue = rawValue !== undefined ? rawValue : verified;
-
-                            if (name == 'additional_fee_police_verification_pa') {
-                                console.log('data index', index, data);
-                                console.log(`--- Processing item ${index} ---`);
-                                console.log("Raw data:", data);
-
-                                console.log("data.values:", data.values);
-                                console.log("Raw Value:", rawValue);
-                                console.log("Verified:", verified);
-                                console.log("Final Value:", finalValue);
-                            }
-
-                            const formatDate = (dateStr) => {
-                                const date = new Date(dateStr);
-                                if (isNaN(date)) {
-                                    console.log("Invalid date string:", dateStr);
-                                    return dateStr;
-                                }
-                                const day = String(date.getDate()).padStart(2, '0');
-                                const month = String(date.getMonth() + 1).padStart(2, '0');
-                                const year = date.getFullYear();
-                                const formatted = `${day}-${month}-${year}`;
-                                console.log("Formatted date:", formatted);
-                                return formatted;
+                            // 🔥 STATUS
+                            const getStatus = () => {
+                                if (res?.success === true || res?.status_code === 200) return "SUCCESS";
+                                if (res?.status_code >= 500) return "SERVER ERROR";
+                                if (res?.errors || res?.success === false) return "FAILED";
+                                return "PENDING";
                             };
 
-                            const formattedValue =
-                                typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                                    ? formatDate(finalValue)
-                                    : finalValue;
+                            const formatKey = (key) =>
+                                key?.replace(/_/g, " ")
+                                    ?.replace(/\b\w/g, c => c.toUpperCase());
 
-                            const formattedVerified =
-                                typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
-                                    ? formatDate(verified)
-                                    : verified;
+                            const cleanValue = (value) => {
+                                if (value === null || value === undefined) return "N/A";
+                                if (typeof value === "boolean") return value ? "Yes" : "No";
+                                return value.toString();
+                            };
 
-                            const result = formattedVerified
-                                ? [data.label, formattedValue, formattedVerified]
-                                : [data.label, formattedValue];
+                            const cleanText = (text) => {
+                                return String(text)
+                                    .replace(/[^\x00-\x7F]/g, "")
+                                    .replace(/\s+/g, " ")
+                                    .trim();
+                            };
 
-                            console.log("Mapped result:", result);
+                            // 🔥 RECURSIVE FUNCTION
+                            const buildRows = (obj) => {
+                                let rows = [];
 
-                            return result;
-                        })
-                        .filter((item) => item !== null);
+                                Object.entries(obj).forEach(([key, value]) => {
+                                    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+                                        // ✅ FIX: section header → only ONE column
+                                        rows.push([formatKey(key)]);
+                                        rows = rows.concat(buildRows(value));
+                                    }
+                                    else if (Array.isArray(value)) {
+                                        value.forEach((item, idx) => {
+                                            if (typeof item === "object") {
+                                                rows = rows.concat(buildRows(item));
+                                            } else {
+                                                rows.push([`${formatKey(key)} ${idx + 1}`, cleanValue(item)]);
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        rows.push([cleanText(formatKey(key)), cleanValue(value)]);
+                                    }
+                                });
+
+                                return rows;
+                            };
+
+                            // ================= BUILD TABLE =================
+                            tableData = [
+                                ["Status", getStatus()],
+                            ];
+
+                            if (res?.message) {
+                                tableData.push(["Message", res.message]);
+                            }
+
+                            if (res?.message_code) {
+                                tableData.push(["Code", formatKey(res.message_code)]);
+                            }
+
+                            // 🔥 REQUEST DATA
+                            tableData.push(["Request Data"]); // ✅ FIXED
+                            tableData = tableData.concat(buildRows(req));
+
+                            // 🔥 RESPONSE DATA
+                            if (res && Object.keys(res).length) {
+                                tableData.push(["Response Data"]); // ✅ FIXED
+                                tableData = tableData.concat(buildRows(res));
+                            }
+
+                            // ❌ ERRORS
+                            if (res?.errors) {
+                                tableData.push(["Errors"]); // ✅ FIXED
+                                tableData = tableData.concat(buildRows(res.errors));
+                            }
+                        }
+                    }
+
+                    // ================= DEFAULT =================
+                    else {
+                        tableData = serviceData
+                            .map((data, index) => {
+
+                                if (!data || !data.values) {
+                                    console.log("Skipped: data or data.values is missing");
+                                    return null;
+                                }
+
+                                const name = data.values.name;
+                                // console.log("Extracted name:", name);
+
+                                if (!name || name.startsWith("annexure")) {
+                                    console.log("Skipped: name is invalid or starts with 'annexure'");
+                                    return null;
+                                }
+
+                                const isVerifiedExist = data.values.isVerifiedExist;
+                                const rawValue = data.values[name];
+                                const verified = data.values[`verified_${name}`];
+
+                                // fallback: if rawValue is undefined but verified is present, use verified as value
+
+                                const finalValue = rawValue !== undefined ? rawValue : verified;
+
+                                if (name == 'additional_fee_police_verification_pa') {
+
+                                }
+
+                                const formatDate = (dateStr) => {
+                                    const date = new Date(dateStr);
+                                    if (isNaN(date)) {
+                                        console.log("Invalid date string:", dateStr);
+                                        return dateStr;
+                                    }
+                                    const day = String(date.getDate()).padStart(2, '0');
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                    const year = date.getFullYear();
+                                    const formatted = `${day}-${month}-${year}`;
+                                    console.log("Formatted date:", formatted);
+                                    return formatted;
+                                };
+
+                                const formattedValue =
+                                    typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
+                                        ? formatDate(finalValue)
+                                        : finalValue;
+
+                                const formattedVerified =
+                                    typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
+                                        ? formatDate(verified)
+                                        : verified;
+
+                                const result = formattedVerified
+                                    ? [data.label, formattedValue, formattedVerified]
+                                    : [data.label, formattedValue];
+
+                                console.log("Mapped result:", result);
+
+                                return result;
+                            })
+                            .filter((item) => item !== null);
+                    }
 
 
                     if (tableData.length > 0) {
@@ -1308,15 +1951,14 @@ const AdminChekin = () => {
                         const rectHeight = 8;
 
                         doc.setLineWidth(0.2); // Set border thickness to 0.2
-                        doc.setFillColor(85, 179, 194);
-
-                        doc.setDrawColor(62, 118, 165);
+                        doc.setFillColor(67, 133, 246);
+                        doc.setTextColor(255);
+                        doc.setDrawColor(46, 93, 172);
 
                         doc.rect(xsPosition, yPosition, pageWidth - 20, rectHeight, "FD");
 
                         doc.setFontSize(10);
-                        doc.setFont('TimesNewRomanBold');
-                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('TimesNewRomanBold')
 
                         const textHeight = doc.getTextDimensions(headingText).h + 1;
                         const verticalCenter = yPosition + rectHeight / 2 + textHeight / 4;
@@ -1338,7 +1980,7 @@ const AdminChekin = () => {
                         };
 
                         const dynamicHead = Myheaders.map(header => ({
-                            content: header,
+                            content: changeLabel(header, generate_report_type),
                             styles: { halign: "left", fontStyle: "bold" }
                         }));
                         const isTwoColumnBody = dynamicHead.length < 3;
@@ -1354,10 +1996,21 @@ const AdminChekin = () => {
 
                                     const isColourCodeRow = row[0] === "Colour Code:";
 
+                                    // ✅ AFTER
                                     if (isTwoColumnBody) {
-                                        // Use only 2 columns in body
+                                        // Single column row (like "Report is Not Ready")
+                                        if (row.length === 1) {
+                                            return [
+                                                {
+                                                    content: changeLabel(row[0], generate_report_type),
+                                                    colSpan: 2,
+                                                    styles: { halign: "center", fontStyle: "bold" }
+                                                }
+                                            ];
+                                        }
+
                                         return [
-                                            { content: row[0], styles: { halign: "left", fontStyle: "bold" } },
+                                            { content: changeLabel(row[0], generate_report_type), styles: { halign: "left", fontStyle: "bold" } },
                                             {
                                                 content: isColourCodeRow ? formatContent(row[1]).toUpperCase() : formatContent(row[1]),
                                                 styles: isColourCodeRow ? { ...getStyle(row[1], isColourCodeRow) } : {}
@@ -1365,9 +2018,18 @@ const AdminChekin = () => {
                                         ];
                                     } else {
                                         // Normal 3-column body
+                                        if (row.length === 1) {
+                                            return [
+                                                {
+                                                    content: changeLabel(row[0], generate_report_type),
+                                                    colSpan: 3,
+                                                    styles: { halign: "center", fontStyle: "bold" }
+                                                }
+                                            ];
+                                        }
                                         return row.length === 2
                                             ? [
-                                                { content: row[0], styles: { halign: "left", fontStyle: "bold" } },
+                                                { content: changeLabel(row[0], generate_report_type), styles: { halign: "left", fontStyle: "bold" } },
                                                 {
                                                     content: isColourCodeRow ? formatContent(row[1]).toUpperCase() : formatContent(row[1]),
                                                     colSpan: 2,
@@ -1375,7 +2037,7 @@ const AdminChekin = () => {
                                                 }
                                             ]
                                             : [
-                                                { content: row[0], styles: { halign: "left", fontStyle: "bold" } },
+                                                { content: changeLabel(row[0], generate_report_type), styles: { halign: "left", fontStyle: "bold" } },
                                                 {
                                                     content: isColourCodeRow ? formatContent(row[1]).toUpperCase() : formatContent(row[1]),
                                                     styles: isColourCodeRow ? { ...getStyle(row[1], isColourCodeRow) } : {}
@@ -1394,7 +2056,7 @@ const AdminChekin = () => {
                                 fontSize: 10,
                                 cellPadding: 2,
                                 lineWidth: 0.2,
-                                lineColor: [62, 118, 165]
+                                lineColor: [67, 133, 246]
                             },
                             columnStyles: isTwoColumnBody
                                 ? {
@@ -1413,6 +2075,36 @@ const AdminChekin = () => {
                                 textColor: [0, 0, 0],
                                 fontSize: 10,
                                 halign: "left"
+                            },
+                            didDrawCell: (data) => {
+                                if (
+                                    data.section === 'body' &&
+                                    data.column.index === 1 &&
+                                    data.row.raw?.[0]?.content === 'Report URL'  // ✅ label se identify karo
+                                ) {
+                                    const { x, y, width, height } = data.cell;
+                                    const linkText = "Click here to view";
+
+                                    doc.setFontSize(10);
+                                    doc.setFont("times");
+                                    doc.setTextColor(0, 0, 255);
+
+                                    const textX = x + 2;
+                                    const textY = y + height / 2 + 1.5;
+
+                                    doc.textWithLink(linkText, textX, textY, {
+                                        url: vpReport?.reportUrl
+                                    });
+
+                                    // Underline
+                                    const textWidth = doc.getTextWidth(linkText);
+                                    doc.setDrawColor(0, 0, 255);
+                                    doc.setLineWidth(0.3);
+                                    doc.line(textX, textY + 0.8, textX + textWidth, textY + 0.8);
+
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.setDrawColor(46, 93, 172);
+                                }
                             },
                             bodyStyles: { textColor: [0, 0, 0] },
                             margin: { horizontal: 10 }
@@ -1463,8 +2155,7 @@ const AdminChekin = () => {
 
 
 
-
-
+                        // ✅ Report URL - clickable link add karo
 
                         yPosition = doc.lastAutoTable.finalY + 10;
 
@@ -1534,7 +2225,7 @@ const AdminChekin = () => {
 
                                                     // Draw image box
                                                     const padding = 5;
-                                                    doc.setDrawColor(62, 118, 165);
+                                                    doc.setDrawColor(46, 93, 172);
                                                     doc.setLineWidth(0.2);
                                                     doc.rect(10, yPosition, maxBoxWidth, maxBoxHeight);
 
@@ -1609,7 +2300,7 @@ const AdminChekin = () => {
                                                 doc.text(text, pageWidth / 2, yPosition, { align: "center" }); // Centered text
                                                 yPosition += 5;
 
-                                                doc.setDrawColor(62, 118, 165);
+                                                doc.setDrawColor(46, 93, 172);
                                                 doc.setLineWidth(0.2);
                                                 doc.rect(10, yPosition, maxBoxWidth, maxBoxHeight);
 
@@ -1696,11 +2387,11 @@ const AdminChekin = () => {
         const disclaimerButtonTextWidth = doc.getTextWidth('DISCLAIMER :');
         const buttonTextHeight = doc.getFontSize();
         const disclaimerButtonXPosition = (doc.internal.pageSize.width - disclaimerButtonWidth) / 2;
-        doc.setDrawColor(62, 118, 165); // Border color
-        doc.setFillColor(backgroundColor); // Fill color
+        doc.setDrawColor(46, 93, 172); // Border color
+        doc.setFillColor(67, 133, 246); // Fill color
         doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'F'); // Fill
         doc.rect(disclaimerButtonXPosition, disclaimerY, disclaimerButtonWidth, disclaimerButtonHeight, 'D'); // Border
-        doc.setTextColor(0, 0, 0); // Black text
+        doc.setTextColor(255);// Black text
         doc.setFont('TimesNewRomanBold');
 
         // Center the 'DISCLAIMER' text
@@ -1871,6 +2562,13 @@ const AdminChekin = () => {
         // Update Company Details Y (aligned with the same paragraph block)
         let companyDetailsY = yPosition + disclaimerTextTopMargin - 4;
         let endOfDetailY = companyDetailsY + 10;
+        const sealImage = '/risk-free.png';
+        const imgWidth = 40;
+        const imgHeight = 40;
+        const centerXNew = (pageWidth - imgWidth) / 2;
+
+        // doc.addImage(sealImage, "PNG", centerXNew, endOfDetailY, imgWidth, imgHeight);
+
 
         if (endOfDetailY + disclaimerButtonHeight > doc.internal.pageSize.height - 20) {
             doc.addPage();
@@ -1907,6 +2605,107 @@ const AdminChekin = () => {
         setLoadingGenrate(null);
     }
 
+    const handleExportToJSON = () => {
+        const isQCPending = (item) =>
+            item.overall_status === "completed" && item.is_verify !== "yes";
+
+        const isNotReady = (item) => item.overall_status !== "completed";
+
+        const nonCompleted = filteredData.filter(
+            (item) => isNotReady(item) || isQCPending(item)
+        );
+
+        if (nonCompleted.length === 0) {
+            Swal.fire("No Records Found", "No non-completed or QC pending records are available for export.", "info");
+            return;
+        }
+
+        const exportData = nonCompleted.map((item, index) => {
+            const parseDocuments = (raw) => {
+                if (!raw || typeof raw !== "string" || raw.trim() === "") return [];
+                return raw.split(",").map((url) => url.trim()).filter(Boolean);
+            };
+
+            const initiationDate = item.initiation_date ? new Date(item.initiation_date) : null;
+            const reportDate = item.report_date ? new Date(item.report_date) : null;
+            const deadlineDate = item.deadline_date ? new Date(item.deadline_date) : null;
+
+            const completedIn =
+                initiationDate && reportDate
+                    ? Math.floor((reportDate - initiationDate) / (1000 * 60 * 60 * 24))
+                    : null;
+
+            const daysDelayed =
+                reportDate && deadlineDate && reportDate > deadlineDate
+                    ? Math.floor((reportDate - deadlineDate) / (1000 * 60 * 60 * 24))
+                    : 0;
+
+            return {
+                sl_no: index + 1,
+                application_id: item.application_id || null,
+                name: item.name || null,
+                employee_id: item.employee_id || null,
+                sub_client: item.sub_client || null,
+                location: item.location || null,
+                check_id: item.check_id || null,
+                ticket_id: item.ticket_id || null,
+                case_id: item.case_id || null,
+                batch_no: item.batch_no || null,
+                overall_status: item.overall_status || null,
+                report_type: item.report_type || null,
+                initiation_date: formatDate(item.initiation_date),
+                interim_date: formatDate(item.interim_date),
+                deadline_date: formatDate(item.deadline_date),
+                report_date: formatDate(item.report_date),
+                completed_in_days: completedIn,
+                days_delayed: daysDelayed,
+                report_generated_by: item.report_generated_by_name || null,
+                qc_done_by: item.qc_done_by_name || null,
+                is_highlight: item.is_highlight === 1,
+                is_verify: item.is_verify || null,
+                first_insufficiency_marks: formatJsonForExcel(item.first_insufficiency_marks),
+                first_insuff_date: formatDate(item.first_insuff_date, true),
+                first_insuff_reopened_date: formatDate(item.first_insuff_reopened_date),
+                second_insufficiency_marks: formatJsonForExcel(item.second_insufficiency_marks),
+                second_insuff_date: formatDate(item.second_insuff_date, true),
+                second_insuff_reopened_date: item.second_insuff_reopened_date || null,
+                third_insufficiency_marks: formatJsonForExcel(item.third_insufficiency_marks),
+                third_insuff_date: formatDate(item.third_insuff_date, true),
+                third_insuff_reopened_date: item.third_insuff_reopened_date || null,
+                delay_reason: formatJsonForExcel(item.delay_reason),
+                attach_documents: parseDocuments(item.attach_documents),
+                report_completed_status: item.report_completed_status || null,
+            };
+        });
+
+        // ✅ Parent wrapper with branch/company meta
+        const exportPayload = {
+            exported_at: new Date().toISOString(),
+            branch_name: branchName,
+            company_name: companyName,
+            tat_days: adminTAT,
+            customer_emails: customerEmails,
+            total_records: exportData.length,
+            records: exportData,
+        };
+
+        const jsonString = JSON.stringify(exportPayload, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `applications-export-${branchName}-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        Swal.fire(
+            "Exported Successfully",
+            `${exportData.length} record(s) exported successfully.`,
+            "success"
+        );
+    };
 
     useEffect(() => {
         fetchData();
@@ -1996,6 +2795,62 @@ const AdminChekin = () => {
         setApiLoading(false)
         setLoadingIndex(null);
     };
+    useEffect(() => {
+        const fetchHeadingsAndStatuses = async () => {
+            if (!Array.isArray(data) || data.length === 0) return;
+
+            const applicationInfo = data[0]; // You can change this logic if needed
+
+            if (!applicationInfo?.main_id || !applicationInfo?.services) return;
+
+            try {
+                const servicesData = await fetchServicesData(applicationInfo.main_id, applicationInfo.services);
+                if (!Array.isArray(servicesData)) return;
+
+                const headings = [];
+
+                servicesData.forEach((service) => {
+                    const rawJson = service?.reportFormJson?.json;
+                    if (!rawJson || rawJson === "null") return;
+
+                    let parsedJson;
+                    try {
+                        parsedJson = JSON.parse(rawJson);
+                    } catch (err) {
+                        console.warn("Invalid JSON found in reportFormJson:", rawJson);
+                        return;
+                    }
+
+                    const heading = parsedJson?.heading?.trim();
+                    if (!heading || heading.toLowerCase() === "null") return;
+
+                    let status = service?.annexureData?.status?.trim();
+
+                    // Handle empty, null or "null" status
+                    if (!status || status.toLowerCase() === "null") {
+                        status = "INITIATED";
+                    } else if (status.length < 4) {
+                        // Format short statuses
+                        status = status.replace(/[^a-zA-Z0-9\s]/g, " ").toUpperCase() || "N/A";
+                    } else {
+                        // Format longer statuses (e.g. "completed" -> "Completed")
+                        status = status
+                            .replace(/[^a-zA-Z0-9\s]/g, " ")
+                            .toLowerCase()
+                            .replace(/\b\w/g, (char) => char.toUpperCase()) || "N/A";
+                    }
+
+                    headings.push({ heading, status });
+                });
+
+                setHeadingsAndStatuses(headings);
+            } catch (err) {
+                console.error("Error fetching headings and statuses:", err);
+            }
+        };
+
+        fetchHeadingsAndStatuses();
+    }, [data]);
 
 
     const handleCheckboxChange = (id, isDownloadable) => {
@@ -2100,7 +2955,7 @@ const AdminChekin = () => {
 
 
     const handleUpload = (applicationId, branchid) => {
-        navigate(`/admin-generate-report?applicationId=${applicationId}&branchid=${branchid}&clientId=${clientId}`);
+        navigate(`/admin-generate-report?applicationId=${applicationId}&branchid=${branchid}&clientId=${clientId}&by=${'valuepitch'}`);
     };
 
     function sanitizeText(text) {
@@ -2118,10 +2973,24 @@ const AdminChekin = () => {
     };
 
     // Function to format the date to "Month Day, Year" format
-    const formatDate = (date) => {
-        if (!date) return "NOT APPLICABLE"; // Check for null, undefined, or empty
+    const formatDate = (date, isInsuff = false) => {
+        if (!date) {
+            if (isInsuff) {
+                return "No Insuff"; // Check for null, undefined, or empty
+            } else {
+                return "N/A";
+            }
+        }
+
         const dateObj = new Date(date);
-        if (isNaN(dateObj.getTime())) return "Nill"; // Check for invalid date
+        if (isNaN(dateObj.getTime())) {
+            if (isInsuff) {
+                return "N/A"; // Check for null, undefined, or empty
+            } else {
+                return "N/A";
+            }
+        }
+
         const day = String(dateObj.getDate()).padStart(2, '0');
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
         const year = dateObj.getFullYear();
@@ -2174,6 +3043,7 @@ const AdminChekin = () => {
             "Name Of APPLICANT",
             "Reference Id",
             "Employee Id",
+            "Interim Date",
             "Check ID",
             "Ticket ID",
             "Case ID",
@@ -2248,6 +3118,7 @@ const AdminChekin = () => {
                 item.name || "NIL",
                 item.application_id || "NIL",
                 item.employee_id || "NIL",
+                formatDate(item.interim_date) || "NIL",
                 item.check_id || "NIL",
                 item.ticket_id || "",
                 item.case_id || "",
@@ -2458,7 +3329,7 @@ const AdminChekin = () => {
     };
 
     const handleGoBack = () => {
-        navigate('/admin-admin-manager');  // Navigate to the /adminjkd path
+        navigate('/admin-valuepitch-manager');  // Navigate to the /adminjkd path
     };
 
 
@@ -2473,7 +3344,7 @@ const AdminChekin = () => {
         return acc;
     }, {});
     const formatedJson = (delayReason) => {
-        if (!delayReason) return ""; // Handle empty, null, or undefined inputs
+        if (!delayReason) return "No Insuff"; // Handle empty, null, or undefined inputs
         return delayReason
             // Remove backslashes
             .replace(/\\+/g, "")
@@ -2503,16 +3374,22 @@ const AdminChekin = () => {
     const modifiedNames = customerEmails.map(name =>
         name[0] + name.slice(2)
     );
+    useEffect(() => {
+        if (tableScrollRef.current) {
+            setScrollWidth(tableScrollRef.current.scrollWidth + "px");
+        }
+    }, [paginatedData, loading]);
+
+
     const removeColorNames = (text) => {
         const colorRegex = new RegExp(`\\b(${colorNames.join('|')})\\b`, 'gi');
         return text.replace(colorRegex, '').trim();
     };
-    console.log('filteredData name', filteredData);
-    console.log('selectedRows    name', selectedRows);
+    console.log('paginatedData    name', paginatedData);
 
     return (
         <div className="bg-[#c1dff2] border border-black">
-            <h2 className="md:text-2xl text-xl font-bold py-3 text-left text-[#4d606b] px-3 border">ADMIN CHECKIN - {
+            <h2 className="md:text-2xl text-xl font-bold py-3 text-left text-[#4d606b] px-3 border">ADMIN  VALUEPITCH  CHECKIN - {
                 branchName === companyName ? branchName : `${branchName} (${companyName})`}</h2>
 
             <div className="space-y-4 py-[30px] md:px-[51px] px-6 bg-white">
@@ -2528,12 +3405,23 @@ const AdminChekin = () => {
 
                 <div className='md:flex justify-between items-baseline mb-6 '>
                     <div className=" text-left">
-                        <div className='flex items-center gap-5'>   <button
-                            className="bg-green-500 hover:scale-105  hover:bg-green-600 text-white px-6 py-2 rounded"
-                            onClick={handleExportToExcel}
-                        >
-                            Export to Excel
-                        </button>
+                        <div className='flex items-center gap-5'>
+                            <div className="flex items-center gap-5">
+                                <button
+                                    className="bg-green-500 hover:scale-105  hover:bg-green-600 text-white px-6 py-2 rounded"
+                                    onClick={handleExportToExcel}
+                                >
+                                    Export to Excel
+                                </button>
+
+                                <button
+                                    className="bg-purple-500 hover:scale-105 hover:bg-purple-600 text-white px-6 py-2 rounded"
+                                    onClick={handleExportToJSON}
+                                >
+                                    Export Non-Completed JSON
+                                </button>
+                            </div>
+
                             {selectedRows.length > 0 &&
                                 filteredData.filter(
                                     (data) =>
@@ -2587,7 +3475,7 @@ const AdminChekin = () => {
                                 >
                                     {selectedValue ? (
                                         <>
-                                            {selectedValue.replace(/count/gi, '').charAt(0).toUpperCase() + selectedValue.replace(/count/gi, '').slice(1)}
+                                            {changeLabelStatus(selectedValue)}
                                         </>
                                     ) : (
                                         "Select Status"
@@ -2614,21 +3502,25 @@ const AdminChekin = () => {
                                                 </div>
 
                                                 {/* Dropdown Options */}
-                                                {filteredDropdownData.map((item) => (
-                                                    <div
-                                                        key={item.status}
-                                                        className={`p-2 hover:bg-gray-100 cursor-pointer ${selectedValue === item.status ? "bg-gray-200" : ""
-                                                            }`}
-                                                        onClick={() => {
-                                                            setSelectedValue(item.status);
-                                                            fetchData(item.status);
-                                                            setCurrentPage(1)
-                                                            setShowDropdown(false);
-                                                        }}
-                                                    >
-                                                        {`${item.status.replace(/\bcount\b/gi, '').trim().charAt(0).toUpperCase() + item.status.replace(/\bcount\b/gi, '').trim().slice(1)} (${item.count})`}
-                                                    </div>
-                                                ))}
+                                                {filteredDropdownData
+                                                    .filter((item) => item.status !== "previous completed count")
+                                                    .map((item) => (
+                                                        <div
+                                                            key={item.status}
+                                                            className={`p-2 hover:bg-gray-100 uppercase cursor-pointer ${selectedValue === item.status ? "bg-gray-200" : ""
+                                                                }`}
+                                                            onClick={() => {
+                                                                setSelectedValue(item.status);
+                                                                fetchData(item.status);
+                                                                setCurrentPage(1);
+                                                                setShowDropdown(false);
+                                                            }}
+                                                        >
+                                                            {changeLabelStatus(item.status)}
+                                                        </div>
+                                                    )) || (
+                                                        <div className="p-2 text-gray-500">No results found</div>
+                                                    )}
                                             </>
                                         ) : (
                                             <div className="p-2 text-gray-500">No results found</div>
@@ -2648,369 +3540,372 @@ const AdminChekin = () => {
 
                     </div>
                 </div>
+                <div className="table-container rounded-lg">
+                    {/* Top Scroll */}
+                    <div className="top-scroll" ref={topScrollRef} onScroll={syncScroll}>
+                        <div className="top-scroll-inner" style={{ width: scrollWidth }} />
+                    </div>
 
-                <div className="rounded-lg overflow-scroll " ref={scrollContainerRef}>
-                    <table className="min-w-full border-collapse border border-black overflow-scroll rounded-lg whitespace-nowrap">
-                        <thead className='rounded-lg'>
-                            <tr className="bg-[#c1dff2] text-[#4d606b]">
-                                <th className="border border-black px-4 py-2">
-                                    <input
-                                        type="checkbox"
-                                        className="w-5 h-5"
-                                        checked={
-                                            selectedRows.length > 0 &&
-                                            filteredData.find((data) => selectedRows.includes(data.id))
-                                        }
-                                        onChange={handleSelectAll}
-                                    />
-
-
-                                </th>
-
-                                <th className="uppercase border border-black px-4 py-2">SL NO</th>
-                                <th className="uppercase border border-black px-4 py-2">TAT Days</th>
-                                <th className="uppercase border border-black px-4 py-2">Location</th>
-                                <th className="uppercase border border-black px-4 py-2">Name Of APPLICANT</th>
-                                <th className="uppercase border border-black px-4 py-2">Sub Client</th>
-                                <th className="uppercase border border-black px-4 py-2">Reference Id</th>
-                                <th className="uppercase border border-black px-4 py-2">Check Id</th>
-                                <th className="uppercase border border-black px-4 py-2">Ticket Id</th>
-
-                                <th className="uppercase border border-black px-4 py-2">Photo</th>
-                                <th className="uppercase border border-black px-4 py-2">Employee Id</th>
-                                <th className="uppercase border border-black px-4 py-2">Initiation Date</th>
-                                <th className="uppercase border border-black px-4 py-2">Deadline Date</th>
-                                <th className="uppercase border border-black px-4 py-2">Report Data</th>
-                                <th className="uppercase border border-black px-4 py-2">Download Status</th>
-                                <th className="uppercase border border-black px-4 py-2">View More</th>
-                                <th className="uppercase border border-black px-4 py-2">Overall Status</th>
-                                <th className="uppercase border border-black px-4 py-2">Report Type</th>
-                                <th className="uppercase border border-black px-4 py-2">Report Date</th>
-                                <th className="uppercase border border-black px-4 py-2">Report Generated By</th>
-                                <th className="uppercase border border-black px-4 py-2">QC Done By</th>
-                                <th className="uppercase border border-black px-4 py-2 " colSpan={1}>Action</th>
-                                <th className="uppercase border border-black px-4 py-2">Completed IN</th>
-                                <th className="uppercase border border-black px-4 py-2">Days Delayed</th>
-                                <th className="uppercase border border-black px-4 py-2 ">HIGHLIGHT</th>
+                    {/* Actual Table Scroll */}
+                    <div className="table-scroll rounded-lg" ref={tableScrollRef} onScroll={syncScroll}>
+                        <table className="min-w-full border-collapse border border-black overflow-scroll rounded-lg whitespace-nowrap">
+                            <thead className='rounded-lg'>
+                                <tr className="bg-[#c1dff2] text-[#4d606b]">
+                                    <th className="border border-black px-4 py-2">
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5"
+                                            checked={
+                                                selectedRows.length > 0 &&
+                                                filteredData.find((data) => selectedRows.includes(data.id))
+                                            }
+                                            onChange={handleSelectAll}
+                                        />
 
 
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
+                                    </th>
 
-                                <tr>
-                                    <td colSpan={17} className="py-4 text-center text-gray-500">
-                                        <Loader className="text-center" />
-                                    </td>
+                                    <th className="uppercase border border-black px-4 py-2">SL NO</th>
+                                    <th className="uppercase border border-black px-4 py-2">TAT Days</th>
+                                    <th className="uppercase border border-black px-4 py-2">Location</th>
+                                    <th className="uppercase border border-black px-4 py-2">Name Of APPLICANT</th>
+                                    <th className="uppercase border border-black px-4 py-2">Sub Client</th>
+                                    <th className="uppercase border border-black px-4 py-2">Reference Id</th>
+                                    <th className="uppercase border border-black px-4 py-2">Check Id</th>
+                                    <th className="uppercase border border-black px-4 py-2">Ticket Id</th>
+
+                                    <th className="uppercase border border-black px-4 py-2">Photo</th>
+                                    <th className="uppercase border border-black px-4 py-2">Employee Id</th>
+                                    <th className="uppercase border border-black px-4 py-2">Interim Date</th>
+
+                                    <th className="uppercase border border-black px-4 py-2">
+                                        <button
+                                            className="bg-orange-500 hover:scale-105  hover:bg-orange-600 text-white px-6 py-2 rounded"
+                                            onClick={() => setViewServices(prev => !prev)}
+
+                                        >
+                                            {viewServices ? "Hide Services" : "View Services"}
+                                        </button><br />
+                                        Initiation Date</th>
+                                    {viewServices && servicesHeadings && servicesHeadings.length > 0 ? (
+                                        servicesHeadings.map((heading, index) => {
+                                            return (
+                                                <th key={index} className="uppercase border border-black px-4 py-2">
+                                                    {heading.heading}
+                                                </th>
+                                            );
+                                        })
+                                    ) : null}
+                                    <th className="uppercase border border-black px-4 py-2">Deadline Date</th>
+                                    <th className="uppercase border border-black px-4 py-2">Report Data</th>
+                                    <th className="uppercase border border-black px-4 py-2">Download Status</th>
+
+                                    <th className="uppercase border border-black px-4 py-2">Overall Status</th>
+                                    <th className="uppercase border border-black px-4 py-2">Report Type</th>
+                                    <th className="uppercase border border-black px-4 py-2">Report Date</th>
+                                    <th className="uppercase border border-black px-4 py-2">Report Generated By</th>
+                                    <th className="uppercase border border-black px-4 py-2">QC Done By</th>
+                                    <th className="uppercase border border-black px-4 py-2 " colSpan={1}>Action</th>
+                                    <th className="uppercase border border-black px-4 py-2">Completed IN</th>
+                                    <th className="uppercase border border-black px-4 py-2">Days Delayed</th>
+                                    <th className="uppercase border border-black px-4 py-2 ">HIGHLIGHT</th>
+
+                                    {/* {headingsAndStatuses.map((item, idx) => {
+                                    const rawHeading = item?.heading;
+
+                                    const isEmpty =
+                                        !rawHeading ||
+                                        rawHeading.trim() === '' ||
+                                        rawHeading.trim().toLowerCase() === 'null';
+
+                                    return (
+                                        <th
+                                            key={`heading-${idx}`}
+                                            className="text-left p-2 border border-black capitalize bg-gray-200"
+                                        >
+                                            {isEmpty ? 'NIL' : sanitizeText(rawHeading)}
+                                        </th>
+                                    );
+                                })} */}
+
+                                    <th className="border border-black uppercase px-4 py-2">First Level Insuff</th>
+                                    <th className="border border-black uppercase px-4 py-2">First Insuff Date</th>
+                                    <th className="border border-black uppercase px-4 py-2">First Insuff Reopen</th>
+                                    <th className="border border-black uppercase px-4 py-2">Second Level Insuff</th>
+                                    <th className="border border-black uppercase px-4 py-2">Second Insuff Date</th>
+                                    <th className="border border-black uppercase px-4 py-2">Third Level Insuff</th>
+                                    <th className="border border-black uppercase px-4 py-2">Third Insuff Date</th>
+                                    <th className="border border-black uppercase px-4 py-2">Reason for Delay</th>
+
+
                                 </tr>
-                            ) : paginatedData.length === 0 ? (
-                                <tr>
-                                    <td colSpan={17} className="py-4 text-center text-gray-500">
-                                        No data available in table
-                                    </td>
-                                </tr>
-                            ) : (
-                                <>
-                                    {paginatedData.map((data, index) => {
-                                        const actualIndex = (currentPage - 1) * rowsPerPage + index;
-                                        const isDownloadable = data.id;
-                                        return (
+                            </thead>
+                            <tbody>
+                                {loading ? (
+
+                                    <tr>
+                                        <td colSpan={17} className="py-4 text-center text-gray-500">
+                                            <Loader className="text-center" />
+                                        </td>
+                                    </tr>
+                                ) : paginatedData.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={17} className="py-4 text-center text-gray-500">
+                                            No data available in table
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <>
+                                        {paginatedData.map((data, index) => {
+                                            const actualIndex = (currentPage - 1) * rowsPerPage + index;
+                                            const isDownloadable = data.id;
+                                            const isExpanded = expandedRow && expandedRow.index === index;
+                                            return (
 
 
-                                            <React.Fragment key={data.id}>
-                                                <tr
-                                                    className={`text-center ${data.is_highlight === 1 ? 'highlight' : ''}`}
-                                                    style={{
-                                                        borderColor: data.is_highlight === 1 ? 'yellow' : 'transparent',
-                                                    }}
-                                                >
-                                                    <td className="border border-black px-4 py-2">
-                                                        <input
-                                                            type="checkbox"
-                                                            className='w-5 h-5'
-                                                            checked={selectedRows.includes(data.id)}
-                                                            onChange={() => handleCheckboxChange(data.id, isDownloadable)}
-                                                            disabled={!isDownloadable}
-                                                        />
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">                        {index + 1 + (currentPage - 1) * rowsPerPage}</td>
-                                                    <td className="border border-black px-4 py-2">{adminTAT || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">{data.location || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        {data.name || companyName || 'NIL'}
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">{data.sub_client || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">{data.application_id || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">{data.check_id || 'NIL'}</td>  <td className="border border-black px-4 py-2">{data.ticket_id || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        <div className='flex justify-center items-center'>
-                                                            <img src={data.photo ? data.photo : `${Default}`}
-                                                                alt={data.name} className="w-10 h-10 rounded-full" />
-                                                        </div>
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">{data.employee_id || 'NIL'}</td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        {data.initiation_date
-                                                            ? new Date(data.initiation_date).toLocaleDateString('en-GB').replace(/\//g, '-')
-                                                            : 'NIL'}
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        {data.deadline_date
-                                                            ? new Date(data.deadline_date).toLocaleDateString('en-GB').replace(/\//g, '-')
-                                                            : 'NIL'}
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        <button
-                                                            className="  border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
-                                                            onClick={() => handleUpload(data.id, data.branch_id)}
-                                                        >
-                                                            Generate Report
-                                                        </button>
-                                                    </td>
+                                                <React.Fragment key={data.id}>
+                                                    <tr
+                                                        className={`text-center  ${isExpanded ? "bg-gray-100" : "" // selected row bg gray
+                                                            }  ${data.is_highlight === 1 ? 'highlight' : ''}`}
+                                                        style={{
+                                                            borderColor: data.is_highlight === 1 ? 'yellow' : 'transparent',
+                                                        }}
+                                                    >
+                                                        <td className="border border-black px-4 py-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className='w-5 h-5'
+                                                                checked={selectedRows.includes(data.id)}
+                                                                onChange={() => handleCheckboxChange(data.id, isDownloadable)}
+                                                                disabled={!isDownloadable}
+                                                            />
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">                        {index + 1 + (currentPage - 1) * rowsPerPage}</td>
+                                                        <td className="border border-black px-4 py-2">{adminTAT || 'NIL'}</td>
+                                                        <td className="border border-black px-4 py-2">{data.location || 'NIL'}</td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            {data.name || companyName || 'NIL'}
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">{data.sub_client || 'NIL'}</td>
+                                                        <td className="border border-black px-4 py-2">{data.application_id || 'NIL'}</td>
+                                                        <td className="border border-black px-4 py-2">{data.check_id || 'NIL'}</td>  <td className="border border-black px-4 py-2">{data.ticket_id || 'NIL'}</td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            <div className='flex justify-center items-center'>
+                                                                <img src={data.photo ? data.photo : `${Default}`}
+                                                                    alt={data.name} className="w-10 h-10 rounded-full" />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">{data.employee_id || 'NIL'}</td>
 
-                                                    <td className="border border-black px-4 py-2">
-                                                        {(() => {
-                                                            let buttonText = "";
-                                                            let buttonDisabled = false;
+                                                        <td className="border border-black px-4 py-2">
+                                                            {data.interim_date
+                                                                ? new Date(data.interim_date).toLocaleDateString('en-GB').replace(/\//g, '-')
+                                                                : 'NIL'}
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            {data.initiation_date
+                                                                ? new Date(data.initiation_date).toLocaleDateString('en-GB').replace(/\//g, '-')
+                                                                : 'NIL'}
+                                                        </td>
+                                                        {viewServices && servicesHeadings && servicesHeadings.length > 0 ? (
+                                                            servicesHeadings.map((heading, index) => {
+                                                                return (
+                                                                    <th key={index} className="uppercase font-normal border border-black px-4 py-2">
+                                                                        {getStatusByServiceId(data.annexureResults, heading.id)}
+                                                                    </th>
+                                                                );
+                                                            })
+                                                        ) : null}
+                                                        <td className="border border-black px-4 py-2">
+                                                            {data.deadline_date
+                                                                ? new Date(data.deadline_date).toLocaleDateString('en-GB').replace(/\//g, '-')
+                                                                : 'NIL'}
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            <button
+                                                                className="  border border-[#073d88] text-[#073d88] px-4 py-2 rounded hover:bg-[#073d88] hover:text-white"
+                                                                onClick={() => handleUpload(data.id, data.branch_id)}
+                                                            >
+                                                                Generate Report
+                                                            </button>
+                                                        </td>
 
-                                                            if (data.overall_status === "completed") {
-                                                                if (data.is_verify === "yes") {
-                                                                    buttonText = "DOWNLOAD";
+                                                        <td className="border border-black px-4 py-2">
+                                                            {(() => {
+                                                                let buttonText = "";
+                                                                let buttonDisabled = false;
+
+                                                                if (data.overall_status === "completed") {
+                                                                    if (data.is_verify === "yes") {
+                                                                        buttonText = "DOWNLOAD";
+                                                                    } else {
+                                                                        buttonText = "QC Pending";
+                                                                    }
+                                                                } else if (data.overall_status === "wip") {
+                                                                    buttonText = "WIP";
+                                                                    buttonDisabled = true;
+
                                                                 } else {
-                                                                    buttonText = "QC Pending";
+                                                                    buttonText = "NOT READY";
+                                                                    buttonDisabled = true;
                                                                 }
-                                                            } else if (data.overall_status === "wip") {
-                                                                buttonText = "WIP";
-                                                            } else {
-                                                                buttonText = "NOT READY";
-                                                                buttonDisabled = true;
+
+                                                                return buttonDisabled ? (
+                                                                    <button
+                                                                        className="text-white px-4 py-2 rounded cursor-not-allowed bg-gray-500"
+                                                                        disabled
+                                                                    >
+                                                                        {buttonText}
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleDownload(actualIndex, data)}
+                                                                        disabled={downloadingIndex === actualIndex}
+                                                                        className={`${buttonText === "DOWNLOAD"
+                                                                            ? ""
+                                                                            : buttonText === "QC Pending"
+                                                                                ? "text-[#00aeee]"
+                                                                                : "bg-green-500 hover:bg-green-300 text-white"
+                                                                            } ${buttonText !== "DOWNLOAD" ? "px-4 py-2" : ""
+                                                                            } hover:scale-105 uppercase border border-white rounded ${downloadingIndex === actualIndex ? "opacity-50 cursor-not-allowed" : ""
+                                                                            }`}
+                                                                        style={{
+                                                                            backgroundColor: buttonText === "QC Pending" ? "transparent" : undefined,
+                                                                        }}
+                                                                    >
+                                                                        {downloadingIndex === actualIndex ? (
+                                                                            <span className="flex items-center gap-2">
+                                                                                <svg
+                                                                                    className="animate-spin h-5 w-5 text-white hover:text-green-500"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    fill="none"
+                                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                                >
+                                                                                    <circle
+                                                                                        className="opacity-25"
+                                                                                        cx="12"
+                                                                                        cy="12"
+                                                                                        r="10"
+                                                                                        stroke="currentColor"
+                                                                                        strokeWidth="4"
+                                                                                    ></circle>
+                                                                                    <path
+                                                                                        className="opacity-75"
+                                                                                        fill="currentColor"
+                                                                                        d="M4 12a8 8 0 018-8v8H4z"
+                                                                                    ></path>
+                                                                                </svg>
+                                                                                Downloading...
+                                                                            </span>
+                                                                        ) : buttonText === "DOWNLOAD" ? (
+                                                                            <img
+                                                                                src={pdfIcon}
+                                                                                alt="Download PDF"
+                                                                                className="w-12 h-12 object-contain"
+                                                                            />
+                                                                        ) : (
+                                                                            buttonText
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            })()}
+                                                        </td>
+
+                                                        <td className="border border-black px-4 uppercase py-2">{(data.overall_status || 'WIP').replace(/_/g, ' ')}
+                                                        </td>
+                                                        <td className="border border-black px-4 uppercase py-2">{data.report_type?.replace(/_/g, " ") || 'N/A'}</td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            {
+                                                                data.report_type === 'final_report'
+                                                                    ? data.report_date
+                                                                        ? new Date(data.report_date).toLocaleDateString('en-GB').replace(/\//g, '-')
+                                                                        : 'NIL'
+                                                                    : 'NIL'
                                                             }
 
-                                                            return buttonDisabled ? (
-                                                                <button
-                                                                    className="text-white px-4 py-2 rounded cursor-not-allowed bg-gray-500"
-                                                                    disabled
-                                                                >
-                                                                    {buttonText}
-                                                                </button>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => handleDownload(actualIndex, data)}
-                                                                    disabled={downloadingIndex === actualIndex}
-                                                                    className={`${buttonText === "DOWNLOAD"
-                                                                        ? ""
-                                                                        : buttonText === "QC Pending"
-                                                                            ? "text-[#00aeee]"
-                                                                            : "bg-green-500 hover:bg-green-300 text-white"
-                                                                        } ${buttonText !== "DOWNLOAD" ? "px-4 py-2" : ""
-                                                                        } hover:scale-105 uppercase border border-white rounded ${downloadingIndex === actualIndex ? "opacity-50 cursor-not-allowed" : ""
-                                                                        }`}
+                                                        </td>
+
+                                                        <td className="border border-black px-4 py-2">{data.report_generated_by_name || 'N/A'}</td>
+                                                        <td className="border border-black px-4 py-2">{data.qc_done_by_name || 'N/A'}</td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            <button
+                                                                className={`text-white rounded px-4 py-2 bg-red-500 hover:bg-red-600 ${deleteLoading === data.main_id ? 'opacity-50 cursor-not-allowed' : ''
+                                                                    }`}
+                                                                onClick={() => handleApplicationDelete(data.main_id)}
+                                                                disabled={deleteLoading === data.main_id}
+                                                            >
+
+                                                                {deleteLoading === data.main_id ? ' Deleting...' : ' Delete'}
+                                                            </button>
+
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            {(data.report_completed_status?.status === 'early' || data.report_completed_status?.status === 'on_time')
+                                                                ? data.report_completed_status?.used ?? 'NIL'
+                                                                : 'NIL'}
+                                                        </td>
+                                                        <td className="border border-black px-4 py-2">
+                                                            {data.report_completed_status?.status === 'exceed'
+                                                                ? data.report_completed_status?.exceededBy ?? 'NIL'
+                                                                : 'NIL'}
+                                                        </td>
+
+                                                        <td className="border border-black text-center px-4 py-2">
+                                                            <div className="flex items-center justify-center">
+                                                                <FaFlag
                                                                     style={{
-                                                                        backgroundColor: buttonText === "QC Pending" ? "transparent" : undefined,
+                                                                        color: data.is_highlight === 1 ? 'orange' : 'gray', // Change color based on highlight state
+                                                                        textAlign: 'center',
+                                                                        fontSize: '30px',
+                                                                        cursor: 'pointer',
+                                                                        boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.5)', // Shadow effect
+                                                                        padding: '4px', // Adds spacing inside the border
+                                                                        borderRadius: '4px', // Rounds the border corners
+                                                                        transition: 'transform 0.2s, color 0.2s', // Smooth animation
                                                                     }}
-                                                                >
-                                                                    {downloadingIndex === actualIndex ? (
-                                                                        <span className="flex items-center gap-2">
-                                                                            <svg
-                                                                                className="animate-spin h-5 w-5 text-white hover:text-green-500"
-                                                                                viewBox="0 0 24 24"
-                                                                                fill="none"
-                                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                            >
-                                                                                <circle
-                                                                                    className="opacity-25"
-                                                                                    cx="12"
-                                                                                    cy="12"
-                                                                                    r="10"
-                                                                                    stroke="currentColor"
-                                                                                    strokeWidth="4"
-                                                                                ></circle>
-                                                                                <path
-                                                                                    className="opacity-75"
-                                                                                    fill="currentColor"
-                                                                                    d="M4 12a8 8 0 018-8v8H4z"
-                                                                                ></path>
-                                                                            </svg>
-                                                                            Downloading...
-                                                                        </span>
-                                                                    ) : buttonText === "DOWNLOAD" ? (
-                                                                        <img
-                                                                            src={pdfIcon}
-                                                                            alt="Download PDF"
-                                                                            className="w-12 h-12 object-contain"
-                                                                        />
-                                                                    ) : (
-                                                                        buttonText
-                                                                    )}
-                                                                </button>
-                                                            );
-                                                        })()}
-                                                    </td>
+                                                                    onClick={() =>
+                                                                        !isHighlightLoading &&
+                                                                        handleHighlightClick(data.main_id, data.is_highlight === 1 ? 0 : 1)
+                                                                    }
+                                                                    onMouseEnter={(e) => {
+                                                                        e.target.style.color = 'gold'; // Highlight on hover
+                                                                        e.target.style.transform = 'scale(1.1)'; // Slightly enlarge on hover
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.target.style.color = data.is_highlight === 1 ? 'orange' : 'gray'; // Revert color
+                                                                        e.target.style.transform = 'scale(1)'; // Reset size
+                                                                    }}
+                                                                />
+                                                                {isHighlightLoading && data.main_id === activeId && (
+                                                                    <span className="ml-2 text-gray-500">Loading...</span> // Show loading indicator
+                                                                )}
+                                                            </div>
+                                                        </td>
 
 
-                                                    <td className="border border-black px-4  py-2" >
-                                                        <button
-                                                            className={`bg-orange-500 hover:scale-105 *:uppercase border border-white hover:border-orange-500 text-white px-4 py-2 
-    ${loadingIndex === index ? 'opacity-50 cursor-not-allowed' : ''} rounded hover:bg-white hover:text-orange-500`}
-                                                            onClick={() => handleViewMore(index)}
-                                                            disabled={loadingIndex === index} // Disable the button only for the loading row
-                                                        >
-                                                            {expandedRow && expandedRow.index === index ? 'Less' : 'View'}
-                                                        </button>
+                                                        <td className="border border-black px-4 py-2">{formatedJson(data.first_insufficiency_marks) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatDate(data.first_insuff_date, true) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatDate(data.first_insuff_reopened_date) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatedJson(data.second_insufficiency_marks) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatDate(data.second_insuff_date, true) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatedJson(data.third_insufficiency_marks) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatDate(data.third_insuff_date, true) || "No Insuff"}</td>
+                                                        <td className="border border-black px-4 py-2">{formatedJson(data.delay_reason) || "No Insuff"}</td>
 
-                                                    </td>
-                                                    <td className="border border-black px-4 uppercase py-2">{(data.overall_status || 'WIP').replace(/_/g, ' ')}
-                                                    </td>
-                                                    <td className="border border-black px-4 uppercase py-2">{data.report_type?.replace(/_/g, " ") || 'N/A'}</td>
-                                                    <td className="border border-black px-4 py-2">
 
-                                                        {data.report_date
-                                                            ? new Date(data.report_date).toLocaleDateString('en-GB').replace(/\//g, '-')
-                                                            : 'NIL'}
-                                                    </td>
+                                                    </tr>
 
-                                                    <td className="border border-black px-4 py-2">{data.report_generated_by_name || 'N/A'}</td>
-                                                    <td className="border border-black px-4 py-2">{data.qc_done_by_name || 'N/A'}</td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        <button
-                                                            className={`text-white rounded px-4 py-2 bg-red-500 hover:bg-red-600 ${deleteLoading === data.main_id ? 'opacity-50 cursor-not-allowed' : ''
-                                                                }`}
-                                                            onClick={() => handleApplicationDelete(data.main_id)}
-                                                            disabled={deleteLoading === data.main_id}
-                                                        >
 
-                                                            {deleteLoading === data.main_id ? ' Deleting...' : ' Delete'}
-                                                        </button>
-
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        {(data.report_completed_status?.status === 'early' || data.report_completed_status?.status === 'on_time')
-                                                            ? data.report_completed_status?.used ?? 'NIL'
-                                                            : 'NIL'}
-                                                    </td>
-                                                    <td className="border border-black px-4 py-2">
-                                                        {data.report_completed_status?.status === 'exceed'
-                                                            ? data.report_completed_status?.exceededBy ?? 'NIL'
-                                                            : 'NIL'}
-                                                    </td>
-
-                                                    <td className="border border-black text-center px-4 py-2">
-                                                        <div className="flex items-center justify-center">
-                                                            <FaFlag
-                                                                style={{
-                                                                    color: data.is_highlight === 1 ? 'orange' : 'gray', // Change color based on highlight state
-                                                                    textAlign: 'center',
-                                                                    fontSize: '30px',
-                                                                    cursor: 'pointer',
-                                                                    boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.5)', // Shadow effect
-                                                                    padding: '4px', // Adds spacing inside the border
-                                                                    borderRadius: '4px', // Rounds the border corners
-                                                                    transition: 'transform 0.2s, color 0.2s', // Smooth animation
-                                                                }}
-                                                                onClick={() =>
-                                                                    !isHighlightLoading &&
-                                                                    handleHighlightClick(data.main_id, data.is_highlight === 1 ? 0 : 1)
-                                                                }
-                                                                onMouseEnter={(e) => {
-                                                                    e.target.style.color = 'gold'; // Highlight on hover
-                                                                    e.target.style.transform = 'scale(1.1)'; // Slightly enlarge on hover
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    e.target.style.color = data.is_highlight === 1 ? 'orange' : 'gray'; // Revert color
-                                                                    e.target.style.transform = 'scale(1)'; // Reset size
-                                                                }}
-                                                            />
-                                                            {isHighlightLoading && data.main_id === activeId && (
-                                                                <span className="ml-2 text-gray-500">Loading...</span> // Show loading indicator
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                </tr>
-
-                                                {expandedRow && expandedRow.index === index && (
-                                                    <>
-                                                        <tr>
-                                                            <td colSpan="100%" className="text-center p-4 w-1/4">
-                                                                {/* Table structure to display headings in the first column and statuses in the second column */}
-                                                                <table className="w-1/4">
-                                                                    <tbody>
-
-                                                                        {expandedRow.headingsAndStatuses &&
-                                                                            expandedRow.headingsAndStatuses.map((item, idx) => (
-                                                                                <>
-                                                                                    {item.heading && item.heading !== "null" ? ( // Exclude string "null"
-                                                                                        <tr key={`row-${idx}`}>
-                                                                                            <td className="text-left p-2 border border-black capitalize bg-gray-200">
-                                                                                                {sanitizeText(item.heading)}
-                                                                                            </td>
-                                                                                            <td
-                                                                                                className="text-left p-2 border font-bold border-black uppercase"
-                                                                                                style={getColorStyle(item.status)}
-                                                                                            >
-                                                                                                {isValidDate(item.status) ?
-                                                                                                    formatDate(item.status) :
-                                                                                                    sanitizeText(removeColorNames(item.status))
-                                                                                                }                                                                                            </td>
-                                                                                        </tr>
-                                                                                    ) : null // Skip rendering if heading is null, undefined, or the string "null"
-                                                                                    }
-
-                                                                                </>
-                                                                            ))
-                                                                        }
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200  ref={clientSubmitRef}" id="clientSubmit">First Level Insuff</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatedJson(data.first_insufficiency_marks) || ''}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Date</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatDate(data.first_insuff_date)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">First Level Insuff Reopen Date</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatDate(data.first_insuff_reopened_date)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatedJson(data.second_insufficiency_marks) || ''}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Second Level Insuff Date</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatDate(data.second_insuff_date)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Marks</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatedJson(data.third_insufficiency_marks) || ''}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Date</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatDate(data.third_insuff_date)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Third Level Insuff Reopen Date</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatDate(data.third_insuff_reopened_date)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="text-left p-2 border border-black uppercase bg-gray-200">Reason For Delay</td>
-                                                                            <td className="text-left p-2 border border-black capitalize font-bold">{formatedJson(data.delay_reason) || ''}</td>
-                                                                        </tr>
-
-                                                                    </tbody>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                    </>
-                                                )}
-                                            </React.Fragment>
-                                        )
-                                    })}
-                                </>
-                            )}
-                        </tbody>
-                    </table>
+                                                </React.Fragment>
+                                            )
+                                        })}
+                                    </>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
                 <div className="flex justify-between items-center mt-4">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
@@ -3034,4 +3929,5 @@ const AdminChekin = () => {
         </div>
     );
 };
-export default AdminChekin;
+export default ValuePitchChekin;
+// DONE

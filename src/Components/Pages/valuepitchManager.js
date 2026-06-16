@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver"; // Import XLSX for Excel export
 import { useApiLoading } from '../ApiLoadingContext';
 import Swal from 'sweetalert2';
-const AdminManager = () => {
+const ValuePitchManager = () => {
     const { validateAdminLogin, setApiLoading, apiLoading } = useApiLoading();
 
     const [responseError, setResponseError] = useState(null);
@@ -118,7 +118,7 @@ const AdminManager = () => {
                 .join('');
         }
 
-        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/list`;
+        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/list-valuepitch`;
         const queryParams = new URLSearchParams({
             admin_id: adminId,
             _token: token,
@@ -236,7 +236,7 @@ const AdminManager = () => {
         // Handle delete functionality here
     };
     const handleCheckInGo = (branch_id, main_id, branchName) => {
-        navigate(`/admin-chekin?clientId=${main_id}&branchId=${branch_id}&BranchName${branchName}`);
+        navigate(`/admin-valuepitch-checkin?clientId=${main_id}&branchId=${branch_id}&BranchName${branchName}`);
     };
     const Loader = () => (
         <div className="flex w-full justify-center items-center h-20">
@@ -801,4 +801,4 @@ const AdminManager = () => {
     );
 };
 
-export default AdminManager;
+export default ValuePitchManager;

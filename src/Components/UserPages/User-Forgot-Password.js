@@ -33,7 +33,7 @@ const UserForgotPassword = () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/branch/forgot-password-request", requestOptions);
+            const response = await fetch("https://devscreeningnode.onrender.com/branch/forgot-password-request", requestOptions);
             const result = await response.json();
 
             if (response.ok) {

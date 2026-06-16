@@ -76,7 +76,7 @@ const ExEmployements = () => {
             return;
         }
 
-        const url = `http://localhost:5000/internal-storage/ex-employment/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://devscreeningnode.onrender.com/internal-storage/ex-employment/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         try {
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -214,8 +214,8 @@ const ExEmployements = () => {
         };
 
         const url = isEditing
-            ? "http://localhost:5000/internal-storage/ex-employment/update"
-            : "http://localhost:5000/internal-storage/ex-employment/create";
+            ? "https://devscreeningnode.onrender.com/internal-storage/ex-employment/update"
+            : "https://devscreeningnode.onrender.com/internal-storage/ex-employment/create";
 
         try {
             const response = await fetch(url, requestOptions);
@@ -321,7 +321,7 @@ const ExEmployements = () => {
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `http://localhost:5000/internal-storage/ex-employment/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://devscreeningnode.onrender.com/internal-storage/ex-employment/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 

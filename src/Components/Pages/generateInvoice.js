@@ -113,7 +113,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
+        `https://devscreeningnode.onrender.com/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
         {
           method: "GET",
           redirect: "follow",
@@ -215,7 +215,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/invoice-master/send-data`,
+        `https://devscreeningnode.onrender.com/invoice-master/send-data`,
         raw,
         {
           headers: {
@@ -291,7 +291,7 @@ const GenerateInvoice = () => {
     try {
       console.log("Sending fetch request...");
       const response = await fetch(
-        `http://localhost:5000/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
+        `https://devscreeningnode.onrender.com/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
         requestOptions
       );
       const data = await response.json();

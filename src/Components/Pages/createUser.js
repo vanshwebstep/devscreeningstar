@@ -60,7 +60,7 @@ const CreateUser = () => {
       redirect: "follow"
     };
 
-    fetch(`http://localhost:5000/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions)
+    fetch(`https://devscreeningnode.onrender.com/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions)
       .then((response) => {
         return response.json().then((result) => {
           // Check if the API response status is false
@@ -238,7 +238,7 @@ const CreateUser = () => {
 
         try {
           console.log("Sending POST request to upload files...");
-          const response = await axios.post(`http://localhost:5000/admin/upload`, formData, {
+          const response = await axios.post(`https://devscreeningnode.onrender.com/admin/upload`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -339,7 +339,7 @@ const CreateUser = () => {
       };
 
       const response = await fetch(
-        "http://localhost:5000/admin/create",
+        "https://devscreeningnode.onrender.com/admin/create",
         requestOptions
       );
 

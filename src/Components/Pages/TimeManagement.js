@@ -66,7 +66,7 @@ const TimeManagement = () => {
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
         const token = localStorage.getItem('_token');
 
-        const url = new URL("http://localhost:5000/personal-manager/break");
+        const url = new URL("https://devscreeningnode.onrender.com/personal-manager/break");
         url.searchParams.append("admin_id", adminId);
         url.searchParams.append("_token", token);
 
@@ -133,7 +133,7 @@ const TimeManagement = () => {
     //     }
 
     //     // Construct the URL with query parameters
-    //     const url = `http://localhost:5000/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
+    //     const url = `https://devscreeningnode.onrender.com/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     //     // Request options for GET request (no body required)
     //     const requestOptions = {
@@ -214,7 +214,7 @@ const TimeManagement = () => {
             redirect: "follow",
         };
 
-        fetch("http://localhost:5000/personal-manager/break", requestOptions)
+        fetch("https://devscreeningnode.onrender.com/personal-manager/break", requestOptions)
             .then((response) => response.json()) // <-- FIXED: parse JSON
             .then((result) => {
                 Swal.fire({

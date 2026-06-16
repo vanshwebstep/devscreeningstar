@@ -63,7 +63,7 @@ const AdminSetPassword = () => {
         };
     
         try {
-            const response = await fetch("http://localhost:5000/admin/forgot-password", requestOptions);
+            const response = await fetch("https://devscreeningnode.onrender.com/admin/forgot-password", requestOptions);
             const result = await response.json();
     
             if (response.ok) {

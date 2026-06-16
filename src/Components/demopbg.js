@@ -162,7 +162,7 @@ const BackgroundVerificationForm = () => {
 
         try {
             await axios.post(
-                `http://localhost:5000/branch/candidate-application/backgroud-verification/upload`,
+                `https://devscreeningnode.onrender.com/branch/candidate-application/backgroud-verification/upload`,
                 customerLogoFormData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -179,7 +179,7 @@ const BackgroundVerificationForm = () => {
     const isApplicationExists = useCallback(() => {
         setMainLoading(true)
         if (isValidApplication && decodedValues.app_id && decodedValues.branch_id && decodedValues.customer_id) {
-            fetch(`http://localhost:5000/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
+            fetch(`https://devscreeningnode.onrender.com/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
                 .then(res => res.json()
                 )
                 .then(result => {
@@ -392,7 +392,7 @@ const BackgroundVerificationForm = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/branch/candidate-application/backgroud-verification/submit",
+                "https://devscreeningnode.onrender.com/branch/candidate-application/backgroud-verification/submit",
                 requestOptions
             );
             const data = await response.json();
@@ -457,7 +457,7 @@ const BackgroundVerificationForm = () => {
 
         try {
             // Make the API call
-            const response = await fetch("http://localhost:5000/branch/candidate-application/backgroud-verification/submit", requestOptions);
+            const response = await fetch("https://devscreeningnode.onrender.com/branch/candidate-application/backgroud-verification/submit", requestOptions);
 
             // Parse the response data
             const data = await response.json();

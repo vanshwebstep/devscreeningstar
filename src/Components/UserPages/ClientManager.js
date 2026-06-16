@@ -127,7 +127,7 @@ const ClientManager = () => {
         const branchInfo = JSON.parse(localStorage.getItem("branch"));
         const { customer_id, id: branch_id } = branchInfo;
         const branch_token = localStorage.getItem("branch_token");
-        const url = `http://localhost:5000/branch/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
+        const url = `https://devscreeningnode.onrender.com/branch/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
 
         try {
             let response;
@@ -339,7 +339,7 @@ const ClientManager = () => {
                     }
 
                     try {
-                        await axios.post(`http://localhost:5000/branch/client-application/upload`, customerLogoFormData, {
+                        await axios.post(`https://devscreeningnode.onrender.com/branch/client-application/upload`, customerLogoFormData, {
                             headers: {
                                 "Content-Type": "multipart/form-data",
                             },
@@ -397,8 +397,8 @@ const ClientManager = () => {
 
 
         const apiUrl = handleEditClick
-            ? "http://localhost:5000/branch/client-application/update"
-            : "http://localhost:5000/branch/client-application/create";
+            ? "https://devscreeningnode.onrender.com/branch/client-application/update"
+            : "https://devscreeningnode.onrender.com/branch/client-application/create";
 
         const method = handleEditClick ? "PUT" : "POST";
 
@@ -508,9 +508,9 @@ const ClientManager = () => {
                 let url;
                 if (branchData?.type === "sub_user") {
                     const sub_user_id = branchData?.id ?? null;
-                    url = `http://localhost:5000/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
+                    url = `https://devscreeningnode.onrender.com/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
                 } else {
-                    url = `http://localhost:5000/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+                    url = `https://devscreeningnode.onrender.com/branch/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
                 }
 
                 fetch(`${url}`, requestOptions)

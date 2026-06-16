@@ -73,7 +73,7 @@ const InvoiceMaster = () => {
             const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
             const storedToken = localStorage.getItem("_token");
 
-            const url = `http://localhost:5000/invoice-master?admin_id=${admin_id}&_token=${storedToken}`;
+            const url = `https://devscreeningnode.onrender.com/invoice-master?admin_id=${admin_id}&_token=${storedToken}`;
 
             const response = await fetch(url, { method: "GET", redirect: "follow" });
             const data = await response.json();
@@ -129,7 +129,7 @@ const InvoiceMaster = () => {
 
                 try {
                     const response = await fetch(
-                        `http://localhost:5000/invoice-master/delete?id=${invoice.id}&admin_id=${admin_id}&_token=${storedToken}`,
+                        `https://devscreeningnode.onrender.com/invoice-master/delete?id=${invoice.id}&admin_id=${admin_id}&_token=${storedToken}`,
                         { method: "DELETE" }
                     );
 
@@ -196,7 +196,7 @@ const InvoiceMaster = () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/invoice-master/update", requestOptions);
+            const response = await fetch("https://devscreeningnode.onrender.com/invoice-master/update", requestOptions);
             const result = await response.json();
 
             if (response.ok) {

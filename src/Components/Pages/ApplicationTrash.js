@@ -72,7 +72,7 @@ const ApplicationTrash = () => {
                 .join('');
         }
 
-        const baseUrl = `http://localhost:5000/trashed/client-master-tracker/list`;
+        const baseUrl = `https://devscreeningnode.onrender.com/trashed/client-master-tracker/list`;
         const queryParams = new URLSearchParams({
             admin_id: adminId,
             _token: token,
@@ -152,7 +152,7 @@ const ApplicationTrash = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -228,7 +228,7 @@ const ApplicationTrash = () => {
             setActiveId(id);
             try {
                 const response = await fetch(
-                    `http://localhost:5000/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://devscreeningnode.onrender.com/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: "GET",
                         redirect: "follow",

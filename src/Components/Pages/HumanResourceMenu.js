@@ -75,7 +75,7 @@ const HumanResourceMenu = () => {
         setApiLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:5000/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`,
+                `https://devscreeningnode.onrender.com/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`,
                 { method: "GET", redirect: "follow" }
             );
 
@@ -156,7 +156,7 @@ const HumanResourceMenu = () => {
                 try {
                     console.log("Sending POST request to upload files...");
                     const response = await axios.post(
-                        `http://localhost:5000/personal-manager/upload`,
+                        `https://devscreeningnode.onrender.com/personal-manager/upload`,
                         formData,
                         {
                             headers: {
@@ -241,8 +241,8 @@ const HumanResourceMenu = () => {
         };
 
         const url = isEditing
-            ? `http://localhost:5000/personal-manager/update`
-            : `http://localhost:5000/personal-manager/create`;
+            ? `https://devscreeningnode.onrender.com/personal-manager/update`
+            : `https://devscreeningnode.onrender.com/personal-manager/create`;
 
         try {
             const response = await fetch(url, requestOptions);
@@ -325,7 +325,7 @@ const HumanResourceMenu = () => {
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `http://localhost:5000/personal-manager/delete?personal_manager_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://devscreeningnode.onrender.com/personal-manager/delete?personal_manager_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 
@@ -389,7 +389,7 @@ const HumanResourceMenu = () => {
         setLoadingSpoc((prev) => ({ ...prev, [spocId]: status }));
 
         try {
-            const response = await fetch("http://localhost:5000/personal-manager/response", requestOptions);
+            const response = await fetch("https://devscreeningnode.onrender.com/personal-manager/response", requestOptions);
             const result = await response.json();
             console.log("API Response:", result);
 

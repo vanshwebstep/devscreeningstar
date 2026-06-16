@@ -34,7 +34,7 @@ export const ApiLoadingProvider = ({ children }) => {
 
     try {
         const response = await axios.post(
-            "http://localhost:5000/admin/verify-admin-login",
+            "https://devscreeningnode.onrender.com/admin/verify-admin-login",
             {
                 admin_id: adminData.id,
                 _token: storedToken,

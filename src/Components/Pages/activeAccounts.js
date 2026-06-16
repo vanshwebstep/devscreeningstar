@@ -101,7 +101,7 @@ const ActiveAccounts = () => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:5000/branch/update", requestOptions)
+    fetch("https://devscreeningnode.onrender.com/branch/update", requestOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((data) => {
@@ -164,7 +164,7 @@ const ActiveAccounts = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/customer/list?admin_id=${admin_id}&_token=${storedToken}`,
+        `https://devscreeningnode.onrender.com/customer/list?admin_id=${admin_id}&_token=${storedToken}`,
         { method: "GET", redirect: "follow" }
       );
       const data = await response.json();
@@ -250,7 +250,7 @@ const ActiveAccounts = () => {
       setActiveId(id);
       try {
         const response = await fetch(
-          `http://localhost:5000/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://devscreeningnode.onrender.com/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           {
             method: "GET",
             redirect: "follow",
@@ -301,7 +301,7 @@ const ActiveAccounts = () => {
           redirect: "follow",
         };
   
-        fetch(`http://localhost:5000/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json()) // Parse as JSON
           .then((result) => {
             const newToken = result.token || result._token || '';
@@ -351,7 +351,7 @@ const ActiveAccounts = () => {
         throw new Error("Admin ID or Token not found in localStorage");
       }
 
-      const url = `http://localhost:5000/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
+      const url = `https://devscreeningnode.onrender.com/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -415,7 +415,7 @@ const ActiveAccounts = () => {
           redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/branch/delete?id=${branch.id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/branch/delete?id=${branch.id}&admin_id=${adminId}&_token=${token}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             setShowModal(false);
@@ -572,7 +572,7 @@ const ActiveAccounts = () => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:5000/branch/update", requestOptions)
+    fetch("https://devscreeningnode.onrender.com/branch/update", requestOptions)
       .then((response) => response.json())
       .then((result) => {
         if (result.k) {

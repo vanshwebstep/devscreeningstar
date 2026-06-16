@@ -47,7 +47,7 @@ const CaseAllocation = () => {
         let apiResult = null; // Define a variable to store the result
         const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
 
-        fetch(`http://localhost:5000/client-allocation/applications?admin_id=${adminId}&_token=${token}`, {
+        fetch(`https://devscreeningnode.onrender.com/client-allocation/applications?admin_id=${adminId}&_token=${token}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -268,7 +268,7 @@ const CaseAllocation = () => {
             redirect: "follow"
         };
 
-        fetch("http://localhost:5000/client-allocation/create", requestOptions)
+        fetch("https://devscreeningnode.onrender.com/client-allocation/create", requestOptions)
             .then((response) => response.json()) // Assuming the response is JSON
             .then((result) => {
                 const newToken = result?.token || result?._token || storedToken || "";

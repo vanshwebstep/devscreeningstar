@@ -125,7 +125,7 @@ const Attendance = () => {
       return;
     }
 
-    const url = `http://localhost:5000/personal-manager/attendance-list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://devscreeningnode.onrender.com/personal-manager/attendance-list?admin_id=${admin_id}&_token=${storedToken}`;
 
     fetch(url, {
       method: "GET",
@@ -301,7 +301,7 @@ const Attendance = () => {
     const from = format(startDate, "MM/yyyy");
     const to = format(endDate, "MM/yyyy");
 
-    const url = `http://localhost:5000/personal-manager/attendance-list?admin_id=${admin_id}&_token=${storedToken}&from=${from}&to=${to}`;
+    const url = `https://devscreeningnode.onrender.com/personal-manager/attendance-list?admin_id=${admin_id}&_token=${storedToken}&from=${from}&to=${to}`;
 
     try {
       const response = await fetch(url, { method: "GET", redirect: "follow" });

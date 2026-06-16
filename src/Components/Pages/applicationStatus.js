@@ -56,7 +56,7 @@ const ApplicationStatus = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/report-master/application-tracker?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/report-master/application-tracker?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 return response.json().then((result) => {
                     // Check if the API response status is false

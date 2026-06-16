@@ -59,7 +59,7 @@ const MyProfile = () => {
         const queryString = new URLSearchParams(payLoad).toString();
 
         try {
-            const response = await fetch(`http://localhost:5000/branch/customer-info?${queryString}`, {
+            const response = await fetch(`https://devscreeningnode.onrender.com/branch/customer-info?${queryString}`, {
                 method: "GET",
                 redirect: "follow",
             });

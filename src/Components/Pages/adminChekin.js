@@ -189,7 +189,7 @@ const AdminChekin = () => {
                 .join('');
         }
 
-        const baseUrl = `http://localhost:5000/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
+        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
 
         // Initialize URLSearchParams for parameters
         const parameters = new URLSearchParams();
@@ -300,7 +300,7 @@ const AdminChekin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -460,7 +460,7 @@ const AdminChekin = () => {
             // console.log("Payload:", raw);
 
             const response = await axios.post(
-                "http://localhost:5000/utils/image-to-base",
+                "https://devscreeningnode.onrender.com/utils/image-to-base",
                 raw,
                 { headers }
             );
@@ -3232,7 +3232,7 @@ const AdminChekin = () => {
             redirect: "follow",
         };
 
-        const url = `http://localhost:5000/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
+        const url = `https://devscreeningnode.onrender.com/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
 
         fetch(url, requestOptions)
             .then((response) => {
@@ -3290,7 +3290,7 @@ const AdminChekin = () => {
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `http://localhost:5000/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `https://devscreeningnode.onrender.com/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {

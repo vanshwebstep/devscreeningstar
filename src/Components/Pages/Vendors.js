@@ -75,7 +75,7 @@ const Vendors = () => {
             return;
         }
 
-        const url = `http://localhost:5000/internal-storage/vendor/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://devscreeningnode.onrender.com/internal-storage/vendor/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         try {
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -215,8 +215,8 @@ const Vendors = () => {
         };
 
         const url = isEditing
-            ? "http://localhost:5000/internal-storage/vendor/update"
-            : "http://localhost:5000/internal-storage/vendor/create";
+            ? "https://devscreeningnode.onrender.com/internal-storage/vendor/update"
+            : "https://devscreeningnode.onrender.com/internal-storage/vendor/create";
 
         try {
             const response = await fetch(url, requestOptions);
@@ -325,7 +325,7 @@ const Vendors = () => {
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `http://localhost:5000/internal-storage/vendor/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://devscreeningnode.onrender.com/internal-storage/vendor/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 

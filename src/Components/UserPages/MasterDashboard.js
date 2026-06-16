@@ -57,7 +57,7 @@ const MasterDashboard = () => {
     const branchData = JSON.parse(localStorage.getItem("branch"));
     const branch_id = JSON.parse(localStorage.getItem("branch"))?.branch_id;
     const branch_token = localStorage.getItem("branch_token");
-    const url = `http://localhost:5000/branch/?branch_id=${branch_id}&_token=${branch_token}`;
+    const url = `https://devscreeningnode.onrender.com/branch/?branch_id=${branch_id}&_token=${branch_token}`;
 
     try {
       let response;

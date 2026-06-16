@@ -78,7 +78,7 @@ const GenerateReport = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
     const [scrollWidth, setScrollWidth] = useState("100%");
-const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
+    const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
 
     function formatDateSafe(dateValue) {
         const date = new Date(dateValue);
@@ -335,17 +335,30 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
 
     const fromTat = new URLSearchParams(window.location.search).get('from-tat');
     const redirectAfterSuccess = () => {
-        const branchidFromUrl = new URLSearchParams(window.location.search).get('branchid');
-        const clientIdFromUrl = new URLSearchParams(window.location.search).get('clientId');
+        const searchParams = new URLSearchParams(window.location.search);
+
+        const branchidFromUrl = searchParams.get('branchid');
+        const clientIdFromUrl = searchParams.get('clientId');
+        const by = searchParams.get('by');
 
         const branchId = branchidFromUrl || cmtData.branch_id;
         const customerId = clientIdFromUrl || cmtData.customer_id;
 
-        if (fromTat == 1) {
-            navigate("/admin-tat-reminder");
-        } else {
-            navigate(`/admin-chekin?clientId=${customerId}&branchId=${branchId}`);
+        if (by === 'valuepitch') {
+            return navigate(
+                `/admin-valuepitch-checkin?clientId=${customerId}&branchId=${branchId}&BranchName=${encodeURIComponent(
+                    cmtData?.branch_name || 'TESTING ORG'
+                )}&by=valuepitch`
+            );
         }
+
+        if (fromTat == 1) {
+            return navigate("/admin-tat-reminder");
+        }
+
+        return navigate(
+            `/admin-chekin?clientId=${customerId}&branchId=${branchId}`
+        );
     };
     // Set referenceId only once when applicationId changes
     useEffect(() => {
@@ -373,7 +386,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
             };
 
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -487,7 +500,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || localStorage.getItem("_token") || '';
@@ -800,7 +813,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
 
 
         // Construct the URL with query parameters
-        const url = `http://localhost:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://devscreeningnode.onrender.com/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',
@@ -914,7 +927,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
 
             try {
                 const response = await axios.post(
-                    "http://localhost:5000/client-master-tracker/upload",
+                    "https://devscreeningnode.onrender.com/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -1230,7 +1243,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
                     body: raw,
                 };
                 const response = await fetch(
-                    `http://localhost:5000/client-master-tracker/generate-report`,
+                    `https://devscreeningnode.onrender.com/client-master-tracker/generate-report`,
                     requestOptions
                 );
 
@@ -1267,19 +1280,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
                         redirectAfterSuccess();
                     });
                 }
-
-
-                const branchidFromUrl = new URLSearchParams(window.location.search).get('branchid');
-                const clientIdFromUrl = new URLSearchParams(window.location.search).get('clientId');
-
-                const branchId = branchidFromUrl || cmtData.branch_id;
-                const customerId = clientIdFromUrl || cmtData.customer_id;
-
-                if (fromTat == 1) {
-                    navigate("/admin-tat-reminder");
-                } else {
-                    navigate(`/admin-chekin?clientId=${customerId}&branchId=${branchId}`);
-                }
+                
             } catch (error) {
                 console.error("Error during submission:", error);
 
@@ -2347,18 +2348,25 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
 
 
     const handleGoBack = () => {
-        const branchidFromUrl = new URLSearchParams(window.location.search).get('branchid');
-        const clientIdFromUrl = new URLSearchParams(window.location.search).get('clientId');
+        const searchParams = new URLSearchParams(window.location.search);
+
+        const branchidFromUrl = searchParams.get('branchid');
+        const clientIdFromUrl = searchParams.get('clientId');
+        const by = searchParams.get('by');
 
         const branchId = branchidFromUrl || cmtData.branch_id;
         const customerId = clientIdFromUrl || cmtData.customer_id;
 
-        if (fromTat == 1) {
+        if (by === 'valuepitch') {
+            navigate(
+                `/admin-valuepitch-checkin?clientId=${customerId}&branchId=${branchId}&BranchName=${encodeURIComponent(cmtData?.branch_name || 'TESTING ORG')}`
+            );
+        } else if (fromTat == 1) {
             navigate("/admin-tat-reminder");
         } else {
             navigate(`/admin-chekin?clientId=${customerId}&branchId=${branchId}`);
         }
-    }
+    };
 
     const optionsData = [
         {
@@ -2685,7 +2693,7 @@ const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
             addresses: addresses,
         });
 
-        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-valuepitch`, {
+        const res = await fetch(`https://devscreeningnode.onrender.com/client-master-tracker/submit-valuepitch`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: raw,

@@ -203,7 +203,7 @@ function formatDateSafe(dateValue) {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://devscreeningnode.onrender.com/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 // Check if result is valid
@@ -333,7 +333,7 @@ function formatDateSafe(dateValue) {
             };
 
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -496,7 +496,7 @@ function formatDateSafe(dateValue) {
 
             try {
                 const response = await axios.post(
-                    "http://localhost:5000/client-master-tracker/upload",
+                    "https://devscreeningnode.onrender.com/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -592,7 +592,7 @@ function formatDateSafe(dateValue) {
                 };
 
                 const response = await fetch(
-                    `http://localhost:5000/data-management/submit`,
+                    `https://devscreeningnode.onrender.com/data-management/submit`,
                     requestOptions
                 );
 
