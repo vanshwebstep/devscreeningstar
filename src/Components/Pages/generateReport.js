@@ -3342,12 +3342,7 @@ const GenerateReport = () => {
                                                                                         <tbody>
                                                                                             {formJson.rows.map((row, idx) => {
                                                                                                 // ✅ Filter inputs based on valuepitch
-                                                                                                const filteredInputs = row.inputs.filter(input => {
-                                                                                                    if (isValuePitch(serviceData)) {
-                                                                                                        return input.type === "file"; // 👈 only file inputs
-                                                                                                    }
-                                                                                                    return true;
-                                                                                                });
+                                                                                              const filteredInputs = row.inputs;
 
                                                                                                 // ✅ Hide row if no inputs left (for valuepitch)
                                                                                                 if (filteredInputs.length === 0) return null;

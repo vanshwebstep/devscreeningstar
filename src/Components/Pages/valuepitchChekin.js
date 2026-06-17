@@ -1436,9 +1436,9 @@ const ValuePitchChekin = () => {
                             vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
                             vpReport?.report
                         ) {
-                            rawStatus = vpReport.report; // ✅ GREEN / RED
+                            rawStatus = service?.annexureData.status || 'N/A'; // ✅ GREEN / RED
                         } else {
-                            rawStatus = "Managed By ValuePitch API";
+                            rawStatus = service?.annexureData.status || 'N/A';
                         }
                     }
                     if (serviceTypes.includes("surepass")) {
@@ -1497,12 +1497,9 @@ const ValuePitchChekin = () => {
                                     const vpReport = service?.valuePitchReport;
 
                                     if (vpReport?.job_name) {
-                                        return vpReport.job_name
-                                            .split(":")[0]                // remove time
-                                            .replace(/_/g, ' ')          // underscores → spaces
-                                            .replace(/\b\w/g, c => c.toUpperCase());
+                                        return "Manjunatha H S - Advocate"
                                     }
-                                    return "Managed By ValuePitch API";
+                                    return "Manjunatha H S - Advocate";
                                 }
 
 
@@ -1573,32 +1570,32 @@ const ValuePitchChekin = () => {
                         },
                         {
                             content: (() => {
-                                const serviceType = service?.service_type || "";
+                                const serviceType = service?.service_type || service?.annexureData.status || "";
                                 const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
-
+                                console.log('serviceTypes', service)
                                 // ================= VALUEPITCH =================
-                                if (serviceTypes.includes("valuepitch")) {
-                                    const vpStatus = service?.valuePitchStatus;
-                                    const vpReport = service?.valuePitchReport;
+                                // if (serviceTypes.includes("valuepitch")) {
+                                //     const vpStatus = service?.valuePitchStatus;
+                                //     const vpReport = service?.valuePitchReport;
+                                //     console.log('vpStatus', service)
+                                //     // ✅ Report Ready
+                                //     if (
+                                //         vpStatus?.statusCode === 201 &&
+                                //         vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                //         vpReport?.report
+                                //     ) {
+                                //         return service?.annexureData.status; // GREEN / RED etc.
+                                //     }
 
-                                    // ✅ Report Ready
-                                    if (
-                                        vpStatus?.statusCode === 201 &&
-                                        vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
-                                        vpReport?.report
-                                    ) {
-                                        return vpReport.report.toUpperCase(); // GREEN / RED etc.
-                                    }
-
-                                    // ❌ Not Ready
-                                    return "MANAGED BY VALUEPITCH API";
-                                }
+                                //     // ❌ Not Ready
+                                //     return service?.annexureData.status;
+                                // }
 
                                 // ================= SUREPASS =================
-                                if (serviceTypes.includes("surepass")) {
-                                    const sp = getSurepassStatus(service);
-                                    return sp.label;
-                                }
+                                // if (serviceTypes.includes("surepass")) {
+                                //     const sp = getSurepassStatus(service);
+                                //     return sp.label;
+                                // }
 
                                 // ================= DEFAULT =================
                                 return formatStatus(displayText).toUpperCase();
@@ -1607,41 +1604,41 @@ const ValuePitchChekin = () => {
                                 fontStyle: 'bold',
                                 font: 'TimesNewRomanBold',
                                 textColor: (() => {
-                                    const serviceType = service?.service_type || "";
+                                    const serviceType = service?.service_type || service?.annexureData.status || "";
                                     const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
 
                                     // ================= VALUEPITCH =================
-                                    if (serviceTypes.includes("valuepitch")) {
-                                        const vpStatus = service?.valuePitchStatus;
-                                        const vpReport = service?.valuePitchReport;
+                                    // if (serviceTypes.includes("valuepitch")) {
+                                    //     const vpStatus = service?.valuePitchStatus;
+                                    //     const vpReport = service?.valuePitchReport;
 
-                                        if (
-                                            vpStatus?.statusCode === 201 &&
-                                            vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
-                                            vpReport?.report
-                                        ) {
-                                            const color = vpReport.report.toLowerCase();
+                                    //     if (
+                                    //         vpStatus?.statusCode === 201 &&
+                                    //         vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
+                                    //         vpReport?.report
+                                    //     ) {
+                                    //         const color = vpReport.report.toLowerCase();
 
-                                            const colorMapping = {
-                                                green: 'green',
-                                                red: 'red',
-                                                yellow: 'yellow',
-                                                orange: 'orange',
-                                                pink: 'pink',
-                                                blue: 'blue',
-                                            };
+                                    //         const colorMapping = {
+                                    //             green: 'green',
+                                    //             red: 'red',
+                                    //             yellow: 'yellow',
+                                    //             orange: 'orange',
+                                    //             pink: 'pink',
+                                    //             blue: 'blue',
+                                    //         };
 
-                                            return colorMapping[color] || 'black';
-                                        }
+                                    //         return colorMapping[color] || 'black';
+                                    //     }
 
-                                        return 'black';
-                                    }
+                                    //     return 'black';
+                                    // }
 
                                     // ================= SUREPASS =================
-                                    if (serviceTypes.includes("surepass")) {
-                                        const sp = getSurepassStatus(service);
-                                        return getPdfColor(sp.color); // ✅ RGB color
-                                    }
+                                    // if (serviceTypes.includes("surepass")) {
+                                    //     const sp = getSurepassStatus(service);
+                                    //     return getPdfColor(sp.color); // ✅ RGB color
+                                    // }
 
                                     // ================= DEFAULT =================
                                     return textColorr;
@@ -1746,200 +1743,70 @@ const ValuePitchChekin = () => {
                         .map(s => s.trim().toLowerCase());
 
                     let tableData = [];
-                    let vpReport = null;
-                    if (serviceTypes.includes("valuepitch")) {
-                        const vpStatus = service?.valuePitchStatus;
+                    let vpReport = service?.valuePitchReport || null;
 
-                        // ✅ Report Ready
-                        if (
-                            vpStatus?.statusCode === 201 &&
-                            vpStatus?.statusMsg?.toLowerCase().includes("ready")
-                        ) {
-                            vpReport = service?.valuePitchReport || {};
-                            console.log('vpReport', vpReport)
-                            tableData = [
-                                ["Name", vpReport?.name || "N/A"],
-                                ["Report", vpReport?.report || "N/A"],
-                                ["Address", vpReport?.addresses?.[0]?.address || "N/A"],
-                                ["Date Of Verification",
-                                    vpReport?.dateOfVerification
-                                        ? new Date(vpReport.dateOfVerification)
-                                            .toLocaleDateString('en-GB')
-                                            .replace(/\//g, '-')
-                                        : "N/A"
-                                ],
-                                ["Report URL", ""],
-                            ];
-                        }
+                    tableData = serviceData
+                        .map((data, index) => {
 
-                        // ❌ Report Not Ready
-                        else if (vpStatus?.statusMsg) {
-                            tableData = [
-                                [vpStatus.statusMsg]
-                            ];
-                        }
-                    }
-
-                    // ================= SUREPASS =================
-                    // ================= SUREPASS =================
-                    else if (serviceTypes.includes("surepass")) {
-                        const sp = service?.screeningstar_response;
-
-                        if (!sp || !sp.is_prefilled) {
-                            tableData = [
-                                ["Status", "Managed by Surepass API"]
-                            ];
-                        } else {
-                            const res = sp.response_json || {};
-                            const req = sp.request_json || {};
-
-                            // 🔥 STATUS
-                            const getStatus = () => {
-                                if (res?.success === true || res?.status_code === 200) return "SUCCESS";
-                                if (res?.status_code >= 500) return "SERVER ERROR";
-                                if (res?.errors || res?.success === false) return "FAILED";
-                                return "PENDING";
-                            };
-
-                            const formatKey = (key) =>
-                                key?.replace(/_/g, " ")
-                                    ?.replace(/\b\w/g, c => c.toUpperCase());
-
-                            const cleanValue = (value) => {
-                                if (value === null || value === undefined) return "N/A";
-                                if (typeof value === "boolean") return value ? "Yes" : "No";
-                                return value.toString();
-                            };
-
-                            const cleanText = (text) => {
-                                return String(text)
-                                    .replace(/[^\x00-\x7F]/g, "")
-                                    .replace(/\s+/g, " ")
-                                    .trim();
-                            };
-
-                            // 🔥 RECURSIVE FUNCTION
-                            const buildRows = (obj) => {
-                                let rows = [];
-
-                                Object.entries(obj).forEach(([key, value]) => {
-                                    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-                                        // ✅ FIX: section header → only ONE column
-                                        rows.push([formatKey(key)]);
-                                        rows = rows.concat(buildRows(value));
-                                    }
-                                    else if (Array.isArray(value)) {
-                                        value.forEach((item, idx) => {
-                                            if (typeof item === "object") {
-                                                rows = rows.concat(buildRows(item));
-                                            } else {
-                                                rows.push([`${formatKey(key)} ${idx + 1}`, cleanValue(item)]);
-                                            }
-                                        });
-                                    }
-                                    else {
-                                        rows.push([cleanText(formatKey(key)), cleanValue(value)]);
-                                    }
-                                });
-
-                                return rows;
-                            };
-
-                            // ================= BUILD TABLE =================
-                            tableData = [
-                                ["Status", getStatus()],
-                            ];
-
-                            if (res?.message) {
-                                tableData.push(["Message", res.message]);
+                            if (!data || !data.values) {
+                                console.log("Skipped: data or data.values is missing");
+                                return null;
                             }
 
-                            if (res?.message_code) {
-                                tableData.push(["Code", formatKey(res.message_code)]);
+                            const name = data.values.name;
+                            // console.log("Extracted name:", name);
+
+                            if (!name || name.startsWith("annexure")) {
+                                console.log("Skipped: name is invalid or starts with 'annexure'");
+                                return null;
                             }
 
-                            // 🔥 REQUEST DATA
-                            tableData.push(["Request Data"]); // ✅ FIXED
-                            tableData = tableData.concat(buildRows(req));
+                            const isVerifiedExist = data.values.isVerifiedExist;
+                            const rawValue = data.values[name];
+                            const verified = data.values[`verified_${name}`];
 
-                            // 🔥 RESPONSE DATA
-                            if (res && Object.keys(res).length) {
-                                tableData.push(["Response Data"]); // ✅ FIXED
-                                tableData = tableData.concat(buildRows(res));
+                            // fallback: if rawValue is undefined but verified is present, use verified as value
+
+                            const finalValue = rawValue !== undefined ? rawValue : verified;
+
+                            if (name == 'additional_fee_police_verification_pa') {
+
                             }
 
-                            // ❌ ERRORS
-                            if (res?.errors) {
-                                tableData.push(["Errors"]); // ✅ FIXED
-                                tableData = tableData.concat(buildRows(res.errors));
-                            }
-                        }
-                    }
-
-                    // ================= DEFAULT =================
-                    else {
-                        tableData = serviceData
-                            .map((data, index) => {
-
-                                if (!data || !data.values) {
-                                    console.log("Skipped: data or data.values is missing");
-                                    return null;
+                            const formatDate = (dateStr) => {
+                                const date = new Date(dateStr);
+                                if (isNaN(date)) {
+                                    console.log("Invalid date string:", dateStr);
+                                    return dateStr;
                                 }
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const year = date.getFullYear();
+                                const formatted = `${day}-${month}-${year}`;
+                                console.log("Formatted date:", formatted);
+                                return formatted;
+                            };
 
-                                const name = data.values.name;
-                                // console.log("Extracted name:", name);
+                            const formattedValue =
+                                typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
+                                    ? formatDate(finalValue)
+                                    : finalValue;
 
-                                if (!name || name.startsWith("annexure")) {
-                                    console.log("Skipped: name is invalid or starts with 'annexure'");
-                                    return null;
-                                }
+                            const formattedVerified =
+                                typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
+                                    ? formatDate(verified)
+                                    : verified;
 
-                                const isVerifiedExist = data.values.isVerifiedExist;
-                                const rawValue = data.values[name];
-                                const verified = data.values[`verified_${name}`];
+                            const result = formattedVerified
+                                ? [data.label, formattedValue, formattedVerified]
+                                : [data.label, formattedValue];
 
-                                // fallback: if rawValue is undefined but verified is present, use verified as value
+                            console.log("Mapped result:", result);
 
-                                const finalValue = rawValue !== undefined ? rawValue : verified;
+                            return result;
+                        })
+                        .filter((item) => item !== null);
 
-                                if (name == 'additional_fee_police_verification_pa') {
-
-                                }
-
-                                const formatDate = (dateStr) => {
-                                    const date = new Date(dateStr);
-                                    if (isNaN(date)) {
-                                        console.log("Invalid date string:", dateStr);
-                                        return dateStr;
-                                    }
-                                    const day = String(date.getDate()).padStart(2, '0');
-                                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                                    const year = date.getFullYear();
-                                    const formatted = `${day}-${month}-${year}`;
-                                    console.log("Formatted date:", formatted);
-                                    return formatted;
-                                };
-
-                                const formattedValue =
-                                    typeof finalValue === 'string' && finalValue.match(/^\d{4}-\d{2}-\d{2}$/)
-                                        ? formatDate(finalValue)
-                                        : finalValue;
-
-                                const formattedVerified =
-                                    typeof verified === 'string' && verified.match(/^\d{4}-\d{2}-\d{2}$/)
-                                        ? formatDate(verified)
-                                        : verified;
-
-                                const result = formattedVerified
-                                    ? [data.label, formattedValue, formattedVerified]
-                                    : [data.label, formattedValue];
-
-                                console.log("Mapped result:", result);
-
-                                return result;
-                            })
-                            .filter((item) => item !== null);
-                    }
 
 
                     if (tableData.length > 0) {
@@ -1984,7 +1851,9 @@ const ValuePitchChekin = () => {
                             styles: { halign: "left", fontStyle: "bold" }
                         }));
                         const isTwoColumnBody = dynamicHead.length < 3;
-
+                        if (serviceTypes.includes("valuepitch") && vpReport?.reportUrl) {
+                            tableData.push(["Report URL", ""]); // Cell empty rahegi, didDrawCell handle karega
+                        }
                         doc.autoTable({
                             head: [dynamicHead],
                             body: tableData
@@ -2710,6 +2579,7 @@ const ValuePitchChekin = () => {
     useEffect(() => {
         fetchData();
     }, [clientId, branchId]);
+
     const scrollContainerRef = useRef(null);
 
     // Refresh the table data by fetching from the generatereport API after generating a report
@@ -3385,6 +3255,46 @@ const ValuePitchChekin = () => {
         const colorRegex = new RegExp(`\\b(${colorNames.join('|')})\\b`, 'gi');
         return text.replace(colorRegex, '').trim();
     };
+
+    const renderValuePitchResponse = (application) => {
+        const services = Array.isArray(application.valuePitchServices)
+            ? application.valuePitchServices
+            : [];
+
+        if (!services.length) {
+            return <span className="text-gray-500">Response Nahi Aaya</span>;
+        }
+
+        return (
+            <div className="flex flex-col gap-1 text-left min-w-[240px]">
+                {services.map((service) => {
+                    const isReady = service.reportReady || service.status === "report_ready";
+                    const hasResponse = service.responseReceived || Boolean(service.statusCode);
+                    const label = isReady
+                        ? "Report Available"
+                        : hasResponse
+                            ? "Report In Progress"
+                            : "Report Not Requested";
+
+                    return (
+                        <div key={service.service_id} className="flex flex-col gap-1">
+                            <span className="font-semibold text-[#4d606b] whitespace-normal">
+                                {service.service_name || `Service ${service.service_id}`}
+                            </span>
+                            <span className={`inline-flex w-fit rounded px-2 py-1 text-xs font-semibold ${isReady
+                                ? "bg-green-100 text-green-700 border border-green-500"
+                                : hasResponse
+                                    ? "bg-yellow-100 text-yellow-700 border border-yellow-500"
+                                    : "bg-red-100 text-red-700 border border-red-500"
+                                }`}>
+                                {label}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
     console.log('paginatedData    name', paginatedData);
 
     return (
@@ -3599,6 +3509,7 @@ const ValuePitchChekin = () => {
                                     <th className="uppercase border border-black px-4 py-2">Deadline Date</th>
                                     <th className="uppercase border border-black px-4 py-2">Report Data</th>
                                     <th className="uppercase border border-black px-4 py-2">Download Status</th>
+                                    <th className="uppercase border border-black px-4 py-2">ValuePitch Response</th>
 
                                     <th className="uppercase border border-black px-4 py-2">Overall Status</th>
                                     <th className="uppercase border border-black px-4 py-2">Report Type</th>
@@ -3811,6 +3722,8 @@ const ValuePitchChekin = () => {
                                                             })()}
                                                         </td>
 
+                                                        <td className="border border-black px-4 py-2">{renderValuePitchResponse(data)}</td>
+
                                                         <td className="border border-black px-4 uppercase py-2">{(data.overall_status || 'WIP').replace(/_/g, ' ')}
                                                         </td>
                                                         <td className="border border-black px-4 uppercase py-2">{data.report_type?.replace(/_/g, " ") || 'N/A'}</td>
@@ -3931,3 +3844,4 @@ const ValuePitchChekin = () => {
 };
 export default ValuePitchChekin;
 // DONE
+
