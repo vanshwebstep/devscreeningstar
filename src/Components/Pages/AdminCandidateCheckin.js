@@ -9,6 +9,7 @@ import { FaChevronLeft } from 'react-icons/fa';
 import { useApiLoading } from '../ApiLoadingContext';
 import axios from "axios";
 import JSZip from "jszip";
+import * as XLSX from "xlsx";
 
 import LogoBgv from "../../imgs/iso2.png"
 
@@ -837,6 +838,64 @@ const AdminCandidateCheckin = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredOptions.slice(indexOfFirstItem, indexOfLastItem);
 
+    const bgvPdfExportRows = filteredOptions.filter((item) => {
+        const isBgvSubmitted = Number(item.cef_submitted) === 1 || Number(item.cef_id) > 0;
+        return isBgvSubmitted && item.bgv_form_pdf;
+    });
+
+    const handleExportBgvPdfExcel = () => {
+        if (bgvPdfExportRows.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Data Found',
+                text: 'BGV submitted PDF entries are not available for export.',
+            });
+            return;
+        }
+
+        const excelRows = bgvPdfExportRows.map((item, index) => ({
+            'SL NO': index + 1,
+            'Full Name of the Applicant': item.name || 'NIL',
+            'Employee ID': item.employee_id || 'NIL',
+            'Mobile Number': item.mobile_number || 'NIL',
+            'Email': item.email || 'NIL',
+            'Initiation Date': formatDatedmy(item.created_at) || 'NIL',
+            'BGV Filled Date': formatDatedmy(item.cef_filled_date) || 'NIL',
+            'Application ID': item.applications_id || item.application_id || item.main_id || 'NIL',
+            'BGV Form PDF': item.bgv_form_pdf,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(excelRows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'BGV Submitted PDFs');
+        XLSX.writeFile(workbook, 'BGV-Submitted-PDF-Entries.xlsx');
+    };
+    const handleExportBgvPdfJson = () => {
+        if (bgvPdfExportRows.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Data Found',
+                text: 'BGV submitted PDF entries are not available for export.',
+            });
+            return;
+        }
+
+        const jsonRows = bgvPdfExportRows.map((item, index) => ({
+            'SL NO': index + 1,
+            'Full Name of the Applicant': item.name || 'NIL',
+            'Employee ID': item.employee_id || 'NIL',
+            'Mobile Number': item.mobile_number || 'NIL',
+            'Email': item.email || 'NIL',
+            'Initiation Date': formatDatedmy(item.created_at) || 'NIL',
+            'BGV Filled Date': formatDatedmy(item.cef_filled_date) || 'NIL',
+            'Application ID': item.applications_id || item.application_id || item.main_id || 'NIL',
+            'BGV Form PDF': item.bgv_form_pdf,
+        }));
+
+        const jsonString = JSON.stringify(jsonRows, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        saveAs(blob, 'BGV-Submitted-PDF-Entries.json');
+    };
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
@@ -1128,11 +1187,11 @@ const AdminCandidateCheckin = () => {
             console.log("🏁 Finished handleDownloadAllFiles.");
         }
     };
-      useEffect(() => {
-    if (tableScrollRef.current) {
-      setScrollWidth(tableScrollRef.current.scrollWidth + "px");
-    }
-  }, [currentItems, loading]); 
+    useEffect(() => {
+        if (tableScrollRef.current) {
+            setScrollWidth(tableScrollRef.current.scrollWidth + "px");
+        }
+    }, [currentItems, loading]);
 
     const handleDownloadFile = async (url) => {
         try {
@@ -1188,7 +1247,7 @@ const AdminCandidateCheckin = () => {
 
                         <div className="col">
                             <form action="">
-                                <div className="flex gap-5 justify-between">
+                                <div className="flex gap-5 justify-between mb-2">
                                     <select name="options" id="" onChange={handleSelectChange} className='border rounded-lg px-3 py-1 text-gray-700 bg-white mt-2  shadow-sm focus:ring-2 focus:ring-blue-400'>
                                         <option value="10">10</option>
                                         <option value="50">50</option>
@@ -1198,8 +1257,28 @@ const AdminCandidateCheckin = () => {
 
                                 </div>
                             </form>
-                        </div>
-                        <div className="col md:flex justify-end ">
+                            <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+                                <button
+
+
+                                    type="button"
+                                    onClick={handleExportBgvPdfExcel}
+                                    disabled={bgvPdfExportRows.length === 0}
+                                    className={`bg-green-600 text-white px-4 py-2 rounded-md uppercase border border-white hover:border-green-600 hover:bg-white hover:text-green-600 ${bgvPdfExportRows.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    Export Submitted BGV Entries
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleExportBgvPdfJson}
+                                    disabled={bgvPdfExportRows.length === 0}
+                                    className={`bg-blue-600 text-white px-4 py-2 rounded-md uppercase border border-white hover:border-blue-600 hover:bg-white hover:text-blue-600 mt-2 ${bgvPdfExportRows.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    Export JSON
+                                </button>
+                            </div>            </div>
+                        <div className="col md:flex justify-between ">
+
                             <form action="" className='w-96'>
                                 <div className="flex md:items-stretch items-center  gap-3">
                                     <input
@@ -1215,6 +1294,7 @@ const AdminCandidateCheckin = () => {
 
                                 </div>
                             </form>
+
                         </div>
 
                     </div>

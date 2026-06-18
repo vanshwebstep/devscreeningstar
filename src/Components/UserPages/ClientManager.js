@@ -312,7 +312,7 @@ const ClientManager = () => {
                 const branch_token = localStorage.getItem("branch_token");
                 const fileCount = Object.keys(files).length;
                 // console.log('files - - - ', files, 'count', fileCount)
-               
+
                 const serviceData = JSON.stringify(selectedServiceIds);
 
                 for (const [index, [key, value]] of Object.entries(files).entries()) {
@@ -354,10 +354,10 @@ const ClientManager = () => {
         };
 
         const fileCount = Object.keys(files).length;
- const validReportTypes = [
-                    "CONFIDENTIAL BACKGROUND SCREENING REPORT",
-                    "VENDOR CONFIDENTIAL SCREENING REPORT"
-                ];
+        const validReportTypes = [
+            "CONFIDENTIAL BACKGROUND SCREENING REPORT",
+            "VENDOR CONFIDENTIAL SCREENING REPORT"
+        ];
         // console.log(`formData - `, formData);
 
         let payload = {
