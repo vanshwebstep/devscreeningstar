@@ -41,7 +41,7 @@ const Acknowledgement = () => {
       return;
     }
 
-    const url = `https://devscreeningnode.onrender.com/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/acknowledgement/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     fetch(url, {
       method: "GET",
@@ -120,7 +120,7 @@ const Acknowledgement = () => {
     // Set loading state to true
     setLoading(true);
 
-    fetch("https://devscreeningnode.onrender.com/acknowledgement/send-notification", requestOptions)
+    fetch("https://api.screeningstar.co.in/acknowledgement/send-notification", requestOptions)
       .then((response) => response.json())
       .then((result) => {
         if (result.status) {

@@ -51,7 +51,7 @@ const TATReminder = () => {
 
     try {
       const response = await fetch(
-        `https://devscreeningnode.onrender.com/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`,
+        `https://api.screeningstar.co.in/tat-delay/list?admin_id=${admin_id}&_token=${storedToken}`,
         {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${storedToken}` },
@@ -99,7 +99,7 @@ const TATReminder = () => {
 
         try {
           const response = await axios.delete(
-            `https://devscreeningnode.onrender.com/tat-delay/delete`,
+            `https://api.screeningstar.co.in/tat-delay/delete`,
             {
               params: {
                 client_application_id: app_id,
@@ -233,7 +233,7 @@ const TATReminder = () => {
           body: formdata,
           redirect: "follow"
         };
-        const url = `https://devscreeningnode.onrender.com/tat-delay/delete-application?customer_id=${customerid}&admin_id=${adminId}&_token=${token}&application_id=${applicationId}`;
+        const url = `https://api.screeningstar.co.in/tat-delay/delete-application?customer_id=${customerid}&admin_id=${adminId}&_token=${token}&application_id=${applicationId}`;
         fetch(url, requestOptions)
           .then((response) => {
             if (!response.ok) {

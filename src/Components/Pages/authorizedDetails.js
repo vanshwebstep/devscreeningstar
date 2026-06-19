@@ -54,7 +54,7 @@ const AuthorizedDetails = () => {
     }
 
     // Construct the URL with query parameters
-    const url = `https://devscreeningnode.onrender.com/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/authorized-detail/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -136,8 +136,8 @@ const AuthorizedDetails = () => {
     };
 
     const url = isEditing
-      ? `https://devscreeningnode.onrender.com/authorized-detail/update`
-      : `https://devscreeningnode.onrender.com/authorized-detail/create`;
+      ? `https://api.screeningstar.co.in/authorized-detail/update`
+      : `https://api.screeningstar.co.in/authorized-detail/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -219,7 +219,7 @@ const AuthorizedDetails = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setDeletingId(id);
-        fetch(`https://devscreeningnode.onrender.com/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/authorized-detail/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             const newToken = result.token || result._token || storedToken || "";

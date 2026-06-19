@@ -30,7 +30,7 @@ const UserBar = () => {
         return;
       }
 
-      const response = await fetch("https://devscreeningnode.onrender.com/Screeningstar/logout", {
+      const response = await fetch("https://api.screeningstar.co.in/Screeningstar/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

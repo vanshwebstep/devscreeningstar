@@ -127,7 +127,7 @@ const CLientTrashed = () => {
         const branchInfo = JSON.parse(localStorage.getItem("branch"));
         const { customer_id, id: branch_id } = branchInfo;
         const branch_token = localStorage.getItem("branch_token");
-        const url = `https://devscreeningnode.onrender.com/branch/trashed/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
+        const url = `https://api.screeningstar.co.in/branch/trashed/client-application/listings?customer_id=${customer_id}&branch_id=${branchInfo.branch_id}&_token=${branch_token}`;
 
         try {
             let response;
@@ -338,7 +338,7 @@ const CLientTrashed = () => {
                     }
 
                     try {
-                        await axios.post(`https://devscreeningnode.onrender.com/branch/client-application/upload`, customerLogoFormData, {
+                        await axios.post(`https://api.screeningstar.co.in/branch/client-application/upload`, customerLogoFormData, {
                             headers: {
                                 "Content-Type": "multipart/form-data",
                             },
@@ -390,8 +390,8 @@ const CLientTrashed = () => {
 
 
         const apiUrl = handleEditClick
-            ? "https://devscreeningnode.onrender.com/branch/client-application/update"
-            : "https://devscreeningnode.onrender.com/branch/client-application/create";
+            ? "https://api.screeningstar.co.in/branch/client-application/update"
+            : "https://api.screeningstar.co.in/branch/client-application/create";
 
         const method = handleEditClick ? "PUT" : "POST";
 
@@ -495,9 +495,9 @@ const CLientTrashed = () => {
                 let url;
                 if (branchData?.type === "sub_user") {
                     const sub_user_id = branchData?.id ?? null;
-                    url = `https://devscreeningnode.onrender.com/branch/trashed/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
+                    url = `https://api.screeningstar.co.in/branch/trashed/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
                 } else {
-                    url = `https://devscreeningnode.onrender.com/branch/trashed/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+                    url = `https://api.screeningstar.co.in/branch/trashed/client-application/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
                 }
 
                 fetch(`${url}`, requestOptions)
@@ -543,9 +543,9 @@ const CLientTrashed = () => {
                 let url;
                 if (branchData?.type === "sub_user") {
                     const sub_user_id = branchData?.id ?? null;
-                    url = `https://devscreeningnode.onrender.com/branch/trashed/client-application/restore?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
+                    url = `https://api.screeningstar.co.in/branch/trashed/client-application/restore?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${sub_user_id}`;
                 } else {
-                    url = `https://devscreeningnode.onrender.com/branch/trashed/client-application/restore?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+                    url = `https://api.screeningstar.co.in/branch/trashed/client-application/restore?id=${id}&branch_id=${branch_id}&_token=${_token}`;
                 }
 
                 fetch(`${url}`, requestOptions)

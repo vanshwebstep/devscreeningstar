@@ -56,7 +56,7 @@ const AdminUpdatePassword = () => {
 
         // Make the API request to update the password
         try {
-            const response = await fetch('https://devscreeningnode.onrender.com/admin/update-password', requestOptions);
+            const response = await fetch('https://api.screeningstar.co.in/admin/update-password', requestOptions);
             const result = await response.text();
             if (response.ok) {
                 Swal.fire({

@@ -413,7 +413,7 @@ const TeamManagementGenerateReport = () => {
         const token = localStorage.getItem("_token");
 
         fetch(
-            `https://devscreeningnode.onrender.com/team-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`
+            `https://api.screeningstar.co.in/team-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`
         )
             .then((response) => response.json())
             .then((result) => {
@@ -611,7 +611,7 @@ const TeamManagementGenerateReport = () => {
             }
 
             const uploadPromise = axios.post(
-                "https://devscreeningnode.onrender.com/team-management/upload",
+                "https://api.screeningstar.co.in/team-management/upload",
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             )
@@ -737,7 +737,7 @@ const TeamManagementGenerateReport = () => {
             });
 
             const response = await fetch(
-                "https://devscreeningnode.onrender.com/team-management/generate-report",
+                "https://api.screeningstar.co.in/team-management/generate-report",
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -804,7 +804,7 @@ const TeamManagementGenerateReport = () => {
     const fetchImageToBase = async (imageUrls) => {
         try {
             const response = await axios.post(
-                "https://devscreeningnode.onrender.com/utils/image-to-base",
+                "https://api.screeningstar.co.in/utils/image-to-base",
                 { image_urls: imageUrls },
                 { headers: { "Content-Type": "application/json" } }
             );

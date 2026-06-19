@@ -189,7 +189,7 @@ const AdminChekin = () => {
                 .join('');
         }
 
-        const baseUrl = `https://devscreeningnode.onrender.com/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
+        const baseUrl = `https://api.screeningstar.co.in/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
 
         // Initialize URLSearchParams for parameters
         const parameters = new URLSearchParams();
@@ -300,7 +300,7 @@ const AdminChekin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -460,7 +460,7 @@ const AdminChekin = () => {
             // console.log("Payload:", raw);
 
             const response = await axios.post(
-                "https://devscreeningnode.onrender.com/utils/image-to-base",
+                "https://api.screeningstar.co.in/utils/image-to-base",
                 raw,
                 { headers }
             );
@@ -1438,7 +1438,7 @@ const AdminChekin = () => {
                         ) {
                             rawStatus = service?.annexureData.status || 'N/A'; // ✅ GREEN / RED
                         } else {
-                            rawStatus = service?.annexureData.status|| 'N/A'; 
+                            rawStatus = service?.annexureData.status || 'N/A';
                         }
                     }
                     if (serviceTypes.includes("surepass")) {
@@ -1538,15 +1538,15 @@ const AdminChekin = () => {
                                 };
 
                                 // ================= VALUEPITCH =================
-                                if (serviceTypes.includes("valuepitch")) {
-                                    const vpReport = service?.valuePitchReport;
+                                //                                 if (serviceTypes.includes("valuepitch")) {
+                                //                                     const vpReport = service?.valuePitchReport;
+                                // console.log('serviceserviceservice',service)
+                                //                                     if (vpReport?.dateOfVerification) {
+                                //                                         return formatDate(vpReport.dateOfVerification);
+                                //                                     }
 
-                                    if (vpReport?.dateOfVerification) {
-                                        return formatDate(vpReport.dateOfVerification);
-                                    }
-
-                                    return "N/A";
-                                }
+                                //                                     return "N/A";
+                                //                                 }
 
                                 // ================= DEFAULT =================
                                 const annexure = Array.isArray(service?.annexureData)
@@ -1572,30 +1572,8 @@ const AdminChekin = () => {
                             content: (() => {
                                 const serviceType = service?.service_type || service?.annexureData.status || "";
                                 const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
-console.log('serviceTypes', service)
-                                // ================= VALUEPITCH =================
-                                // if (serviceTypes.includes("valuepitch")) {
-                                //     const vpStatus = service?.valuePitchStatus;
-                                //     const vpReport = service?.valuePitchReport;
-                                //     console.log('vpStatus', service)
-                                //     // ✅ Report Ready
-                                //     if (
-                                //         vpStatus?.statusCode === 201 &&
-                                //         vpStatus?.statusMsg?.toLowerCase().includes("ready") &&
-                                //         vpReport?.report
-                                //     ) {
-                                //         return service?.annexureData.status; // GREEN / RED etc.
-                                //     }
-
-                                //     // ❌ Not Ready
-                                //     return service?.annexureData.status;
-                                // }
-
-                                // ================= SUREPASS =================
-                                // if (serviceTypes.includes("surepass")) {
-                                //     const sp = getSurepassStatus(service);
-                                //     return sp.label;
-                                // }
+                                console.log('serviceTypes', service)
+                             
 
                                 // ================= DEFAULT =================
                                 return formatStatus(displayText).toUpperCase();
@@ -3101,7 +3079,7 @@ console.log('serviceTypes', service)
             redirect: "follow",
         };
 
-        const url = `https://devscreeningnode.onrender.com/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
+        const url = `https://api.screeningstar.co.in/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
 
         fetch(url, requestOptions)
             .then((response) => {
@@ -3159,7 +3137,7 @@ console.log('serviceTypes', service)
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `https://devscreeningnode.onrender.com/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `https://api.screeningstar.co.in/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {

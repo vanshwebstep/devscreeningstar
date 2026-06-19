@@ -59,7 +59,7 @@ const MyProfile = () => {
         const queryString = new URLSearchParams(payLoad).toString();
 
         try {
-            const response = await fetch(`https://devscreeningnode.onrender.com/branch/customer-info?${queryString}`, {
+            const response = await fetch(`https://api.screeningstar.co.in/branch/customer-info?${queryString}`, {
                 method: "GET",
                 redirect: "follow",
             });

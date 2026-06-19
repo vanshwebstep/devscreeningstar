@@ -50,7 +50,7 @@ const ServiceManagementGroup = () => {
         }
 
         try {
-            const response = await axios.get(`https://devscreeningnode.onrender.com/service-group/list`, {
+            const response = await axios.get(`https://api.screeningstar.co.in/service-group/list`, {
                 params: { admin_id, _token: storedToken }
             });
 
@@ -133,8 +133,8 @@ const ServiceManagementGroup = () => {
 
         try {
             const url = editingServiceId
-                ? `https://devscreeningnode.onrender.com/service-group/update`
-                : `https://devscreeningnode.onrender.com/service-group/create`;
+                ? `https://api.screeningstar.co.in/service-group/update`
+                : `https://api.screeningstar.co.in/service-group/create`;
 
             const response = await fetch(url, requestOptions);
 
@@ -199,7 +199,7 @@ const ServiceManagementGroup = () => {
                 const storedToken = localStorage.getItem("_token");
 
                 try {
-                    const response = await axios.delete(`https://devscreeningnode.onrender.com/service-group/delete`, {
+                    const response = await axios.delete(`https://api.screeningstar.co.in/service-group/delete`, {
                         params: { id, admin_id, _token: storedToken }
                     });
 

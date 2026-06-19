@@ -46,7 +46,7 @@ const ServiceBGVForm = () => {
     setLoading(true);
     setApiLoading(true);
 
-    const url = `https://devscreeningnode.onrender.com/json-form/background-verification/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/json-form/background-verification/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url);

@@ -35,7 +35,7 @@ const PermissionManager = () => {
   const fetchRolesWithoutLoader = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://devscreeningnode.onrender.com/admin/permission/list?admin_id=${adminId}&_token=${token}`,
+        `https://api.screeningstar.co.in/admin/permission/list?admin_id=${adminId}&_token=${token}`,
         { method: "GET", redirect: "follow" }
       );
 
@@ -62,7 +62,7 @@ const PermissionManager = () => {
     setApiLoading(true);
     try {
       const response = await fetch(
-        `https://devscreeningnode.onrender.com/admin/permission/list?admin_id=${adminId}&_token=${token}`,
+        `https://api.screeningstar.co.in/admin/permission/list?admin_id=${adminId}&_token=${token}`,
         { method: "GET", redirect: "follow" }
       );
 
@@ -258,7 +258,7 @@ const PermissionManager = () => {
         redirect: "follow",
       };
 
-      const response = await fetch("https://devscreeningnode.onrender.com/admin/permission/update", requestOptions);
+      const response = await fetch("https://api.screeningstar.co.in/admin/permission/update", requestOptions);
 
       const data = await response.json();
 
@@ -321,7 +321,7 @@ const PermissionManager = () => {
 
     try {
       const response = await axios.get(
-        `https://devscreeningnode.onrender.com/service/list?admin_id=${admin_id}&_token=${storedToken}`
+        `https://api.screeningstar.co.in/service/list?admin_id=${admin_id}&_token=${storedToken}`
       );
 
       const result = response.data;
@@ -382,7 +382,7 @@ const PermissionManager = () => {
 
     try {
       const response = await fetch(
-        `https://devscreeningnode.onrender.com/service-group/list?${queryParams}`,
+        `https://api.screeningstar.co.in/service-group/list?${queryParams}`,
         {
           method: "GET",
           redirect: "follow",

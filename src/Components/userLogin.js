@@ -56,7 +56,7 @@ useEffect(() => {
         };
         try {
           const response = await fetch(
-            `https://devscreeningnode.onrender.com/customer/fetch-branch-password?branch_email=${usernameFromQuery}&admin_id=${admin_id}&_token=${storedToken}`,
+            `https://api.screeningstar.co.in/customer/fetch-branch-password?branch_email=${usernameFromQuery}&admin_id=${admin_id}&_token=${storedToken}`,
             requestOptions
           );
           const result = await response.json();
@@ -128,7 +128,7 @@ useEffect(() => {
 
     try {
       const loginResponse = await fetch(
-        "https://devscreeningnode.onrender.com/branch/login",
+        "https://api.screeningstar.co.in/branch/login",
         requestOptions
       );
 
@@ -229,7 +229,7 @@ useEffect(() => {
     };
 
     try {
-      const response = await fetch('https://devscreeningnode.onrender.com/branch/verify-two-factor', requestOptions);
+      const response = await fetch('https://api.screeningstar.co.in/branch/verify-two-factor', requestOptions);
       const result = await response.json();
       console.log('API Response:', result); // Debugging log
 

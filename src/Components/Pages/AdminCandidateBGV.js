@@ -663,7 +663,7 @@ const CandidateBGV = () => {
         };
 
         fetch(
-            `https://devscreeningnode.onrender.com/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
+            `https://api.screeningstar.co.in/candidate-master-tracker/bgv-application-by-id?application_id=${applicationId}&branch_id=${branchId}&admin_id=${admin_id}&_token=${MyToken}`,
             requestOptions
         )
             .then(res => {

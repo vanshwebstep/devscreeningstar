@@ -203,7 +203,7 @@ function formatDateSafe(dateValue) {
             redirect: "follow"
         };
 
-        fetch(`https://devscreeningnode.onrender.com/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 // Check if result is valid
@@ -333,7 +333,7 @@ function formatDateSafe(dateValue) {
             };
 
             // Construct the URL with service IDs
-            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -496,7 +496,7 @@ function formatDateSafe(dateValue) {
 
             try {
                 const response = await axios.post(
-                    "https://devscreeningnode.onrender.com/client-master-tracker/upload",
+                    "https://api.screeningstar.co.in/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -592,7 +592,7 @@ function formatDateSafe(dateValue) {
                 };
 
                 const response = await fetch(
-                    `https://devscreeningnode.onrender.com/data-management/submit`,
+                    `https://api.screeningstar.co.in/data-management/submit`,
                     requestOptions
                 );
 

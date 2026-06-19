@@ -75,7 +75,7 @@ const Vendors = () => {
             return;
         }
 
-        const url = `https://devscreeningnode.onrender.com/internal-storage/vendor/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://api.screeningstar.co.in/internal-storage/vendor/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         try {
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -215,8 +215,8 @@ const Vendors = () => {
         };
 
         const url = isEditing
-            ? "https://devscreeningnode.onrender.com/internal-storage/vendor/update"
-            : "https://devscreeningnode.onrender.com/internal-storage/vendor/create";
+            ? "https://api.screeningstar.co.in/internal-storage/vendor/update"
+            : "https://api.screeningstar.co.in/internal-storage/vendor/create";
 
         try {
             const response = await fetch(url, requestOptions);
@@ -325,7 +325,7 @@ const Vendors = () => {
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `https://devscreeningnode.onrender.com/internal-storage/vendor/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://api.screeningstar.co.in/internal-storage/vendor/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 

@@ -60,7 +60,7 @@ const UserSetPassword = () => {
         };
 
         try {
-            const response = await fetch("https://devscreeningnode.onrender.com/branch/forgot-password", requestOptions);
+            const response = await fetch("https://api.screeningstar.co.in/branch/forgot-password", requestOptions);
             const result = await response.json();
 
             if (response.ok) {

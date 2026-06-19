@@ -85,7 +85,7 @@ const DataManagement = () => {
             redirect: "follow"
         };
 
-        fetch(`https://devscreeningnode.onrender.com/data-management/list?admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/data-management/list?admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 return response.json().then((result) => {
                     // Check if the API response status is false
@@ -141,7 +141,7 @@ const DataManagement = () => {
 
         try {
             const response = await fetch(
-                `https://devscreeningnode.onrender.com/data-management/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`,
+                `https://api.screeningstar.co.in/data-management/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`,
                 requestOptions
             );
 
@@ -294,7 +294,7 @@ const DataManagement = () => {
         };
 
         fetch(
-            `https://devscreeningnode.onrender.com/data-management/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`,
+            `https://api.screeningstar.co.in/data-management/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`,
             requestOptions
         )
             .then((response) => response.json())
@@ -368,7 +368,7 @@ const DataManagement = () => {
             setActiveId(id);
             try {
                 const response = await fetch(
-                    `https://devscreeningnode.onrender.com/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://api.screeningstar.co.in/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: "GET",
                         redirect: "follow",
@@ -403,7 +403,7 @@ const DataManagement = () => {
         fetchedRowsRef.current.add(applicationId); // Mark as fetched
 
         try {
-            const url = `https://devscreeningnode.onrender.com/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList.join(','))}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList.join(','))}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
             const response = await fetch(url, { method: "GET" });
             const result = await response.json();
 

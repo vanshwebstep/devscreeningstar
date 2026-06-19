@@ -95,7 +95,7 @@ const CaseAllocationList = () => {
 
     try {
       const response = await fetch(
-        `https://devscreeningnode.onrender.com/client-allocation/list?admin_id=${admin_id}&_token=${storedToken}`,
+        `https://api.screeningstar.co.in/client-allocation/list?admin_id=${admin_id}&_token=${storedToken}`,
         {
           method: "GET",
           redirect: "follow",
@@ -340,7 +340,7 @@ const CaseAllocationList = () => {
 
 
       const response = await fetch(
-        "https://devscreeningnode.onrender.com/client-allocation/update",
+        "https://api.screeningstar.co.in/client-allocation/update",
         requestOptions
       );
 
@@ -650,7 +650,7 @@ const CaseAllocationList = () => {
         setDeletingId(id);
 
         const response = await fetch(
-          `https://devscreeningnode.onrender.com/client-allocation/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://api.screeningstar.co.in/client-allocation/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           requestOptions
         );
 

@@ -214,7 +214,7 @@ const ViewUser = () => {
             return;
         }
 
-        const url = `https://devscreeningnode.onrender.com/user-history/activity?admin_id=${admin_id}&_token=${storedToken}&log_admin_id=${log_admin_id}&log_date=${log_id}`;
+        const url = `https://api.screeningstar.co.in/user-history/activity?admin_id=${admin_id}&_token=${storedToken}&log_admin_id=${log_admin_id}&log_date=${log_id}`;
 
         fetch(url, {
             method: "GET",

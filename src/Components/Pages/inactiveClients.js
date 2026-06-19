@@ -54,7 +54,7 @@ const InactiveClients = () => {
             }
 
             const response = await fetch(
-                `https://devscreeningnode.onrender.com/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`,
+                `https://api.screeningstar.co.in/customer/inactive-list?admin_id=${admin_id}&_token=${storedToken}`,
                 {
                     method: "GET",
                     redirect: "follow",
@@ -129,7 +129,7 @@ const InactiveClients = () => {
             setActiveId(id); // Set loading state to true
             try {
                 const response = await fetch(
-                    `https://devscreeningnode.onrender.com/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://api.screeningstar.co.in/customer/active?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: "GET",
                         redirect: "follow",
@@ -290,7 +290,7 @@ const InactiveClients = () => {
                 };
 
                 // Perform the DELETE request to delete the customer
-                fetch(`https://devscreeningnode.onrender.com/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+                fetch(`https://api.screeningstar.co.in/customer/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => response.text())
                     .then((result) => {
                         const newToken = result.token || result._token || storedToken || '';

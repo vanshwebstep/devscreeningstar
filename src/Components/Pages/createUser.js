@@ -60,7 +60,7 @@ const CreateUser = () => {
       redirect: "follow"
     };
 
-    fetch(`https://devscreeningnode.onrender.com/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions)
+    fetch(`https://api.screeningstar.co.in/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions)
       .then((response) => {
         return response.json().then((result) => {
           // Check if the API response status is false
@@ -238,7 +238,7 @@ const CreateUser = () => {
 
         try {
           console.log("Sending POST request to upload files...");
-          const response = await axios.post(`https://devscreeningnode.onrender.com/admin/upload`, formData, {
+          const response = await axios.post(`https://api.screeningstar.co.in/admin/upload`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -339,7 +339,7 @@ const CreateUser = () => {
       };
 
       const response = await fetch(
-        "https://devscreeningnode.onrender.com/admin/create",
+        "https://api.screeningstar.co.in/admin/create",
         requestOptions
       );
 

@@ -54,7 +54,7 @@ const EscalationManager = () => {
       return;
     }
 
-    const url = `https://devscreeningnode.onrender.com/escalation-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/escalation-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -132,8 +132,8 @@ const EscalationManager = () => {
     };
 
     const url = isEditing
-      ? `https://devscreeningnode.onrender.com/escalation-manager/update`
-      : `https://devscreeningnode.onrender.com/escalation-manager/create`;
+      ? `https://api.screeningstar.co.in/escalation-manager/update`
+      : `https://api.screeningstar.co.in/escalation-manager/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -205,7 +205,7 @@ const EscalationManager = () => {
       if (willDelete) {
         setDeletingId(id);
         const response = await fetch(
-          `https://devscreeningnode.onrender.com/escalation-manager/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://api.screeningstar.co.in/escalation-manager/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           requestOptions
         );
 

@@ -236,7 +236,7 @@ const EditClient = () => {
 
             try {
                 await axios.post(
-                    `https://devscreeningnode.onrender.com/customer/upload`,
+                    `https://api.screeningstar.co.in/customer/upload`,
                     customerLogoselectedClient,
                     {
                         headers: {
@@ -595,7 +595,7 @@ const EditClient = () => {
                 redirect: "follow",
             };
 
-            const response = await fetch("https://devscreeningnode.onrender.com/customer/update", requestOptions);
+            const response = await fetch("https://api.screeningstar.co.in/customer/update", requestOptions);
             const result = await response.json();
 
             // Store new token if available

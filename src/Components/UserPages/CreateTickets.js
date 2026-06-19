@@ -55,7 +55,7 @@ const CreateTickets = () => {
       redirect: 'follow',
     };
 
-    let url = `https://devscreeningnode.onrender.com/branch/ticket/list?branch_id=${branch_id}&_token=${branch_token}&page=${page}&search=${search}`;
+    let url = `https://api.screeningstar.co.in/branch/ticket/list?branch_id=${branch_id}&_token=${branch_token}&page=${page}&search=${search}`;
 
     // Conditionally append sub_user_id if the condition is met
     if (branchData?.type == "sub_user" && branchData.id) {
@@ -157,7 +157,7 @@ const CreateTickets = () => {
 
 
 
-      const response = await fetch('https://devscreeningnode.onrender.com/branch/ticket/create', requestOptions);
+      const response = await fetch('https://api.screeningstar.co.in/branch/ticket/create', requestOptions);
 
       if (response.ok) {
         const result = await response.json();
@@ -204,8 +204,8 @@ const CreateTickets = () => {
 
     const url =
       branchData?.type === "sub_user" && branchData.id
-        ? `https://devscreeningnode.onrender.com/branch/ticket/delete?ticket_number=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${branchData.id}`
-        : `https://devscreeningnode.onrender.com/branch/ticket/delete?ticket_number=${id}&branch_id=${branch_id}&_token=${_token}`;
+        ? `https://api.screeningstar.co.in/branch/ticket/delete?ticket_number=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${branchData.id}`
+        : `https://api.screeningstar.co.in/branch/ticket/delete?ticket_number=${id}&branch_id=${branch_id}&_token=${_token}`;
 
     const requestOptions = {
       method: "DELETE",

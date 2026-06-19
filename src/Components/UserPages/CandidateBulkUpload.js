@@ -75,7 +75,7 @@ const CandidateBulkUpload = () => {
 
         const branch_token = localStorage.getItem("branch_token");
 
-        const url = `https://devscreeningnode.onrender.com/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
+        const url = `https://api.screeningstar.co.in/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
 
         try {
             let response;
@@ -201,7 +201,7 @@ const CandidateBulkUpload = () => {
             }
             // Make the API request
             const response = await fetch(
-                "https://devscreeningnode.onrender.com/branch/candidate-application/bulk-create",
+                "https://api.screeningstar.co.in/branch/candidate-application/bulk-create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

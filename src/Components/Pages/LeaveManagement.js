@@ -59,7 +59,7 @@ const LeaveManagement = () => {
         }
 
         // Construct the URL with query parameters
-        const url = `https://devscreeningnode.onrender.com/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://api.screeningstar.co.in/personal-manager/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         // Request options for GET request (no body required)
         const requestOptions = {
@@ -238,7 +238,7 @@ const LeaveManagement = () => {
                 try {
                     console.log("Sending POST request to upload files...");
                     const response = await axios.post(
-                        `https://devscreeningnode.onrender.com/personal-manager/upload`,
+                        `https://api.screeningstar.co.in/personal-manager/upload`,
                         formData,
                         {
                             headers: {
@@ -324,8 +324,8 @@ setLoading(false);
             };
 
             const url = isEditing
-                ? `https://devscreeningnode.onrender.com/personal-manager/update`
-                : `https://devscreeningnode.onrender.com/personal-manager/create`;
+                ? `https://api.screeningstar.co.in/personal-manager/update`
+                : `https://api.screeningstar.co.in/personal-manager/create`;
 
             try {
                 const response = await fetch(url, requestOptions);
@@ -410,7 +410,7 @@ setLoading(false);
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `https://devscreeningnode.onrender.com/personal-manager/delete?personal_manager_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://api.screeningstar.co.in/personal-manager/delete?personal_manager_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 

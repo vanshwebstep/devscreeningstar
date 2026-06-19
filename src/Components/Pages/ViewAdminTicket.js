@@ -54,7 +54,7 @@ const ViewAdminTicket = () => {
 
         try {
             const response = await fetch(
-                `https://devscreeningnode.onrender.com/ticket/view?ticket_number=${ticketNumber}&sub_user_id=&admin_id=${admin_id}&_token=${storedToken}`,
+                `https://api.screeningstar.co.in/ticket/view?ticket_number=${ticketNumber}&sub_user_id=&admin_id=${admin_id}&_token=${storedToken}`,
                 requestOptions // Correctly pass requestOptions as the second argument
             );
             const result = await response.json();
@@ -133,7 +133,7 @@ const ViewAdminTicket = () => {
         setErrors({}); // Clear errors
     
         try {
-            const response = await fetch('https://devscreeningnode.onrender.com/ticket/chat', {
+            const response = await fetch('https://api.screeningstar.co.in/ticket/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -200,7 +200,7 @@ const ViewAdminTicket = () => {
             redirect: "follow"
         };
 
-        fetch("https://devscreeningnode.onrender.com/ticket/update", requestOptions)
+        fetch("https://api.screeningstar.co.in/ticket/update", requestOptions)
             .then((response) => response.json())  // Use response.json() to parse JSON responses
             .then((result) => console.log(result))  // Log the result of the response
             .catch((error) => console.error("Error:", error));  // Proper error handling
