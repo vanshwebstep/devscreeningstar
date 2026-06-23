@@ -91,6 +91,8 @@ const AdminBar = () => {
       localStorage.setItem('subMenu', 'adminCandidateManager');
     } else if (linkName === 'Data Management') {
       localStorage.setItem('subMenu', 'dataManagement');
+    } else if (linkName === 'Import Client Data') {
+      localStorage.setItem('subMenu', 'importClientData');
     } else if (linkName === 'Team Management') {
       localStorage.setItem('subMenu', 'teamManagement');
     } else if (linkName === 'TICKETS') {
@@ -266,6 +268,7 @@ const AdminBar = () => {
             >
               {[
                 { name: 'Data Management', icon: <FaDatabase className="text-4xl m-auto" />, link: '/admin-data-management' },
+                { name: 'Import Client Data', icon: <FaFileAlt className="text-4xl m-auto" />, link: '/admin-import-client-data' },
                 { name: 'Team Management', icon: <FaUsersCog className="text-4xl m-auto" />, link: '/admin-team-management' },
                 { name: 'APPLICATION DOCUMENT', icon: <FaFileAlt className="text-4xl m-auto" />, link: '/admin-documents' },
                 { name: 'Candidate Manager', icon: <FaEdit className="text-4xl m-auto" />, link: '/admin-candidate-manager' },
@@ -672,9 +675,10 @@ const AdminBar = () => {
 
           {adminManagerOpen && (
             <div className="transition duration-300 ease-in-out transform origin-top">
-              {['Data Management', 'Team Management', 'APPLICATION DOCUMENT', 'Candidate Manager'].map((tab, index) => {
+              {['Data Management', 'Import Client Data', 'Team Management', 'APPLICATION DOCUMENT', 'Candidate Manager'].map((tab, index) => {
                 const tabRoutes = {
                   'Data Management': '/admin-data-management',
+                  'Import Client Data': '/admin-import-client-data',
                   'Team Management': '/admin-team-management',
                   'APPLICATION DOCUMENT': '/admin-documents',
                   'Candidate Manager': '/admin-candidate-manager',
@@ -699,6 +703,7 @@ const AdminBar = () => {
                     >
                       <div className="flex gap-3">
                         {tab === 'Data Management' && <FaDatabase className="text-lg" />}
+                        {tab === 'Import Client Data' && <FaFileAlt className="text-lg" />}
                         {tab === 'Team Management' && <FaUsersCog className="text-lg" />}
                         {tab === 'APPLICATION DOCUMENT' && <FaFileAlt className="text-lg" />}
                         {tab === 'Candidate Manager' && <FaEdit className="text-lg" />}

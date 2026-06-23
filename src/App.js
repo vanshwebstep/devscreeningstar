@@ -54,6 +54,7 @@ import PackageManagement from "./Components/Pages/packageManagment.js";
 import LoginCheck from './Components/Pages/LoginCheck.js';
 import IsNotLogin from './Components/Pages/isNotLogin.js';
 import DataManagement from "./Components/Pages/dataManagment.js";
+import ImportClientData from "./Components/Pages/ImportClientData.js";
 import TeamManagment from "./Components/Pages/teamManagment.js";
 import ClientManagementData from "./Components/Pages/admin-clienttable.js";
 import UserHistory from "./Components/Pages/UserHistory.js";
@@ -216,6 +217,7 @@ const Layout = () => {
               <Route path="/admin-documents" element={<Documents />} />
 
               <Route path="/admin-data-management" element={<DataManagement />} />
+              <Route path="/admin-import-client-data" element={<ImportClientData />} />
               <Route path="/admin-report-master" element={<ReportMaster />} />
               <Route path="/admin-client-credentials" element={<ClientCredentials />} />
               <Route path="/admin-IntegrationServices" element={<IntegrationServices />} />

@@ -237,6 +237,11 @@ export const SidebarProvider = ({ children }) => {
       key: "dataManagement",
       href: "/admin-data-management"
     },
+    {
+      name: "Import Client Data",
+      key: "importClientData",
+      href: "/admin-import-client-data"
+    },
   ];
 
   const adminTabs = [
@@ -613,6 +618,9 @@ export const SidebarProvider = ({ children }) => {
         localStorage.setItem('inHome', 'no');
         tabs = adminManager;
       } else if (section === "Data Management") {
+        localStorage.setItem('inHome', 'no');
+        tabs = dataManagement;
+      } else if (section === "Import Client Data") {
         localStorage.setItem('inHome', 'no');
         tabs = dataManagement;
       } else if (section === "See More") {

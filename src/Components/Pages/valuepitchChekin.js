@@ -3268,8 +3268,13 @@ const ValuePitchChekin = () => {
         return (
             <div className="flex flex-col gap-1 text-left min-w-[240px]">
                 {services.map((service) => {
-                    const isReady = service.reportReady || service.status === "report_ready";
-                    const hasResponse = service.responseReceived || Boolean(service.statusCode);
+                    const statusCode = Number(
+                        service.statusCode ||
+                        service.valuePitchStatus?.statusCode ||
+                        service.screeningstar_response?.statusCode
+                    );
+                    const isReady = service.reportReady || service.status === "report_ready" || statusCode === 201;
+                    const hasResponse = service.responseReceived || Boolean(statusCode) || Boolean(service.verifyId);
                     const label = isReady
                         ? "Report Available"
                         : hasResponse

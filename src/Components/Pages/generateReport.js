@@ -72,8 +72,6 @@ const MultiSelect = ({ id, name, value, onChange, options, isDisabled }) => {
         />
     );
 };
-
-
 const GenerateReport = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
@@ -1280,7 +1278,7 @@ const GenerateReport = () => {
                         redirectAfterSuccess();
                     });
                 }
-                
+
             } catch (error) {
                 console.error("Error during submission:", error);
 
@@ -2622,7 +2620,12 @@ const GenerateReport = () => {
         return sd.service_type?.toLowerCase().split(",").map(t => t.trim()).includes("valuepitch");
     };
     const isAlreadySubmitted = (sd) =>
-        isValuePitch(sd) && sd.screeningstar_response?.statusCode === 200 && sd.verifyId;
+        isValuePitch(sd) && Boolean(
+            sd.verifyId ||
+            sd.valuePitchStatus?.verifyId ||
+            sd.screeningstar_response?.verifyId ||
+            sd.screeningstar_response?.statusCode === 200
+        );
     const reportColorClass = (status) => {
         // Check if any color name is in the status
         for (let color of colorNames) {
@@ -2632,7 +2635,8 @@ const GenerateReport = () => {
         }
         return status;  // Return the original status if no color name is found
     };
-    const isReportReady = (sd) => sd.valuePitchReport?.statusCode === 201;
+    const isReportReady = (sd) =>
+        Number(sd.valuePitchStatus?.statusCode || sd.valuePitchReport?.statusCode || sd.screeningstar_response?.statusCode) === 201;
 
     const addresses = [
         {
@@ -2701,6 +2705,25 @@ const GenerateReport = () => {
         const result = await res.json();
 
         if (result.token) localStorage.setItem("_token", result.token);
+        if (result.status) {
+            const pendingStatus = result.valuePitchStatus || {
+                statusCode: 200,
+                statusMsg: "Report is Not Ready",
+                verifyId: result.verifyId,
+            };
+            setServicesDataInfo((prev) => Array.isArray(prev)
+                ? prev.map((item) => String(item.service_id) === String(serviceData.service_id)
+                    ? {
+                        ...item,
+                        verifyId: result.verifyId || item.verifyId,
+                        valuePitchStatus: pendingStatus,
+                        valuePitchReport: result.valuePitchReport ?? item.valuePitchReport ?? null,
+                        screeningstar_response: result.screeningstar_response || item.screeningstar_response || pendingStatus,
+                    }
+                    : item)
+                : prev
+            );
+        }
         Swal.fire(result.status ? "Success!" : "Error", result.message, result.status ? "success" : "error");
         await fetchApplicationData();
 
@@ -3342,7 +3365,7 @@ const GenerateReport = () => {
                                                                                         <tbody>
                                                                                             {formJson.rows.map((row, idx) => {
                                                                                                 // ✅ Filter inputs based on valuepitch
-                                                                                              const filteredInputs = row.inputs;
+                                                                                                const filteredInputs = row.inputs;
 
                                                                                                 // ✅ Hide row if no inputs left (for valuepitch)
                                                                                                 if (filteredInputs.length === 0) return null;
@@ -3461,7 +3484,7 @@ const GenerateReport = () => {
                                                                                         </div>
                                                                                     ) : isAlreadySubmitted(serviceData) ? (
                                                                                         <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm font-medium text-center">
-                                                                                            Your case has been submitted: {serviceData.valuePitchStatus?.statusMsg}
+                                                                                            Your case has been submitted: {serviceData.valuePitchStatus?.statusMsg || "Report is Not Ready"}
                                                                                         </div>
                                                                                     ) : null}
 

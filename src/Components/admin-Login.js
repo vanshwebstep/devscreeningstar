@@ -79,6 +79,7 @@ const AdminLogin = () => {
       return;
     }
 
+  
     // Prepare login data
     const loginData = {
       username: input.username,
@@ -150,6 +151,7 @@ const AdminLogin = () => {
           confirmButtonText: 'Ok',
         });
       }
+
     } catch (error) {
       Swal.fire({
         title: 'Error!',
