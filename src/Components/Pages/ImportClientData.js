@@ -50,6 +50,70 @@ const sampleJson = `{
   ]
 }`;
 
+// ✅ NEW: robust date formatter, accepts yyyy-mm-dd, dd-mm-yyyy, dd/mm/yyyy, yyyy/mm/dd, ISO string, Date object
+function formatDateSafe(dateValue) {
+  if (!dateValue) return "";
+
+  if (dateValue instanceof Date) {
+    return isNaN(dateValue.getTime()) ? "" : dateValue.toISOString().split("T")[0];
+  }
+
+  const str = String(dateValue).trim();
+  if (!str) return "";
+
+  // yyyy-mm-dd or ISO string (e.g. 2024-11-19T14:54:38.000Z)
+  let match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, y, m, d] = match;
+    return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : "";
+  }
+
+  // yyyy/mm/dd
+  match = str.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (match) {
+    const [, y, m, d] = match;
+    return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : "";
+  }
+
+  // dd-mm-yyyy or dd/mm/yyyy
+  match = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (match) {
+    let [, d, m, y] = match;
+    d = d.padStart(2, "0");
+    m = m.padStart(2, "0");
+    return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : "";
+  }
+
+  // fallback native parse (e.g. "Nov 19, 2024")
+  const parsed = new Date(str);
+  return isNaN(parsed.getTime()) ? "" : parsed.toISOString().split("T")[0];
+}
+
+function isValidYMD(y, m, d) {
+  const yy = Number(y), mm = Number(m), dd = Number(d);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return false;
+  const date = new Date(yy, mm - 1, dd);
+  return date.getFullYear() === yy && date.getMonth() === mm - 1 && date.getDate() === dd;
+}
+
+// ✅ NEW: walk each record and normalize known date fields to yyyy-MM-dd before validation/submit
+const DATE_FIELDS = ["initiation_date", "dob", "QC_Date", "Date_of_Data"];
+
+const normalizeRecordDates = (records) => {
+  return records.map((record) => {
+    if (!record?.updated_json) return record;
+
+    const updated_json = { ...record.updated_json };
+    DATE_FIELDS.forEach((field) => {
+      if (updated_json[field]) {
+        updated_json[field] = formatDateSafe(updated_json[field]);
+      }
+    });
+
+    return { ...record, updated_json };
+  });
+};
+
 const ImportClientData = () => {
   const navigate = useNavigate();
   const { validateAdminLogin, setApiLoading } = useApiLoading();
@@ -91,6 +155,40 @@ const ImportClientData = () => {
     reader.readAsText(file);
   };
 
+  // ✅ validate required fields same as DataGenerateReport (month_year, verification_purpose) + client_application_id
+  const validateRecords = (records) => {
+    const validationErrors = [];
+
+    records.forEach((record, index) => {
+      const rowNum = index + 1;
+      const missingFields = [];
+
+      if (!record.client_application_id) {
+        missingFields.push("client_application_id");
+      }
+
+      const monthYear = record?.updated_json?.month_year;
+      const verificationPurpose = record?.updated_json?.verification_purpose;
+
+      if (!monthYear) {
+        missingFields.push("updated_json.month_year");
+      }
+      if (!verificationPurpose) {
+        missingFields.push("updated_json.verification_purpose");
+      }
+
+      if (missingFields.length > 0) {
+        validationErrors.push({
+          row: rowNum,
+          client_application_id: record.client_application_id || "N/A",
+          missingFields,
+        });
+      }
+    });
+
+    return validationErrors;
+  };
+
   const handleSubmit = async () => {
     const adminId = JSON.parse(localStorage.getItem("admin"))?.id;
     const token = localStorage.getItem("_token");
@@ -114,6 +212,63 @@ const ImportClientData = () => {
       return;
     }
 
+    // ✅ NEW: normalize all date fields to yyyy-MM-dd regardless of input format (dd-mm-yyyy, dd/mm/yyyy, etc.)
+    const normalizedRecords = normalizeRecordDates(records);
+
+    // ✅ required fields validation before hitting API (now runs on normalized records)
+    const validationErrors = validateRecords(normalizedRecords);
+    // ✅ better styled error list instead of plain <ul><li>
+    if (validationErrors.length > 0) {
+      const errorListHtml = validationErrors
+        .map(
+          (err) => `
+        <div style="
+          text-align:left;
+          border:1px solid #f1b0b7;
+          background:#fff5f5;
+          border-radius:8px;
+          padding:10px 14px;
+          margin-bottom:8px;
+        ">
+          <div style="font-weight:600; color:#b02a37; margin-bottom:4px;">
+            Row ${err.row} 
+            <span style="font-weight:400; color:#6b7280;">(${err.client_application_id})</span>
+          </div>
+          <div style="font-size:13px; color:#374151;">
+            Missing: 
+            ${err.missingFields
+              .map(
+                (f) =>
+                  `<span style="
+                    display:inline-block;
+                    background:#fee2e2;
+                    color:#991b1b;
+                    padding:2px 8px;
+                    border-radius:6px;
+                    font-size:12px;
+                    margin:2px 4px 2px 0;
+                  ">${f}</span>`
+              )
+              .join("")}
+          </div>
+        </div>`
+        )
+        .join("");
+
+      Swal.fire({
+        title: "Required Fields Missing",
+        html: `
+      <div style="max-height:320px; overflow-y:auto; padding:4px 2px;">
+        ${errorListHtml}
+      </div>
+    `,
+        icon: "error",
+        confirmButtonColor: "#2c81ba", // ✅ matches your theme color instead of default purple
+        width: 480, // ✅ wider popup so badges don't wrap awkwardly
+      });
+      return;
+    }
+
     setLoading(true);
     setApiLoading(true);
     setImportResult(null);
@@ -128,7 +283,7 @@ const ImportClientData = () => {
           admin_id: adminId,
           _token: token,
           import_name: parsedJson.import_name || fileName || "Client Data Import",
-          records,
+          records: normalizedRecords, // ✅ changed from records -> normalizedRecords
         }),
       });
 

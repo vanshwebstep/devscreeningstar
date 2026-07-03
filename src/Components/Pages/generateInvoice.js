@@ -12,6 +12,39 @@ import Swal from 'sweetalert2';
 import DatePicker from "react-datepicker";
 import { format, parseISO } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
+
+// ---------- Image helpers ----------
+const getImageBase64 = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = (err) => reject(err);
+    img.src = url;
+  });
+};
+
+const safeAddImage = (doc, base64, format, x, y, w, h) => {
+  if (!base64) return;
+  try {
+    doc.addImage(base64, format, x, y, w, h);
+  } catch (error) {
+    console.warn("Unable to add image to PDF:", error);
+  }
+};
+// ------------------------------------
+
 const GenerateInvoice = () => {
   const [activeList, setActiveList] = useState([]);
   const [clientCode, setClientCode] = useState("");
@@ -33,7 +66,8 @@ const GenerateInvoice = () => {
   const [overallServiceAmount, setOverallServiceAmount] = useState([]);
   const [cgst, setCgst] = useState([]);
   const getStateNameFromCode = (code) => {
-    const state = states.find((st) => st.isoCode === code.toUpperCase());
+    if (!code) return "N/A";
+    const state = states.find((st) => st.isoCode === String(code).toUpperCase());
     return state ? state.name : "N/A";
   };
   const currentYear = new Date().getFullYear();
@@ -44,7 +78,6 @@ const GenerateInvoice = () => {
   const [totalAmount, setTotalAmount] = useState([]);
   const [servicesData, setServicesData] = useState([]);
   const navigate = useNavigate();
-  console.log('years', years)
   const [formData, setFormData] = useState({
     client_code: '',
     invoice_number: "",
@@ -92,9 +125,6 @@ const GenerateInvoice = () => {
       [name]: '',
     }));
   };
-
-
-
 
   const options = activeList.map((client) => ({
     name: client.name + `(${client.client_unique_id})`,
@@ -154,6 +184,7 @@ const GenerateInvoice = () => {
 
     initialize(); // Execute the sequence
   }, [navigate, fetchActiveAccounts]);
+
   function addFooter(doc) {
     const totalPages = doc.internal.getNumberOfPages();
     const pageWidth = doc.internal.pageSize.width;
@@ -161,10 +192,6 @@ const GenerateInvoice = () => {
 
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i); // Go to each page
-
-      // Clear previous footer space (optional: if overlapping still happens)
-      // doc.setFillColor(255, 255, 255); // white
-      // doc.rect(0, pageHeight - 15, pageWidth, 15, "F");
 
       // Set font for footer
       doc.setFont("helvetica", "italic");
@@ -177,8 +204,6 @@ const GenerateInvoice = () => {
       doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: "center" });
     }
   }
-
-
 
   const fetchPdfData = useCallback(async (overAllCgstTaxs, overAllSgstTaxs, overAllIGSTTaxs, totalGsts, totalAmounts, taxableValuess, overAllAmountWithTaxs, companynames, customer) => {
     const admin_id = JSON.parse(localStorage.getItem("admin"))?.id;
@@ -233,7 +258,6 @@ const GenerateInvoice = () => {
       }
 
       if (result.status) {
-        // handle success here
         console.log("Data successfully sent");
       } else {
         console.error("Failed to fetch packages. Status:", result.status);
@@ -242,15 +266,8 @@ const GenerateInvoice = () => {
       console.error("Error fetching data:", error);
     } finally {
       // Ensure loading is set to false in the finally block (if you have a loading state)
-      // Example: setLoading(false);
     }
   }, [formData, customer, companyName, taxableValue, totalGst,]);
-
-
-
-
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -277,19 +294,12 @@ const GenerateInvoice = () => {
     const { month, year } = formData;
     const customer_id = formData.client_code;
 
-    console.log("Admin ID:", admin_id);
-    console.log("Stored Token:", storedToken);
-    console.log("Customer ID:", customer_id);
-    console.log("Month:", month);
-    console.log("Year:", year);
-
     const requestOptions = {
       method: "GET",
       redirect: "follow",
     };
 
     try {
-      console.log("Sending fetch request...");
       const response = await fetch(
         `https://api.screeningstar.co.in/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
         requestOptions
@@ -300,15 +310,11 @@ const GenerateInvoice = () => {
         throw new Error(data.message);
       }
 
-      console.log("Response data:", data);
-
       // Update the token if available
       const newToken = data.token || data._token || storedToken;
       if (newToken) {
-        console.log("New token received:", newToken);
         localStorage.setItem("_token", newToken);
       }
-      // setClientCode(formData.client_code);
 
       // Update state with response data
       setServiceInfo(data.finalArr.serviceInfo);
@@ -320,17 +326,7 @@ const GenerateInvoice = () => {
       setCustomer(data.customer || []);
       setApplications(data.applications);
 
-      /*
-      setFormData({
-        client_code: '',
-        invoice_number: "",
-        invoice_date: "",
-        month: "",
-        year: "",
-      });
-      */
-
-      if (applications.length > 0) {
+      if ((data.applications || []).length > 0) {
         Swal.fire({
           icon: "success",
           title: "Invoice Generated Successfully",
@@ -349,10 +345,25 @@ const GenerateInvoice = () => {
         });
       }
 
-
       // Proceed with PDF generation if the data is ready
       if (data.status) {
-        console.log("PDF available, generating...");
+        // Preload all images as base64 BEFORE generating the PDF,
+        // so addImage never fails on a raw URL string.
+        const [logoBase64, qrBase64, stampBase64] = await Promise.all([
+          getImageBase64("/screeningLogoNew.png").catch((err) => {
+            console.warn("Logo image failed to load:", err);
+            return null;
+          }),
+          getImageBase64("/screeningstarqr-9654317.webp").catch((err) => {
+            console.warn("QR image failed to load:", err);
+            return null;
+          }),
+          getImageBase64("/stampsign.png").catch((err) => {
+            console.warn("Stamp image failed to load:", err);
+            return null;
+          }),
+        ]);
+
         await generatePdf(
           data.serviceNames,
           data.finalArr.serviceInfo,
@@ -363,7 +374,8 @@ const GenerateInvoice = () => {
           data.customer || [],
           data.applications,
           data.finalArr.costInfo.totalAmount,
-          data.companyInfo
+          data.companyInfo,
+          { logoBase64, qrBase64, stampBase64 }
         );
       } else {
         Swal.fire({
@@ -373,12 +385,6 @@ const GenerateInvoice = () => {
         });
       }
     } catch (error) {
-      // Error alert
-      // Swal.fire({
-      //   icon: "error",
-      //   title: "Error",
-      //   text: `An error occurred: ${error.message}`,
-      // });
       console.error("Fetch error:", error);
     } finally {
       // Turn off loading state
@@ -411,14 +417,24 @@ const GenerateInvoice = () => {
     return words + ' Only';
   }
 
-  const generatePdf = (serviceNames, serviceInfo, overallServiceAmount, cgst, sgst, totalTax, customer, applications, totalAmounts, companyInfo) => {
+  const generatePdf = (serviceNames, serviceInfo, overallServiceAmount, cgst, sgst, totalTax, customer, applications, totalAmounts, companyInfo, images) => {
+    const { logoBase64, qrBase64, stampBase64 } = images || {};
+
     const doc = new jsPDF("landscape");
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
     const leftMargin = 10;
     const topMargin = 10;
+    const bottomMargin = 15;
     const padding = 5; // Padding between content and borders
     const columnHeight = 50;
+    const ensureSpace = (startY, requiredHeight, resetY = 20) => {
+      if (startY + requiredHeight > pageHeight - bottomMargin) {
+        doc.addPage();
+        return resetY;
+      }
+      return startY;
+    };
     const formatDate = (dateStr) => {
       const date = new Date(dateStr);
       if (isNaN(date)) return "Invalid Date";
@@ -434,9 +450,10 @@ const GenerateInvoice = () => {
     const firstColumnWidth = (pageWidth - 2 * leftMargin) * 0.25; // 25% of available width
     const secondColumnWidth = (pageWidth - 2 * leftMargin) * 0.50; // 50% of available width
     const thirdColumnWidth = (pageWidth - 2 * leftMargin) * 0.25; // 25% of available width
-    const logoBase64 = "/screeningLogoNew.png";
+
     doc.rect(leftMargin, topMargin, firstColumnWidth, columnHeight); // Add border around first column
-    doc.addImage(
+    safeAddImage(
+      doc,
       logoBase64,
       "PNG",
       leftMargin + padding,
@@ -456,9 +473,6 @@ const GenerateInvoice = () => {
     setCompanyName(companyName);
     const companynames = companyName;
 
-    // if (companyInfo?.address) {
-    //   addressLines = companyInfo.address.split(",");
-    // }
     const addressLines = [
       "No-19/4 & 27",
       " IndiQube Alpha",
@@ -479,21 +493,18 @@ const GenerateInvoice = () => {
     // Loop through the address array
     for (let i = 0; i < addressLines.length; i++) {
       if (i <= 2) {
-        // Combine first three parts into one line
         if (formattedLine1) {
           formattedLine1 += `, ${addressLines[i].trim()}`;
         } else {
           formattedLine1 = addressLines[i].trim();
         }
       } else if (i >= 3 && i <= 5) {
-        // Next few for line 2
         if (formattedLine2) {
           formattedLine2 += `, ${addressLines[i].trim()}`;
         } else {
           formattedLine2 = addressLines[i].trim();
         }
       } else {
-        // Remaining for line 3 (e.g., pincode etc.)
         if (formattedLine3) {
           formattedLine3 += `, ${addressLines[i].trim()}`;
         } else {
@@ -502,18 +513,13 @@ const GenerateInvoice = () => {
       }
     }
 
-
-
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text('SCREENINGSTAR SOLUTIONS PRIVATE LIMITED', textX, textY, { align: "center" });
-    // addFooter(doc); // Add footer for this page
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    // Check and add formatted lines if they are not empty
     if (formattedLine1) {
-      const textWidth = doc.getTextWidth(formattedLine1);
       doc.text(formattedLine1, textX, textY + 5, { align: "center", maxWidth: secondColumnWidth - 2 });
     }
     if (formattedLine2) {
@@ -523,7 +529,6 @@ const GenerateInvoice = () => {
       doc.text(formattedLine3, textX, textY + 15, { align: "center" });
     }
 
-    // Check and add company info if it's available
     if (companyInfo?.phone_number && companyInfo?.email) {
       doc.text(
         `PH: 9980004953 | Email: ${companyInfo.email}`,
@@ -536,7 +541,6 @@ const GenerateInvoice = () => {
       doc.text(`Web: www.screeningstar.com`, textX, textY + 25, { align: "center" });
     }
 
-    // Check and add tax information if available
     if (companyInfo?.pan && companyInfo?.gstin) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
@@ -557,16 +561,13 @@ const GenerateInvoice = () => {
       );
     }
 
-
     // Third column (QR Code)
     const thirdColumnX = secondColumnX + secondColumnWidth; // Correct position for third column
-    const qrCodeBase64 =
-      "/screeningstarqr-9654317.webp"; // Replace with your base64-encoded image or a URL
     doc.rect(thirdColumnX, topMargin, thirdColumnWidth, columnHeight); // Add border around third column
 
-    // Set image size to 60px by 60px
-    doc.addImage(
-      qrCodeBase64,
+    safeAddImage(
+      doc,
+      qrBase64,
       "PNG",
       thirdColumnX + (thirdColumnWidth - 35) / 2, // Center the QR code horizontally
       topMargin + (columnHeight - 35) / 2, // Center the QR code vertically
@@ -599,12 +600,10 @@ const GenerateInvoice = () => {
     const column1X = leftMargin; // Left column start
     const column2X = leftMargin + columnWidth; // Right column start
 
-    // Column 1 (Invoice Details)
-
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 0, 0); // Black text
-    // Column 2 (Details of Service Recipient)
+
     // Add second row (for "Bill To", "Attention", etc.)
     const rowHeightNext = 35; // Height of the new row
     const rowYNext = rowY + rowHeight + 5; // Position below the first row
@@ -616,54 +615,46 @@ const GenerateInvoice = () => {
     doc.rect(column1XNext, rowYNext, columnWidth, rowHeightNext); // Add border
     doc.setFont("helvetica", "normal");
 
-    // Labels and Values in the first column (Bill To and Attention)
-
     let labelY = rowYNext + padding; // Start Y position for labels in the first column
 
     // --- Bill To ---
     const orgName = customer.name || "N/A";
     const address = customer.address || "N/A";
 
-    // Set font for the label and content
     doc.setFont("helvetica", "normal");
 
-    // Print "To," on the first line
     doc.text("To,", column1XNext + padding, labelY);
 
-    // Move to next line for company name
     labelY += 7;
     doc.text(orgName, column1XNext + padding, labelY);
 
-    // Move to next line for address, with wrapping if needed
     labelY += 7;
     const wrappedAddress = doc.splitTextToSize(`${address}`, columnWidth - 7);
     doc.text(wrappedAddress, column1XNext + padding, labelY);
 
-    // Update Y position after the address
     labelY += wrappedAddress.length * 7;
 
     doc.setFont("helvetica", "normal");
 
     doc.rect(column2XNext, rowYNext, columnWidth, rowHeightNext); // Add border
 
-    // Labels and Values in the second column (Client GST NO, Invoice Number, etc.)
     let labelYSecondColumn = rowYNext + padding; // Start Y position for labels in the second column
     doc.text("GSTIN", column2XNext + padding, labelYSecondColumn); // Client GST NO label
     doc.text(customer.gst_number || "Not Registered", column2XNext + 40, labelYSecondColumn); // Value for Client GST NO
-    labelYSecondColumn += 7; // Move to next row with 5px gap
+    labelYSecondColumn += 7;
 
     doc.text("Invoice Number", column2XNext + padding, labelYSecondColumn); // Invoice Number label
     doc.text(formData.invoice_number, column2XNext + 40, labelYSecondColumn); // Value for Invoice Number
-    labelYSecondColumn += 7; // Move to next row with 5px gap
+    labelYSecondColumn += 7;
 
     doc.text("State", column2XNext + padding, labelYSecondColumn); // State label
     doc.text(getStateNameFromCode(customer.state) || "N/A", column2XNext + 40, labelYSecondColumn); // Value for State
-    labelYSecondColumn += 7; // Move to next row with 5px gap
+    labelYSecondColumn += 7;
     const formattedDateInvoice = formatDate(formData.invoice_date);
 
     doc.text("Date Of Invoice", column2XNext + padding, labelYSecondColumn); // Date Of Service label
     doc.text(formattedDateInvoice, column2XNext + 40, labelYSecondColumn); // Value for Date Of Service
-    labelYSecondColumn += 7; // Move to next row with 5px gap
+    labelYSecondColumn += 7;
 
     doc.text("State Code", column2XNext + padding, labelYSecondColumn); // State Code label
     doc.text(customer.state_code || "N/A", column2XNext + 40, labelYSecondColumn); // Value for State Code
@@ -753,11 +744,11 @@ const GenerateInvoice = () => {
           }
           return "NIL";
         });
-        // Function to format the date to "Month Day, Year" format
+
         const formatDate = (date) => {
-          if (!date) return "NOT APPLICABLE"; // Check for null, undefined, or empty
+          if (!date) return "NOT APPLICABLE";
           const dateObj = new Date(date);
-          if (isNaN(dateObj.getTime())) return "Nill"; // Check for invalid date
+          if (isNaN(dateObj.getTime())) return "Nill";
           const day = String(dateObj.getDate()).padStart(2, '0');
           const month = String(dateObj.getMonth() + 1).padStart(2, '0');
           const year = dateObj.getFullYear();
@@ -789,9 +780,8 @@ const GenerateInvoice = () => {
         overallApplicationsTotalPriceWithTax +=
           parseFloat(appTotalPricing) + parseFloat(appTotalTax);
 
-        // Create an object dynamically for each service code with corresponding service price
         const servicePriceDetails = serviceCodes.reduce((acc, code, index) => {
-          acc[`serviceCode${code}`] = servicePrices[index] || "0.00"; // Default to "0.00" if price is missing
+          acc[`serviceCode${code}`] = servicePrices[index] || "0.00";
           return acc;
         }, {});
 
@@ -833,7 +823,6 @@ const GenerateInvoice = () => {
       const hsnCode = serviceName ? serviceName.hsnCode : "N/A";
       const title = serviceName ? serviceName.title : "N/A";
 
-      // const price = formatAmount(item.price);
       const price = parseFloat(item.price);
       const totalPrice = parseFloat(item.totalPrice);
       const totalAddFee = parseFloat(item.totalAddFee);
@@ -852,19 +841,17 @@ const GenerateInvoice = () => {
       };
     });
 
-
     const overallApplicationsTotalPricingWithAdditionalFee = overallApplicationsTotalPricing + overallApplicationsAdditionalFeeSum;
 
     // ✅ Add Sub Total Row after the map
     serviceTableBody.push({
       serviceDescription: "Sub Total",
       hsnCode: "",
-      qty: "", // String(totalServiceQty)
-      rate: "", // formatAmount(totalSubPrice)
+      qty: "",
+      rate: "",
       additionalFee: formatAmount(overallApplicationsAdditionalFeeSum),
       taxableAmount: formatAmount(overallApplicationsTotalPricing),
     });
-
 
     const columns = [
       { header: 'SERVICE DESCRIPTION', dataKey: 'serviceDescription' },
@@ -874,7 +861,6 @@ const GenerateInvoice = () => {
       { header: 'ADDITIONAL FEE', dataKey: 'additionalFee' },
       { header: 'TAXABLE AMOUNT', dataKey: 'taxableAmount' },
     ];
-    let tablecontt = 0;
 
     doc.autoTable({
       columns: columns,
@@ -909,27 +895,13 @@ const GenerateInvoice = () => {
       tableWidth: 'auto',
       tableLineColor: "#4d606b",
       tableLineWidth: 0.4,
-
-      // 👇 This controls page layout on each new page
-      didDrawPage: function (data) {
-        if (data.pageNumber > 1) {
-          tablecontt = 0;
-          doc.setFontSize(12);
-        }
-        else if (data.pageNumber == 1) {
-          tablecontt = 1;
-        }
-      }
     });
 
-    if (tablecontt == 1) {
-      doc.addPage();
-    }
-    // Constants for layout
-    // addFooter(doc); // Add footer for this page
+    // NOTE: removed the forced extra doc.addPage() that used to run here based on
+    // `tablecontt` — that was creating a spurious blank page / large gap between
+    // sections. ensureSpace() below already handles page breaks correctly based
+    // on actual remaining space.
 
-    // doc.addPage();
-    // addFooter(doc); // Add footer for this page
     let overAllCgstTax = 0;
     let overAllSgstTax = 0;
     let overAllIGSTTax = 0;
@@ -961,7 +933,6 @@ const GenerateInvoice = () => {
       { label: 'MICR', value: String(companyInfo?.bank_micr || "N/A") },
     ];
 
-    // Ensure all values are strings
     const taxDetails = [
       { label: `CGST ${overAllCgstPercentage}%`, value: formatAmount(overAllCgstTax) },
       { label: `SGST ${overAllSgstPercentage}%`, value: formatAmount(overAllSgstTax) },
@@ -978,17 +949,12 @@ const GenerateInvoice = () => {
     const overAllIGSTTaxs = overAllIGSTTax;
     const totalGsts = overAllTotalTax;
 
-
     const bankDetailsWidth = (pageWidth - leftMargin * 2) * 0.4; // 40% width for Bank Details
     const taxDetailsWidth = (pageWidth - leftMargin * 2) * 0.6; // 60% width for Tax Details
-    let tableStartYNew = doc.lastAutoTable.finalY + 10; // Starting Y position right below the page margin
+    const bankTaxRowsHeight = Math.max(bankDetails.length, taxDetails.length) * 7;
+    const bankTaxBlockHeight = 12 + bankTaxRowsHeight + getRowHeight("Total Tax Amount :", "Zero Rupees Only") + 10;
+    let tableStartYNew = ensureSpace(doc.lastAutoTable.finalY + 10, bankTaxBlockHeight); // Starting Y position right below the page margin
     let currentY = tableStartYNew + 12; // Starting position after headers
-
-    if (tablecontt == 1) {
-      console.log('tablecontt', tablecontt)
-      currentY = 32; // Starting position after headers
-      tableStartYNew = 20;
-    }
 
     // Title
     doc.setFont("helvetica", "bold");
@@ -999,7 +965,6 @@ const GenerateInvoice = () => {
     doc.setTextColor(77, 96, 107);   // Text color
     doc.rect(leftMargin, tableStartYNew, bankDetailsWidth, 12, 'FD'); // Bank Details Header
     doc.text("SCREENINGSTAR BANK ACCOUNT AND TAX DETAILS", leftMargin + 5, tableStartYNew + 7);
-    // Defines the height of the header row
 
     doc.setDrawColor(0); // Black border (grayscale)
 
@@ -1009,8 +974,7 @@ const GenerateInvoice = () => {
     const labelWidths = taxDetailsWidth * 0.6; // 60% width for the label
     const valueWidths = taxDetailsWidth * 0.4; // 40% width for the value
 
-    // Start position for the "TOTAL AMOUNT BEFORE TAX" to align with bankDetailsWidth
-    const startX = leftMargin + bankDetailsWidth;  // This makes sure it starts after the bank details column
+    const startX = leftMargin + bankDetailsWidth;
     doc.setFillColor(193, 223, 242); // Sky blue
     doc.setDrawColor(77, 96, 107);   // Border color
     doc.setTextColor(77, 96, 107);
@@ -1030,38 +994,38 @@ const GenerateInvoice = () => {
     doc.rect(startX + labelWidths, tableStartYNew, valueWidths, headerHeight); // Draw value column
     doc.text(formatAmountInt(overallApplicationsTotalPricingWithAdditionalFee.toFixed(2)), valueXPosition, tableStartYNew + 7);
 
-    const getRowHeight = (label, value) => {
+    function getRowHeight(label, value) {
       const labelHeight = doc.getTextDimensions(label).h;
       const valueHeight = doc.getTextDimensions(value).h;
       return Math.max(labelHeight, valueHeight, 12);
-    };
+    }
 
     const maxRows = Math.max(bankDetails.length, taxDetails.length);
     doc.setTextColor(0, 0, 0);
     for (let i = 0; i < maxRows; i++) {
       const bankItem = bankDetails[i] || { label: "", value: "" };
       const taxItem = taxDetails[i] || { label: "", value: "" };
-      const rowHeight = 7;
+      const rowHeightLocal = 7;
 
       doc.setFont("helvetica", "normal");
-      doc.rect(leftMargin, currentY, bankDetailsWidth / 2, rowHeight);
+      doc.rect(leftMargin, currentY, bankDetailsWidth / 2, rowHeightLocal);
       doc.text(bankItem.label, leftMargin + 5, currentY + 5);
 
-      doc.rect(leftMargin + bankDetailsWidth / 2, currentY, bankDetailsWidth / 2, rowHeight);
+      doc.rect(leftMargin + bankDetailsWidth / 2, currentY, bankDetailsWidth / 2, rowHeightLocal);
       doc.text(bankItem.value, leftMargin + bankDetailsWidth / 2 + 5, currentY + 5);
 
       const taxLabelWidth = taxDetailsWidth * 0.6;
       const taxValueWidth = taxDetailsWidth * 0.4;
 
-      const labelXPosition = leftMargin + bankDetailsWidth + (taxLabelWidth / 2) - (doc.getTextDimensions(taxItem.label).w / 2);
-      doc.rect(leftMargin + bankDetailsWidth, currentY, taxLabelWidth, rowHeight);
-      doc.text(taxItem.label, labelXPosition, currentY + 5);
+      const labelXPositionLoop = leftMargin + bankDetailsWidth + (taxLabelWidth / 2) - (doc.getTextDimensions(taxItem.label).w / 2);
+      doc.rect(leftMargin + bankDetailsWidth, currentY, taxLabelWidth, rowHeightLocal);
+      doc.text(taxItem.label, labelXPositionLoop, currentY + 5);
 
-      const valueXPosition = leftMargin + bankDetailsWidth + taxLabelWidth + (taxValueWidth / 2) - (doc.getTextDimensions(taxItem.value).w / 2);
-      doc.rect(leftMargin + bankDetailsWidth + taxLabelWidth, currentY, taxValueWidth, rowHeight);
-      doc.text(taxItem.value, valueXPosition, currentY + 5);
+      const valueXPositionLoop = leftMargin + bankDetailsWidth + taxLabelWidth + (taxValueWidth / 2) - (doc.getTextDimensions(taxItem.value).w / 2);
+      doc.rect(leftMargin + bankDetailsWidth + taxLabelWidth, currentY, taxValueWidth, rowHeightLocal);
+      doc.text(taxItem.value, valueXPositionLoop, currentY + 5);
 
-      currentY += rowHeight;
+      currentY += rowHeightLocal;
     }
 
     // Special formatting for Total Tax Amount
@@ -1071,14 +1035,11 @@ const GenerateInvoice = () => {
     const labelText = 'Total Tax Amount :';
     const taxAmountInWords = numberToWords(overAllAmountWithTax);
 
-    // Set bold font and black color for label
     doc.setFont('helvetica', 'bold');
     doc.text(labelText, leftMargin + 5, currentY + 7);
 
-    // Measure width of the label to calculate where to start the value
     const labelWidth = doc.getTextWidth(labelText);
 
-    // Set normal font and light gray color for value
     doc.setFont('helvetica', 'normal');
     doc.text(taxAmountInWords, leftMargin + 5 + labelWidth + 2, currentY + 7); // 2 is small padding
 
@@ -1093,7 +1054,7 @@ const GenerateInvoice = () => {
     }));
 
     const annexureHeight = 6; // Background height
-    let annexureY = topMargin + currentY - 5; // Position below the columns
+    let annexureY = ensureSpace(currentY + 5, annexureHeight + 25); // Position below the columns
 
     // Draw background rectangle
     doc.setFillColor(193, 223, 242);
@@ -1109,9 +1070,6 @@ const GenerateInvoice = () => {
 
     doc.setTextColor(77, 96, 107); // Equivalent to #4d606b
     doc.text("Annexure", annexureX, annexureY + annexureHeight / 2 + 1, { align: "center" });
-
-
-
 
     const header = [
       { header: 'Ref ID', dataKey: 'serviceDescription' },
@@ -1176,7 +1134,7 @@ const GenerateInvoice = () => {
       columns: header,
       body: tableBody2,
       theme: 'grid',
-      startY: annexureY += 10, // Only for the first table position
+      startY: annexureY + 10, // Only for the first table position
       headStyles: {
         fillColor: [193, 223, 242],
         textColor: "#4d606b",
@@ -1208,41 +1166,34 @@ const GenerateInvoice = () => {
         }
       }
     });
-    // addFooter(doc); // Add footer for this page
 
     let services = [];
     let tempArray = [];
 
     // Loop through serviceNames
     serviceNames.forEach((service, index) => {
-      // Create an object for each service with serviceDescription and hsnCode
       const serviceObject = {
-        serviceDescription: service.title,  // Assuming 'title' corresponds to serviceDescription
-        hsnCode: service.shortCode         // Assuming 'shortCode' corresponds to hsnCode
+        serviceDescription: service.title,
+        hsnCode: service.shortCode
       };
 
-      // Push the service object into tempArray
       tempArray.push(serviceObject);
 
-      // When tempArray reaches 6 items or it's the last service, push it to services
       if (tempArray.length === 6 || index === serviceNames.length - 1) {
-        services.push(...tempArray);  // Use spread operator to push individual objects
-        tempArray = [];  // Reset tempArray
+        services.push(...tempArray);
+        tempArray = [];
       }
     });
-
 
     // Determine how many entries per row (in this case, 3 per row)
     const entriesPerRow = 3;
 
-    // Dynamically generate columns based on entries per row
     const header2 = [];
     for (let i = 1; i <= entriesPerRow; i++) {
       header2.push({ header: `S CODE ${i}`, dataKey: `serviceDescription${i}` });
       header2.push({ header: `VERIFICATION SERVICES ${i}`, dataKey: `hsnCode${i}` });
     }
 
-    // Function to dynamically generate rows based on the service data
     const row2 = [];
     for (let i = 0; i < services.length; i += entriesPerRow) {
       const row = {};
@@ -1258,7 +1209,6 @@ const GenerateInvoice = () => {
       }
       row2.push(row);
     }
-
 
     // Constants
     const margin = 10;
@@ -1283,7 +1233,6 @@ const GenerateInvoice = () => {
 
     // === Draw Header ===
     const headerTopY = myheight;
-    console.log('headerTopY:', headerTopY);
 
     const headerBottomY = headerTopY + headerHeightNew;
     const textYNew = headerTopY + headerHeightNew / 2 + 1.5;
@@ -1336,8 +1285,6 @@ const GenerateInvoice = () => {
     const headingYPosition = 10;
 
     // New Page for Notes
-    // addFooter(doc); // Add footer for this page
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("SPECIAL NOTES, TERMS AND CONDITIONS", pageWidth / 2, headingYPosition + 5, { align: "center" });
@@ -1363,8 +1310,9 @@ const GenerateInvoice = () => {
 
     // Add Stamp and Signature
     const stampYPosition = notesYPosition + (notes.length * 5) + 10;
-    doc.addImage(
-      "/stampsign.png",
+    safeAddImage(
+      doc,
+      stampBase64,
       "PNG",
       margin + 5,
       stampYPosition,
@@ -1390,14 +1338,10 @@ const GenerateInvoice = () => {
     ];
     const formattedDate = `${monthNames[invoiceDate.getMonth()]}_${invoiceDate.getFullYear()}`;
 
-    doc.save(`${clientCode || "N/A"}-${formattedDate}`);
+    doc.save(`${clientCode || "N/A"}-${formattedDate}.pdf`);
 
     fetchPdfData(overAllCgstTaxs, overAllSgstTaxs, overAllIGSTTaxs, totalGsts, totalAmounts, taxableValuess, overAllAmountWithTaxs, companynames, customer);
-
-
   };
-
-
 
   return (
     <>
@@ -1414,20 +1358,13 @@ const GenerateInvoice = () => {
                 name="client_code"
                 placeholder={options.length === 0 ? 'No data available in table' : 'Choose your language'}
                 onChange={(value) => {
-                  // Update formData with selected client.id
                   handleChange({ target: { name: 'client_code', value } });
-
-                  // Find original client in activeList using ID
                   const selectedClient = activeList.find(client => client.id === value);
-
-                  // Set client_unique_id (e.g., 'ss-ind') to state
                   setClientCode(selectedClient?.client_unique_id || '');
                 }}
                 search
                 disabled={options.length === 0}
               />
-
-
 
               {errors.client_code && <p className="text-red-500 text-sm">{errors.client_code}</p>}
             </div>

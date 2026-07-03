@@ -23,7 +23,16 @@ const DataCheckin = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
     const [scrollWidth, setScrollWidth] = useState("100%");
-
+    const safeFormatDate = (date) => {
+        if (!date) return "Nill";
+        try {
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return "Nill"; // invalid date guard
+            return d.toLocaleDateString("en-GB").replace(/\//g, "-");
+        } catch (e) {
+            return "Nill";
+        }
+    };
     // 🔹 Sync scroll positions
     const syncScroll = (e) => {
         if (e.target === topScrollRef.current) {
@@ -613,9 +622,7 @@ const DataCheckin = () => {
                                                 <tr className="text-center">
                                                     <td className="border border-black px-4 py-2">{index + 1}</td>
                                                     <td className="border border-black px-4 py-2">
-                                                        {data.initiation_date
-                                                            ? new Date(data.initiation_date).toLocaleDateString("en-GB").replace(/\//g, "-")
-                                                            : "Nill"}
+                                                        {safeFormatDate(data.initiation_date)}
                                                     </td>
 
                                                     <td className="border border-black px-4 py-2">{data.employee_id || 'NIL'}</td>

@@ -16,10 +16,51 @@ const DataGenerateReport = () => {
     const navigate = useNavigate();
     const { validateAdminLogin, setApiLoading, apiLoading } = useApiLoading();
     const [checkboxState, setCheckboxState] = useState({});
-function formatDateSafe(dateValue) {
-  const date = new Date(dateValue);
-  return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
-}
+    function formatDateSafe(dateValue) {
+        if (!dateValue) return '';
+
+        // Already a Date object
+        if (dateValue instanceof Date) {
+            return isNaN(dateValue.getTime()) ? '' : dateValue.toISOString().split('T')[0];
+        }
+
+        const str = String(dateValue).trim();
+        if (!str) return '';
+
+        // ISO / yyyy-mm-dd / yyyy-mm-ddTHH:mm:ss...
+        let match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (match) {
+            const [, y, m, d] = match;
+            return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : '';
+        }
+
+        // yyyy/mm/dd
+        match = str.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+        if (match) {
+            const [, y, m, d] = match;
+            return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : '';
+        }
+
+        // dd-mm-yyyy or dd/mm/yyyy
+        match = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+        if (match) {
+            let [, d, m, y] = match;
+            d = d.padStart(2, '0');
+            m = m.padStart(2, '0');
+            return isValidYMD(y, m, d) ? `${y}-${m}-${d}` : '';
+        }
+
+        // Fallback: try native Date parsing (handles things like "Nov 19, 2024")
+        const parsed = new Date(str);
+        return isNaN(parsed.getTime()) ? '' : parsed.toISOString().split('T')[0];
+    }
+
+    function isValidYMD(y, m, d) {
+        const yy = Number(y), mm = Number(m), dd = Number(d);
+        if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return false;
+        const date = new Date(yy, mm - 1, dd);
+        return date.getFullYear() === yy && date.getMonth() === mm - 1 && date.getDate() === dd;
+    }
     const [submittedData, setSubmittedData] = useState(null); // State to hold submitted data
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -245,20 +286,14 @@ function formatDateSafe(dateValue) {
                         contact_number2: cmtData.contact_number2 || prevFormData.updated_json.contact_number2 || '',
                         spouse_name: cmtData.spouse_name || prevFormData.updated_json.spouse_name || '',
                         Nationality: cmtData.Nationality || prevFormData.updated_json.Nationality || '',
-                        QC_Date: cmtData?.QC_Date
-                            ? new Date(cmtData.QC_Date).toISOString().split('T')[0]
-                            : (prevFormData?.updated_json?.QC_Date
-                                ? new Date(prevFormData.updated_json.QC_Date).toISOString().split('T')[0]
-                                : ''),
+                        QC_Date: formatDateSafe(cmtData?.QC_Date || prevFormData?.updated_json?.QC_Date),
+
                         QC_Analyst_Name: cmtData.QC_Analyst_Name || prevFormData.updated_json.QC_Analyst_Name || '',
                         Data_Entry_Analyst_Name: cmtData.Data_Entry_Analyst_Name || prevFormData.updated_json.Data_Entry_Analyst_Name || '',
                         Date_of_Data: cmtData.Date_of_Data || prevFormData.updated_json.Date_of_Data || '',
                         father_name: cmtData.father_name || prevFormData.updated_json.father_name || '',
-                        initiation_date: cmtData?.initiation_date
-                            ? new Date(cmtData.initiation_date).toISOString().split('T')[0]
-                            : (prevFormData?.updated_json?.insuffDetails?.initiation_date
-                                ? new Date(prevFormData.updated_json.insuffDetails.initiation_date).toISOString().split('T')[0]
-                                : ''),
+                        initiation_date: formatDateSafe(cmtData?.initiation_date || prevFormData?.updated_json?.insuffDetails?.initiation_date),
+
                         dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob),
 
                         marital_status: cmtData.marital_status || prevFormData.updated_json.marital_status || '',
@@ -1267,50 +1302,50 @@ function formatDateSafe(dateValue) {
                                     )}
                                 </div>
                             </div>
-                       <div className="SelectedServices border border-black rounded-md">
-  <div className="bg-[#c1dff2] border-b border-black rounded-t-md p-4">
-    <h1 className="text-center text-2xl">
-      SELECTED SERVICES<span className="text-red-500 text-xl">*</span>
-    </h1>
-  </div>
-  <div className="p-5 border">
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {servicesDataInfo &&
-        servicesDataInfo.map((serviceData, index) => {
-          if (serviceData.serviceStatus) {
-            if (
-              !serviceData?.serviceStatus ||
-              !serviceData?.reportFormJson ||
-              !serviceData?.reportFormJson?.json
-            ) {
-              return null; // Skip this entry
-            }
+                            <div className="SelectedServices border border-black rounded-md">
+                                <div className="bg-[#c1dff2] border-b border-black rounded-t-md p-4">
+                                    <h1 className="text-center text-2xl">
+                                        SELECTED SERVICES<span className="text-red-500 text-xl">*</span>
+                                    </h1>
+                                </div>
+                                <div className="p-5 border">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {servicesDataInfo &&
+                                            servicesDataInfo.map((serviceData, index) => {
+                                                if (serviceData.serviceStatus) {
+                                                    if (
+                                                        !serviceData?.serviceStatus ||
+                                                        !serviceData?.reportFormJson ||
+                                                        !serviceData?.reportFormJson?.json
+                                                    ) {
+                                                        return null; // Skip this entry
+                                                    }
 
-            let formJson;
-            try {
-              formJson = JSON.parse(serviceData.reportFormJson.json);
-            } catch (e) {
-              console.error(
-                `Error parsing reportFormJson.json for service ID ${serviceData?.service_id}:`,
-                e
-              );
-              return null; // Skip this entry if JSON is invalid
-            }
+                                                    let formJson;
+                                                    try {
+                                                        formJson = JSON.parse(serviceData.reportFormJson.json);
+                                                    } catch (e) {
+                                                        console.error(
+                                                            `Error parsing reportFormJson.json for service ID ${serviceData?.service_id}:`,
+                                                            e
+                                                        );
+                                                        return null; // Skip this entry if JSON is invalid
+                                                    }
 
-            return (
-              <div
-                key={index}
-                className="bg-[#f4f4f4] border border-gray-300 p-4 rounded-md shadow-sm"
-              >
-                {formJson.heading && <span className="font-semibold">{formJson.heading}</span>}
-              </div>
-            );
-          }
-          return null;
-        })}
-    </div>
-  </div>
-</div>
+                                                    return (
+                                                        <div
+                                                            key={index}
+                                                            className="bg-[#f4f4f4] border border-gray-300 p-4 rounded-md shadow-sm"
+                                                        >
+                                                            {formJson.heading && <span className="font-semibold">{formJson.heading}</span>}
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })}
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className="text-left mt-4">
                                 <button

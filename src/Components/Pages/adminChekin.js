@@ -695,6 +695,45 @@ const AdminChekin = () => {
         return label;
     }
 
+    const buildSurepassResultRows = (record) => {
+        const isPrintableRow = (row) => {
+            if (row.length === 1) return true;
+            const value = String(row[1] || "").trim().toLowerCase();
+            return value && value !== "n/a" && value !== "na" && value !== "null" && value !== "undefined";
+        };
+        const formatKey = (key) => String(key || "").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()).trim();
+        const formatValue = (key, value) => {
+            if (value === null || value === undefined || value === "") return "N/A";
+            if (typeof value === "boolean") return value ? "Yes" : "No";
+            if (key === "profile_image") return value ? "Available" : "Not Available";
+            if (Array.isArray(value)) return value.length ? value.map((item) => typeof item === "object" ? JSON.stringify(item) : String(item)).join(", ") : "N/A";
+            const text = String(value).replace(/\s+/g, " ").trim();
+            return text.length > 180 ? `${text.slice(0, 177)}...` : text;
+        };
+        const flattenRows = (obj, prefix = "") => {
+            if (!obj || typeof obj !== "object") return [];
+            return Object.entries(obj).flatMap(([key, value]) => {
+                const label = prefix ? `${prefix} ${formatKey(key)}` : formatKey(key);
+                if (key === "profile_image") return [[label, formatValue(key, value)]];
+                if (value && typeof value === "object" && !Array.isArray(value)) return flattenRows(value, label);
+                return [[label, formatValue(key, value)]];
+            });
+        };
+        const response = record?.response_json || null;
+        const rowsFromApi = Array.isArray(record?.surepass_result_rows) ? record.surepass_result_rows : null;
+        if (rowsFromApi?.length) return rowsFromApi.filter(isPrintableRow);
+        if (!record || record.status === "data_not_found" || record.status === "service_not_in_application" || !record.is_prefilled || !response) return [];
+        const status = response.success === true && Number(response.status_code) === 200 ? "VERIFIED" : response.success === false || Number(response.status_code) >= 400 ? "FAILED" : "PENDING";
+        const rows = [
+            ["Status", status],
+            ["Status Code", formatValue("status_code", response.status_code)],
+            ["Message", formatValue("message", response.message)],
+            ["Message Code", formatKey(response.message_code || "")]
+        ];
+        const dataRows = flattenRows(response.data || {}).filter(isPrintableRow);
+        if (dataRows.length) rows.push(["Response Data"], ...dataRows);
+        return rows.filter(isPrintableRow);
+    };
     const generatePDF = async (index, maindata, returnInBlob = false) => {
         let isFirstLoad = true;
 
@@ -1442,8 +1481,7 @@ const AdminChekin = () => {
                         }
                     }
                     if (serviceTypes.includes("surepass")) {
-                        const sp = getSurepassStatus(service);
-                        rawStatus = sp.label;  // ✅ don't return early
+                          rawStatus = annexure.status; // ✅ don't return early
                     }
                     // ================= DEFAULT =================
                     else if (annexure?.status) {
@@ -1784,6 +1822,12 @@ const AdminChekin = () => {
                             return result;
                         })
                         .filter((item) => item !== null);
+                    if (serviceTypes.includes('surepass')) {
+                        const surepassRows = buildSurepassResultRows(service?.screeningstar_response);
+                        if (surepassRows.length) {
+                            tableData = tableData.concat([["SurePass Response"]], surepassRows);
+                        }
+                    }
 
 
 
@@ -3778,3 +3822,8 @@ const AdminChekin = () => {
 };
 export default AdminChekin;
 // DONE
+
+
+
+
+

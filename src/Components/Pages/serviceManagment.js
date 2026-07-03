@@ -452,7 +452,7 @@ const ServiceManagement = () => {
   const serviceTypeNames = {
     "valuepitch": "Value Pitch",
     "manual": "Manual",
-    // "surepass": "SurePass",
+    "surepass": "SurePass",
 
   };
 const selectedLabels = Array.isArray(service_type)

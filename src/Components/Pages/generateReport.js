@@ -75,9 +75,71 @@ const MultiSelect = ({ id, name, value, onChange, options, isDisabled }) => {
 const GenerateReport = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
+    const [surepassSubmitLoading, setSurepassSubmitLoading] = useState(null);
+
     const [scrollWidth, setScrollWidth] = useState("100%");
     const [valuePitchSubmitLoading, setValuePitchSubmitLoading] = useState(null);
+    const isSurepass = (sd) => {
+        return sd.service_type?.toLowerCase().split(",").map(t => t.trim()).includes("surepass");
+    };
 
+    const getSurepassResponsePayload = (sd) => {
+        const response = sd?.screeningstar_response?.response_json || sd?.surepassResponse || null;
+        if (!response || typeof response !== "object") return null;
+        if (response.status === "data_not_found" || response.status === "service_not_in_application") return null;
+        if (!response.data && response.success === undefined && response.status_code === undefined) return null;
+        return response;
+    };
+
+    const hasSurepassResponse = (sd) => isSurepass(sd) && Boolean(getSurepassResponsePayload(sd));
+    const buildSurepassResultRows = (record) => {
+        const isPrintableRow = (row) => {
+            if (row.length === 1) return true;
+            const value = String(row[1] || "").trim().toLowerCase();
+            return value && value !== "n/a" && value !== "na" && value !== "null" && value !== "undefined";
+        };
+        const source = record?.screeningstar_response || record;
+        const response = getSurepassResponsePayload(record) || source?.response_json || record?.surepassResponse || source;
+        const rowsFromApi = response ? (Array.isArray(source?.surepass_result_rows) ? source.surepass_result_rows : null) : null;
+        if (rowsFromApi?.length) return rowsFromApi.filter(isPrintableRow);
+        if (!source && !response) return [];
+
+        const formatKey = (key) => String(key || "").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()).trim();
+        const formatValue = (key, value) => {
+            if (value === null || value === undefined || value === "") return "N/A";
+            if (typeof value === "boolean") return value ? "Yes" : "No";
+            if (key === "profile_image") return value ? "Available" : "Not Available";
+            if (Array.isArray(value)) return value.length ? value.map((item) => typeof item === "object" ? JSON.stringify(item) : String(item)).join(", ") : "N/A";
+            const text = String(value).replace(/\s+/g, " ").trim();
+            return text.length > 180 ? `${text.slice(0, 177)}...` : text;
+        };
+        const flattenRows = (obj, prefix = "") => {
+            if (!obj || typeof obj !== "object") return [];
+            return Object.entries(obj).flatMap(([key, value]) => {
+                const label = prefix ? `${prefix} ${formatKey(key)}` : formatKey(key);
+                if (key === "profile_image") return [[label, formatValue(key, value)]];
+                if (value && typeof value === "object" && !Array.isArray(value)) return flattenRows(value, label);
+                return [[label, formatValue(key, value)]];
+            });
+        };
+
+        const status = source?.surepass_status_label || (
+            response?.success === true && Number(response?.status_code) === 200
+                ? "VERIFIED"
+                : response?.success === false || Number(response?.status_code) >= 400
+                    ? "FAILED"
+                    : "PENDING"
+        );
+        const rows = [
+            ["Status", status],
+            ["Status Code", formatValue("status_code", response?.status_code)],
+            ["Message", formatValue("message", response?.message)],
+            ["Message Code", formatKey(response?.message_code || "")]
+        ];
+        const dataRows = flattenRows(response?.data || {}).filter(isPrintableRow);
+        if (dataRows.length) rows.push(["Response Data"], ...dataRows);
+        return rows.filter(isPrintableRow);
+    };
     function formatDateSafe(dateValue) {
         const date = new Date(dateValue);
         return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
@@ -2730,7 +2792,79 @@ const GenerateReport = () => {
         await fetchAdminList();
         setValuePitchSubmitLoading(null);
     }, [branchid, branchInfo, applicationId]);
+const handleSurepassSubmit = useCallback(async (serviceData, dbTable) => {
+    const adminData = JSON.parse(localStorage.getItem("admin"));
+    const token = localStorage.getItem("_token");
+    setSurepassSubmitLoading(dbTable);
 
+    const subJson = {};
+    const formJson = JSON.parse(serviceData.reportFormJson.json);
+    formJson.rows.forEach(row => {
+        row.inputs.forEach(input => {
+            if (input.type !== "file") {
+                subJson[input.name] = serviceData.annexureData?.[input.name] || "";
+            }
+        });
+    });
+
+    try {
+        const raw = JSON.stringify({
+            admin_id: adminData?.id,
+            _token: token,
+            branch_id: branchid,
+            customer_id: branchInfo.customer_id,
+            application_id: applicationId,
+            service_id: serviceData.service_id,
+            db_table: dbTable,
+            annexure: {
+                [dbTable]: subJson,
+            },
+        });
+
+        const res = await fetch(`https://api.screeningstar.co.in/client-master-tracker/submit-surepass`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: raw,
+        });
+
+        const result = await res.json();
+        if (result.token) localStorage.setItem("_token", result.token);
+
+        if (result.status) {
+            const immediateSurepassResponse = result.screeningstar_response || (result.surepass_response ? {
+                service_id: serviceData.service_id,
+                status: "exist",
+                is_prefilled: true,
+                response_json: result.surepass_response,
+            } : null);
+
+            setServicesDataInfo((prev) =>
+                Array.isArray(prev)
+                    ? prev.map((item) =>
+                        String(item.service_id) === String(serviceData.service_id)
+                            ? {
+                                ...item,
+                                surepassResponse: result.surepass_response || item.surepassResponse || null,
+                                screeningstar_response: immediateSurepassResponse || item.screeningstar_response || null,
+                            }
+                            : item
+                    )
+                    : prev
+            );
+        }
+        Swal.fire(
+            result.status ? "Success!" : "Error",
+            result.message,
+            result.status ? "success" : "error"
+        );
+
+    } catch (err) {
+        console.error("Surepass submit error:", err);
+        Swal.fire("Error", "Surepass API call failed.", "error");
+    } finally {
+        setSurepassSubmitLoading(null);
+    }
+}, [branchid, branchInfo, applicationId]);
 
 
 
@@ -3471,8 +3605,56 @@ const GenerateReport = () => {
                                                                                     </div>
                                                                                 </div>
                                                                             )}
+{/* SurePass */}
+{isSurepass(serviceData) && (
+    <div className="flex flex-col gap-3 mt-4 p-4 border rounded-xl bg-white shadow-sm">
+        {hasSurepassResponse(serviceData) && (
+            <div className="space-y-3">
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm font-medium text-center">
+                    Surepass API response received.
+                </div>
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="min-w-full text-sm">
+                        <tbody>
+                            {buildSurepassResultRows(serviceData).map((row, rowIndex) => (
+                                row.length === 1 ? (
+                                    <tr key={rowIndex} className="bg-gray-100">
+                                        <td colSpan="2" className="px-4 py-2 border font-semibold text-center text-gray-700">
+                                            {row[0]}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <tr key={rowIndex} className="odd:bg-white even:bg-gray-50">
+                                        <td className="px-4 py-2 border font-semibold text-gray-700 whitespace-nowrap">{row[0]}</td>
+                                        <td className="px-4 py-2 border text-gray-800 break-words">{row[1]}</td>
+                                    </tr>
+                                )
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
 
-                                                                            {isValuePitch(serviceData) && (
+        <button
+            type="button"
+            onClick={() => handleSurepassSubmit(serviceData, dbTable)}
+            className="w-full max-w-fit mx-auto py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition duration-200 shadow-sm"
+        >
+            {surepassSubmitLoading === dbTable ? (
+                <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.266 5.883 3.367 7.967l2.633-2.633z"></path>
+                    </svg>
+                    Submitting...
+                </span>
+            ) : (
+                hasSurepassResponse(serviceData) ? "Trigger Surepass API Again" : "Trigger Surepass API"
+            )}
+        </button>
+    </div>
+)}                                                                            {isValuePitch(serviceData) && (
                                                                                 <div className="flex flex-col gap-3 mt-4 p-4 border rounded-xl bg-white shadow-sm">
 
                                                                                     {/* Status */}
@@ -4176,3 +4358,11 @@ const GenerateReport = () => {
     );
 };
 export default GenerateReport;
+
+
+
+
+
+
+
+
