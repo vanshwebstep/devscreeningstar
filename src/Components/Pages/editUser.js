@@ -36,7 +36,7 @@ const EditUser = () => {
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`https://api.screeningstar.co.in/Screeningstar/users/${formData.id}`, {
+            const response = await fetch(`http://localhost:5000/Screeningstar/users/${formData.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

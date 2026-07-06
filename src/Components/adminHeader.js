@@ -72,7 +72,7 @@ const AdminHeader = () => {
         redirect: 'follow',
       };
 
-      const url = `https://api.screeningstar.co.in/admin/logout?admin_id=${adminId}&_token=${storedToken}`;
+      const url = `http://localhost:5000/admin/logout?admin_id=${adminId}&_token=${storedToken}`;
       const response = await fetch(url, requestOptions);
 
       if (response.ok) {
@@ -129,7 +129,7 @@ const AdminHeader = () => {
       const encodedAdminId = btoa(multipliedAdminId.toString());
 
       try {
-        const response = await fetch(`https://api.screeningstar.co.in/notification?YWRtaW5faWQ=${encodedAdminId}`);
+        const response = await fetch(`http://localhost:5000/notification?YWRtaW5faWQ=${encodedAdminId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -236,7 +236,7 @@ const AdminHeader = () => {
     const encodedAdminId = btoa(multipliedAdminId.toString());
 
     try {
-      const response = await fetch(`https://api.screeningstar.co.in/notification/view?YWRtaW5faWQ=${encodedAdminId}`);
+      const response = await fetch(`http://localhost:5000/notification/view?YWRtaW5faWQ=${encodedAdminId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -345,7 +345,7 @@ const AdminHeader = () => {
         redirect: "follow"
       };
 
-      const response = await fetch("https://api.screeningstar.co.in/admin/check-in", requestOptions);
+      const response = await fetch("http://localhost:5000/admin/check-in", requestOptions);
       const result = await response.text();
       console.log(result);
 
@@ -375,7 +375,7 @@ const AdminHeader = () => {
         redirect: "follow",
       };
 
-      const response = await fetch("https://api.screeningstar.co.in/admin/check-out", requestOptions);
+      const response = await fetch("http://localhost:5000/admin/check-out", requestOptions);
       const result = await response.text();
       console.log(result);
 

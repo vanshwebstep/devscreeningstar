@@ -81,7 +81,7 @@ const UserHeader = () => {
       };
   
       // Construct the base URL
-      let url = `https://api.screeningstar.co.in/branch/logout?branch_id=${branchId}&_token=${branchtoken}`;
+      let url = `http://localhost:5000/branch/logout?branch_id=${branchId}&_token=${branchtoken}`;
   
       // Append sub_user_id if the user is a sub-user
       if (branchData?.type === "sub_user" && branchData.id) {
@@ -146,7 +146,7 @@ const UserHeader = () => {
 
       try {
         // Make the GET request without a body
-        const response = await fetch(`https://api.screeningstar.co.in/branch/notification?YnJhbmNoX2lk=${encodedBranchId}`);
+        const response = await fetch(`http://localhost:5000/branch/notification?YnJhbmNoX2lk=${encodedBranchId}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

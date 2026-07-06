@@ -274,7 +274,7 @@ const ImportClientData = () => {
     setImportResult(null);
 
     try {
-      const response = await fetch("https://api.screeningstar.co.in/data-management/import-client-data", {
+      const response = await fetch("http://localhost:5000/data-management/import-client-data", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

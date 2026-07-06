@@ -446,7 +446,7 @@ const GenerateReport = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -560,7 +560,7 @@ const GenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || localStorage.getItem("_token") || '';
@@ -873,7 +873,7 @@ const GenerateReport = () => {
 
 
         // Construct the URL with query parameters
-        const url = `https://api.screeningstar.co.in/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `http://localhost:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',
@@ -987,7 +987,7 @@ const GenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    "https://api.screeningstar.co.in/client-master-tracker/upload",
+                    "http://localhost:5000/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -1303,7 +1303,7 @@ const GenerateReport = () => {
                     body: raw,
                 };
                 const response = await fetch(
-                    `https://api.screeningstar.co.in/client-master-tracker/generate-report`,
+                    `http://localhost:5000/client-master-tracker/generate-report`,
                     requestOptions
                 );
 
@@ -2759,7 +2759,7 @@ const GenerateReport = () => {
             addresses: addresses,
         });
 
-        const res = await fetch(`https://api.screeningstar.co.in/client-master-tracker/submit-valuepitch`, {
+        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-valuepitch`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: raw,
@@ -2821,7 +2821,7 @@ const handleSurepassSubmit = useCallback(async (serviceData, dbTable) => {
             },
         });
 
-        const res = await fetch(`https://api.screeningstar.co.in/client-master-tracker/submit-surepass`, {
+        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-surepass`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: raw,

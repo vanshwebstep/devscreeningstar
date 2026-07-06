@@ -44,7 +44,7 @@ const ServiceReportForm = () => {
     setLoading(true);
     setApiLoading(true);
 
-    const url = `https://api.screeningstar.co.in/json-form/generate-report/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `http://localhost:5000/json-form/generate-report/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url);

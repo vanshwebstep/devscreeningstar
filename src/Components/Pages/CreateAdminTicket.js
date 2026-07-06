@@ -50,7 +50,7 @@ const CreateAdminTicket = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/ticket/list?admin_id=${admin_id}&_token=${storedToken}&page=${page}&search=${search}`,
+        `http://localhost:5000/ticket/list?admin_id=${admin_id}&_token=${storedToken}&page=${page}&search=${search}`,
         requestOptions
       );
       const result = await response.json();
@@ -153,7 +153,7 @@ const CreateAdminTicket = () => {
       if (result.isConfirmed) {
         setDeletingId(id);
         fetch(
-          `https://api.screeningstar.co.in/ticket/delete?ticket_number=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `http://localhost:5000/ticket/delete?ticket_number=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           requestOptions
         )
           .then((response) => response.json())

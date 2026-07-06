@@ -56,7 +56,7 @@ const BillingEscalation = () => {
     }
 
     // Construct the URL with query parameters
-    const url = `https://api.screeningstar.co.in/billing-escalation/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `http://localhost:5000/billing-escalation/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -144,8 +144,8 @@ const BillingEscalation = () => {
     };
 
     const url = isEditing
-      ? `https://api.screeningstar.co.in/billing-escalation/update`
-      : `https://api.screeningstar.co.in/billing-escalation/create`;
+      ? `http://localhost:5000/billing-escalation/update`
+      : `http://localhost:5000/billing-escalation/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -213,7 +213,7 @@ const BillingEscalation = () => {
     }).then((willDelete) => {
       if (willDelete) {
         setDeletingId(id);
-        fetch(`https://api.screeningstar.co.in/billing-escalation/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+        fetch(`http://localhost:5000/billing-escalation/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
           .then((response) => response.json())
           .then((result) => {
             const newToken = result.token || result._token || storedToken || "";

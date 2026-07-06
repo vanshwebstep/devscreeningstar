@@ -61,7 +61,7 @@ const ExpenseMaster = () => {
       return;
     }
 
-    const url = `https://api.screeningstar.co.in/expense-tracker?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `http://localhost:5000/expense-tracker?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url, {
@@ -194,8 +194,8 @@ const ExpenseMaster = () => {
     if (editId) payload.id = editId;
 
     const url = editId
-      ? `https://api.screeningstar.co.in/expense-tracker/update`
-      : `https://api.screeningstar.co.in/expense-tracker/create`;
+      ? `http://localhost:5000/expense-tracker/update`
+      : `http://localhost:5000/expense-tracker/create`;
 
     const method = editId ? "PUT" : "POST";
 
@@ -282,7 +282,7 @@ const ExpenseMaster = () => {
         id: invoiceId,
       };
 
-      const response = await fetch("https://api.screeningstar.co.in/expense-tracker/delete", {
+      const response = await fetch("http://localhost:5000/expense-tracker/delete", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

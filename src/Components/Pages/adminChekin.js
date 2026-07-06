@@ -23,6 +23,8 @@ import logo8 from "../../imgs/7.png"
 import emblemIcon from "../../imgs/2.png";
 import colored from "../../imgs/colored.png";
 import greenShield from "../../imgs/greenShield.png";
+import failedShield from "../../imgs/failedShield.png";
+import successShield from "../../imgs/successShield.png";
 import yellowShield from "../../imgs/yellowShield.png";
 import orangeShield from "../../imgs/orangeShield.png";
 import emailIconGreen from "../../imgs/emailIconGreen.png";
@@ -189,7 +191,7 @@ const AdminChekin = () => {
                 .join('');
         }
 
-        const baseUrl = `https://api.screeningstar.co.in/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
+        const baseUrl = `http://localhost:5000/client-master-tracker/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`;
 
         // Initialize URLSearchParams for parameters
         const parameters = new URLSearchParams();
@@ -300,7 +302,7 @@ const AdminChekin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${encodeURIComponent(reportDownload)}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -460,7 +462,7 @@ const AdminChekin = () => {
             // console.log("Payload:", raw);
 
             const response = await axios.post(
-                "https://api.screeningstar.co.in/utils/image-to-base",
+                "http://localhost:5000/utils/image-to-base",
                 raw,
                 { headers }
             );
@@ -733,6 +735,144 @@ const AdminChekin = () => {
         const dataRows = flattenRows(response.data || {}).filter(isPrintableRow);
         if (dataRows.length) rows.push(["Response Data"], ...dataRows);
         return rows.filter(isPrintableRow);
+    };
+    const getSurepassCardData = (record) => {
+        const response = record?.response_json || null;
+        if (!record || record.status === "data_not_found" || record.status === "service_not_in_application" || !record.is_prefilled || !response) {
+            return null;
+        }
+
+        const isSuccess = response.success === true && Number(response.status_code) === 200;
+        const isFailed = response.success === false || Number(response.status_code) >= 400;
+
+        const formatKey = (key) => String(key || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim();
+        const formatValue = (key, value) => {
+            if (value === null || value === undefined || value === "") return null;
+            if (typeof value === "boolean") return value ? "Yes" : "No";
+            if (key === "profile_image") return value ? "Available" : null;
+            if (Array.isArray(value)) return value.length ? value.map((item) => typeof item === "object" ? JSON.stringify(item) : String(item)).join(", ") : null;
+            const text = String(value).replace(/\s+/g, " ").trim();
+            return text.length > 55 ? `${text.slice(0, 52)}...` : text;
+        };
+        const flatten = (obj, prefix = "") => {
+            if (!obj || typeof obj !== "object") return [];
+            return Object.entries(obj).flatMap(([key, value]) => {
+                const label = prefix ? `${prefix} ${formatKey(key)}` : formatKey(key);
+                if (key === "profile_image") {
+                    const v = formatValue(key, value);
+                    return v ? [{ label, value: v }] : [];
+                }
+                if (value && typeof value === "object" && !Array.isArray(value)) return flatten(value, label);
+                const v = formatValue(key, value);
+                return v ? [{ label, value: v }] : [];
+            });
+        };
+
+        const details = flatten(response.data || {});
+
+        return {
+            isVerified: isSuccess,
+            statusText: isSuccess ? "VERIFIED SUCCESSFULLY" : (isFailed ? "VERIFICATION FAILED" : "VERIFICATION PENDING"),
+            subText: isSuccess ? "The details are valid." : (response.message || "Unable to verify the details."),
+            details,
+        };
+    };
+
+    // Draws the card exactly like the reference image (shield icon + status badge + details box)
+    const drawSurepassVerificationCard = (doc, startY, title, cardInfo) => {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 10;
+        const cardWidth = pageWidth - margin * 2;
+        const { isVerified, statusText, subText, details } = cardInfo;
+
+        const statusColor = isVerified ? [39, 174, 96] : [220, 53, 69];
+        const bgTint = isVerified ? [235, 250, 240] : [253, 235, 235];
+        const borderTint = isVerified ? [190, 230, 205] : [245, 200, 200];
+        const iconImage = isVerified ? successShield : failedShield; // 🔴 icon image yahan use ho rahi hai
+
+        const rowHeight = 6.2;
+        const detailsHeight = details.length ? (details.length * rowHeight + 12) : 0;
+        const badgeHeight = subText ? 16 : 11;
+        const totalHeight = 10 + 18 + 6 + 10 + badgeHeight + 6 + detailsHeight + 8;
+
+        let y = startY;
+
+        // Outer card
+        doc.setDrawColor(225, 225, 225);
+        doc.setLineWidth(0.3);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(margin, y, cardWidth, totalHeight, 3, 3, "FD");
+
+        let innerY = y + 10;
+
+        // Shield icon (centered)
+        const iconSize = 18;
+        doc.addImage(iconImage, "PNG", pageWidth / 2 - iconSize / 2, innerY, iconSize, iconSize);
+        innerY += iconSize + 6;
+
+        // Title
+        doc.setFont("TimesNewRomanBold");
+        doc.setFontSize(13);
+        doc.setTextColor(20, 30, 40);
+        doc.text((title || "VERIFICATION").toUpperCase(), pageWidth / 2, innerY, { align: "center" });
+
+        doc.setDrawColor(...statusColor);
+        doc.setLineWidth(0.8);
+        doc.line(pageWidth / 2 - 12, innerY + 2, pageWidth / 2 + 12, innerY + 2);
+
+        innerY += 10;
+
+        // Status badge box
+        doc.setFillColor(...bgTint);
+        doc.setDrawColor(...borderTint);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(margin + 5, innerY, cardWidth - 10, badgeHeight, 2, 2, "FD");
+
+        const badgeIconSize = 8;
+        doc.addImage(iconImage, "PNG", margin + 10, innerY + badgeHeight / 2 - badgeIconSize / 2, badgeIconSize, badgeIconSize);
+
+        doc.setFont("TimesNewRomanBold");
+        doc.setFontSize(10.5);
+        doc.setTextColor(...statusColor);
+        doc.text(statusText, margin + 22, innerY + (subText ? 7 : badgeHeight / 2 + 1.5));
+
+        if (subText) {
+            doc.setFont("TimesNewRoman");
+            doc.setFontSize(9);
+            doc.setTextColor(90, 90, 90);
+            doc.text(subText, margin + 22, innerY + 12);
+        }
+
+        innerY += badgeHeight + 6;
+
+        // Details box
+        if (details.length) {
+            doc.setDrawColor(225, 225, 225);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(margin + 5, innerY, cardWidth - 10, detailsHeight, 2, 2, "D");
+
+            doc.setFont("TimesNewRomanBold");
+            doc.setFontSize(9);
+            doc.setTextColor(...statusColor);
+            doc.text(`${(title || "VERIFICATION").toUpperCase()} DETAILS`, margin + 11, innerY + 7);
+
+            let rowY = innerY + 14;
+            details.forEach(({ label, value }) => {
+                doc.setFont("TimesNewRoman");
+                doc.setFontSize(9.5);
+                doc.setTextColor(70, 70, 70);
+                doc.text(label, margin + 11, rowY);
+
+                doc.setFont("TimesNewRomanBold");
+                doc.setTextColor(20, 20, 20);
+                doc.text(":", margin + 65, rowY);
+                doc.text(String(value), margin + 70, rowY);
+
+                rowY += rowHeight;
+            });
+        }
+
+        return y + totalHeight;
     };
     const generatePDF = async (index, maindata, returnInBlob = false) => {
         let isFirstLoad = true;
@@ -1481,7 +1621,7 @@ const AdminChekin = () => {
                         }
                     }
                     if (serviceTypes.includes("surepass")) {
-                          rawStatus = annexure.status; // ✅ don't return early
+                        rawStatus = annexure.status; // ✅ don't return early
                     }
                     // ================= DEFAULT =================
                     else if (annexure?.status) {
@@ -1611,7 +1751,7 @@ const AdminChekin = () => {
                                 const serviceType = service?.service_type || service?.annexureData.status || "";
                                 const serviceTypes = serviceType.split(',').map(s => s.trim().toLowerCase());
                                 console.log('serviceTypes', service)
-                             
+
 
                                 // ================= DEFAULT =================
                                 return formatStatus(displayText).toUpperCase();
@@ -1699,10 +1839,7 @@ const AdminChekin = () => {
             },
         });
 
-
-
         addFooter(doc);
-
 
         yPosition = 10;
         let annexureIndex = 1;
@@ -1822,14 +1959,15 @@ const AdminChekin = () => {
                             return result;
                         })
                         .filter((item) => item !== null);
+                    let surepassCardData = null;
                     if (serviceTypes.includes('surepass')) {
-                        const surepassRows = buildSurepassResultRows(service?.screeningstar_response);
-                        if (surepassRows.length) {
-                            tableData = tableData.concat([["SurePass Response"]], surepassRows);
-                        }
+                        const rawResponse = service?.screeningstar_response;
+                        const surepassRecord = Array.isArray(rawResponse)
+                            ? rawResponse.find(item => item?.is_prefilled) || rawResponse[0]
+                            : rawResponse;
+
+                        surepassCardData = getSurepassCardData(surepassRecord);
                     }
-
-
 
                     if (tableData.length > 0) {
 
@@ -2049,7 +2187,15 @@ const AdminChekin = () => {
                         // ✅ Report URL - clickable link add karo
 
                         yPosition = doc.lastAutoTable.finalY + 10;
-
+                        if (surepassCardData) {
+                            const estimatedHeight = 10 + 18 + 6 + 10 + 16 + 6 + (surepassCardData.details.length * 6.2 + 12) + 8;
+                            if (yPosition + estimatedHeight > doc.internal.pageSize.height - 20) {
+                                doc.addPage();
+                                addFooter(doc);
+                                yPosition = 10;
+                            }
+                            yPosition = drawSurepassVerificationCard(doc, yPosition, headingText, surepassCardData) + 10;
+                        }
                         const remarksData = serviceData.find((data) => data.label === "Remarks");
                         const remarks = remarksData?.values?.name;
 
@@ -2083,10 +2229,12 @@ const AdminChekin = () => {
                                     const pageWidth = doc.internal.pageSize.width; // Define page width before loop
 
                                     if (annexureImagesSplitArr.length === 0) {
-                                        doc.setFont("TimesNewRomanbold");
-                                        doc.setFontSize(10);
-                                        doc.text("No annexure images available.", pageWidth / 2, yPosition, { align: "center" });
-                                        yPosition += 10;
+                                        if (!serviceTypes.includes('surepass')) {
+                                            doc.setFont("TimesNewRomanbold");
+                                            doc.setFontSize(10);
+                                            doc.text("No annexure images available.", pageWidth / 2, yPosition, { align: "center" });
+                                            yPosition += 10;
+                                        }
                                     } else {
                                         const imageBases = await fetchImageToBase(annexureImagesStr.trim());
                                         if (imageBases) {
@@ -2163,10 +2311,12 @@ const AdminChekin = () => {
                                 const padding = 5;
 
                                 if (annexureImagesSplitArr.length === 0) {
-                                    doc.setFont("TimesNewRomanbold");
-                                    doc.setFontSize(10);
-                                    doc.text("No annexure images available.", pageWidth / 2, yPosition, { align: "center" });
-                                    yPosition += 10;
+                                    if (!serviceTypes.includes('surepass')) {
+                                        doc.setFont("TimesNewRomanbold");
+                                        doc.setFontSize(10);
+                                        doc.text("No annexure images available.", pageWidth / 2, yPosition, { align: "center" });
+                                        yPosition += 10;
+                                    }
                                 } else {
                                     const imageBases = await fetchImageToBase(annexureImagesStr.trim());
                                     if (imageBases) {
@@ -2211,7 +2361,7 @@ const AdminChekin = () => {
                                 }
 
                             }
-                            else {
+                            else if (!serviceTypes.includes('surepass')) {
                                 doc.setFont("TimesNewRomanbold");
                                 doc.setFontSize(10);
                                 doc.text("No annexure images available.", pageWidth / 2, yPosition, { align: "center" });
@@ -3123,7 +3273,7 @@ const AdminChekin = () => {
             redirect: "follow",
         };
 
-        const url = `https://api.screeningstar.co.in/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
+        const url = `http://localhost:5000/client-master-tracker/application-highlight?application_id=${id}&admin_id=${adminId}&_token=${token}&highlight=${highlightId}`;
 
         fetch(url, requestOptions)
             .then((response) => {
@@ -3181,7 +3331,7 @@ const AdminChekin = () => {
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `https://api.screeningstar.co.in/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `http://localhost:5000/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {
