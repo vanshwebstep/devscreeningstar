@@ -72,7 +72,7 @@ const ApplicationTrash = () => {
                 .join('');
         }
 
-        const baseUrl = `https://api.screeningstar.co.in/trashed/client-master-tracker/list`;
+        const baseUrl = `http://localhost:5000/trashed/client-master-tracker/list`;
         const queryParams = new URLSearchParams({
             admin_id: adminId,
             _token: token,
@@ -152,7 +152,7 @@ const ApplicationTrash = () => {
             redirect: "follow"
         };
 
-        fetch(`https://api.screeningstar.co.in/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`http://localhost:5000/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -228,7 +228,7 @@ const ApplicationTrash = () => {
             setActiveId(id);
             try {
                 const response = await fetch(
-                    `https://api.screeningstar.co.in/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `http://localhost:5000/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: "GET",
                         redirect: "follow",

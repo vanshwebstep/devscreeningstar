@@ -2373,7 +2373,7 @@ const InactiveClients = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `https://api.screeningstar.co.in/integrated-service/list?admin_id=${adminId}&_token=${token}`;
+            const url = `http://localhost:5000/integrated-service/list?admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -2418,8 +2418,8 @@ const InactiveClients = () => {
         // Determine request type and URL
         const method = isEdit ? "PUT" : "POST";
         const url = isEdit
-            ? `https://api.screeningstar.co.in/integrated-service/update`
-            : `https://api.screeningstar.co.in/integrated-service/create`;
+            ? `http://localhost:5000/integrated-service/update`
+            : `http://localhost:5000/integrated-service/create`;
 
         console.log('formDatasubmit', formData)
 
@@ -2515,7 +2515,7 @@ const InactiveClients = () => {
             new Map(records.map(r => [r.reference_id, r])).values()
         );
 
-        const url = `https://api.screeningstar.co.in/integrated-service/create`;
+        const url = `http://localhost:5000/integrated-service/create`;
 
         Swal.fire({
             title: "Processing...",
@@ -2769,7 +2769,7 @@ const InactiveClients = () => {
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `https://api.screeningstar.co.in/integrated-service/delete?id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `http://localhost:5000/integrated-service/delete?id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {

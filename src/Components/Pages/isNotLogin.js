@@ -28,7 +28,7 @@ const IsNotLogin = ({ children }) => {
       // Verify the admin login using an API request
       try {
         const response = await axios.post(
-          'https://api.screeningstar.co.in/admin/verify-admin-login',
+          'http://localhost:5000/admin/verify-admin-login',
           {
             admin_id: adminData.id,
             _token: storedToken,

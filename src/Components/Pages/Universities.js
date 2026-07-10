@@ -72,7 +72,7 @@ const Universities = () => {
             return;
         }
 
-        const url = `https://api.screeningstar.co.in/internal-storage/university/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `http://localhost:5000/internal-storage/university/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         try {
             const response = await fetch(url, {
@@ -209,8 +209,8 @@ const Universities = () => {
         };
 
         const url = isEditing
-            ? "https://api.screeningstar.co.in/internal-storage/university/update"
-            : "https://api.screeningstar.co.in/internal-storage/university/create";
+            ? "http://localhost:5000/internal-storage/university/update"
+            : "http://localhost:5000/internal-storage/university/create";
 
         try {
             const response = await fetch(url, requestOptions);
@@ -314,7 +314,7 @@ const Universities = () => {
             if (willDelete) {
                 setDeletingId(id);
                 const response = await fetch(
-                    `https://api.screeningstar.co.in/internal-storage/university/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `http://localhost:5000/internal-storage/university/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     requestOptions
                 );
 

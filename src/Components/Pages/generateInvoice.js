@@ -143,7 +143,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
+        `http://localhost:5000/customer/list-with-basic-info?admin_id=${admin_id}&_token=${storedToken}`,
         {
           method: "GET",
           redirect: "follow",
@@ -240,7 +240,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await axios.post(
-        `https://api.screeningstar.co.in/invoice-master/send-data`,
+        `http://localhost:5000/invoice-master/send-data`,
         raw,
         {
           headers: {
@@ -301,7 +301,7 @@ const GenerateInvoice = () => {
 
     try {
       const response = await fetch(
-        `https://api.screeningstar.co.in/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
+        `http://localhost:5000/generate-invoice?customer_id=${customer_id}&admin_id=${admin_id}&_token=${storedToken}&month=${month}&year=${year}`,
         requestOptions
       );
       const data = await response.json();

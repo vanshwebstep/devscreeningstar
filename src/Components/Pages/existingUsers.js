@@ -61,7 +61,7 @@ const ExistingUsers = () => {
 
         try {
             const response = await fetch(
-                `https://api.screeningstar.co.in/admin/list?admin_id=${adminId}&_token=${token}`,
+                `http://localhost:5000/admin/list?admin_id=${adminId}&_token=${token}`,
                 { method: "GET", redirect: "follow" }
             );
 
@@ -115,7 +115,7 @@ const ExistingUsers = () => {
         };
 
         try {
-            const response = await fetch(`https://api.screeningstar.co.in/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions);
+            const response = await fetch(`http://localhost:5000/admin/create-listing?admin_id=${adminId}&_token=${token}`, requestOptions);
             const result = await response.json();
 
             if (response.ok) {
@@ -290,7 +290,7 @@ const ExistingUsers = () => {
 
                 try {
                     console.log("Sending POST request to upload files...");
-                    const response = await axios.post(`https://api.screeningstar.co.in/admin/upload`, formData, {
+                    const response = await axios.post(`http://localhost:5000/admin/upload`, formData, {
                         headers: {
                             "Content-Type": "multipart/form-data",
                         },
@@ -389,7 +389,7 @@ const ExistingUsers = () => {
             };
 
             const response = await fetch(
-                "https://api.screeningstar.co.in/admin/update",
+                "http://localhost:5000/admin/update",
                 requestOptions
             );
 
@@ -484,7 +484,7 @@ const ExistingUsers = () => {
                 };
 
                 // Perform the DELETE request to delete the admin
-                fetch(`https://api.screeningstar.co.in/admin/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
+                fetch(`http://localhost:5000/admin/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`, requestOptions)
                     .then((response) => response.json())
                     .then((result) => {
                         const newToken = result.token || result._token || storedToken || '';
