@@ -32,7 +32,7 @@ const ChecklistAndEscalation = () => {
 
     const { id: branch_id, type } = branchData;
     const branch_token = localStorage.getItem("branch_token");
-    const url = `http://localhost:5000/branch/escalation-matrix?branch_id=${branch_id}&_token=${branch_token}`;
+    const url = `https://api.screeningstar.co.in/branch/escalation-matrix?branch_id=${branch_id}&_token=${branch_token}`;
 
     const requestOptions = {
       method: "GET",

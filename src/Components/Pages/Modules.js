@@ -27,7 +27,7 @@ const Modules = () => {
     setLoading(true);
     setApiLoading(true);
 
-    const url = `http://localhost:5000/email-template/modules?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/email-template/modules?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url);

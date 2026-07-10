@@ -63,7 +63,7 @@ const raw = JSON.stringify(rawData);
 
         // Make the API request to update the password
         try {
-            const response = await fetch('http://localhost:5000/branch/update-password', requestOptions);
+            const response = await fetch('https://api.screeningstar.co.in/branch/update-password', requestOptions);
             const result = await response.json();
             const newToken = result.token || result._token || '';
             if (newToken) {

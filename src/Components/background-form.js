@@ -191,7 +191,7 @@ const BackgroundVerificationForm = () => {
 
         try {
             await axios.post(
-                `http://localhost:5000/branch/candidate-application/backgroud-verification/upload`,
+                `https://api.screeningstar.co.in/branch/candidate-application/backgroud-verification/upload`,
                 customerLogoFormData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -210,7 +210,7 @@ const BackgroundVerificationForm = () => {
     const isApplicationExists = useCallback(() => {
         setMainLoading(true)
         if (isValidApplication && decodedValues.app_id && decodedValues.branch_id && decodedValues.customer_id) {
-            fetch(`http://localhost:5000/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
+            fetch(`https://api.screeningstar.co.in/branch/candidate-application/backgroud-verification/is-application-exist?candidate_application_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`)
                 .then(res => res.json()
                 )
                 .then(result => {
@@ -226,9 +226,9 @@ const BackgroundVerificationForm = () => {
                         setIsValidApplication(false);
                         const form = document.getElementById('bg-form');
                         Swal.fire({
-                            title: 'Error',
+                            title: 'Success',
                             text: result.message,
-                            icon: 'error',
+                            icon: 'success',
                             confirmButtonText: 'OK'
                         });
                         if (form) form.remove();
@@ -541,7 +541,7 @@ const BackgroundVerificationForm = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/branch/candidate-application/backgroud-verification/submit",
+                "https://api.screeningstar.co.in/branch/candidate-application/backgroud-verification/submit",
                 requestOptions
             );
             const data = await response.json();
@@ -607,7 +607,7 @@ const BackgroundVerificationForm = () => {
         };
 
         try {
-            const response = await fetch("http://localhost:5000/branch/candidate-application/backgroud-verification/submit", requestOptions);
+            const response = await fetch("https://api.screeningstar.co.in/branch/candidate-application/backgroud-verification/submit", requestOptions);
 
             const data = await response.json();
 
@@ -1076,7 +1076,7 @@ const BackgroundVerificationForm = () => {
                                             ref={(el) => (refs.current["aadhaar_card"] = el)}
                                         />
                                         {errors.aadhaar_card && <p className="text-red-500">{errors.aadhaar_card}</p>}
-                                          {cefApp && cefApp.aadhaar_card && (
+                                        {cefApp && cefApp.aadhaar_card && (
                                             <div className="mt-2 object-cover max-w-60 rounded-md">
                                                 <FileViewer fileUrl={cefApp.aadhaar_card} className="" />
                                             </div>

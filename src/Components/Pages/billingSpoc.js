@@ -52,7 +52,7 @@ const BillingSpoc = () => {
     }
 
     // Construct the URL with query parameters
-    const url = `http://localhost:5000/billing-spoc/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/billing-spoc/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     // Request options for GET request (no body required)
     const requestOptions = {
@@ -140,8 +140,8 @@ const BillingSpoc = () => {
     };
 
     const url = isEditing
-      ? `http://localhost:5000/billing-spoc/update`
-      : `http://localhost:5000/billing-spoc/create`;
+      ? `https://api.screeningstar.co.in/billing-spoc/update`
+      : `https://api.screeningstar.co.in/billing-spoc/create`;
 
     try {
       const response = await fetch(url, requestOptions);
@@ -218,7 +218,7 @@ const BillingSpoc = () => {
       if (willDelete) {
         setDeletingId(id);
         const response = await fetch(
-          `http://localhost:5000/billing-spoc/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://api.screeningstar.co.in/billing-spoc/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           requestOptions
         );
 

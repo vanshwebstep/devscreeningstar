@@ -49,7 +49,7 @@ const UserListing = () => {
     // Get branch type from localStorage
 
     // Construct the base URL
-    let url = `http://localhost:5000/branch/sub-user/list?branch_id=${branch_id}&_token=${branch_token}`;
+    let url = `https://api.screeningstar.co.in/branch/sub-user/list?branch_id=${branch_id}&_token=${branch_token}`;
 
     // Conditionally add sub_user_id to the URL if branch_type is 'subuser'
     if (branchData?.type == "sub_user") {
@@ -147,7 +147,7 @@ const UserListing = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/branch/sub-user/update-email', requestOptions);
+      const response = await fetch('https://api.screeningstar.co.in/branch/sub-user/update-email', requestOptions);
       const result = await response.json();  // Assuming the API returns a JSON object
 
       const newToken = result.token || result._token || localStorage.getItem('branch_token') || "";
@@ -198,7 +198,7 @@ const UserListing = () => {
     };
 
     // Store the base URL in a variable
-    let url = `http://localhost:5000/branch/sub-user/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+    let url = `https://api.screeningstar.co.in/branch/sub-user/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
 
     // Conditionally add sub_user_id if the condition is met
     if (branchData?.type === "sub_user" && branchData.id) {

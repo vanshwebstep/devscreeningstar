@@ -214,7 +214,7 @@ const DigitalAddressVerification = () => {
             decodedValues.customer_id
         ) {
             fetch(
-                `http://localhost:5000/branch/candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
+                `https://api.screeningstar.co.in/branch/candidate-application/digital-address-verification/is-application-exist?app_id=${decodedValues.app_id}&branch_id=${decodedValues.branch_id}&customer_id=${decodedValues.customer_id}`
             )
                 .then(res => res.json())
                 .then(result => {
@@ -337,7 +337,7 @@ const DigitalAddressVerification = () => {
             try {
 
                 await axios.post(
-                    "http://localhost:5000/branch/candidate-application/digital-address-verification/upload",
+                    "https://api.screeningstar.co.in/branch/candidate-application/digital-address-verification/upload",
                     customerLogoFormData,
                     {
                         headers: { "Content-Type": "multipart/form-data" }
@@ -388,7 +388,7 @@ const DigitalAddressVerification = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/branch/candidate-application/digital-address-verification/submit",
+                "https://api.screeningstar.co.in/branch/candidate-application/digital-address-verification/submit",
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },

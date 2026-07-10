@@ -68,7 +68,7 @@ const LeaveListing = () => {
         setApiLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:5000/personal-manager/my-list?admin_id=${admin_id}&_token=${storedToken}`,
+                `https://api.screeningstar.co.in/personal-manager/my-list?admin_id=${admin_id}&_token=${storedToken}`,
                 { method: "GET", redirect: "follow" }
             );
 
@@ -159,7 +159,7 @@ const LeaveListing = () => {
         setLoadingSpoc((prev) => ({ ...prev, [spocId]: status }));
 
         try {
-            const response = await fetch("http://localhost:5000/personal-manager/response", requestOptions);
+            const response = await fetch("https://api.screeningstar.co.in/personal-manager/response", requestOptions);
             const result = await response.json();
             console.log("API Response:", result);
 

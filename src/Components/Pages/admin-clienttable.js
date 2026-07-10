@@ -26,7 +26,7 @@ const ClientManagementData = () => {
         setError(null);
         try {
             const storedToken = localStorage.getItem("token") || '';
-            const res = await fetch(`http://localhost:5000/Screeningstar/service`, {
+            const res = await fetch(`https://api.screeningstar.co.in/Screeningstar/service`, {
                 headers: {
                     'Authorization': `Bearer ${storedToken}`,
                 },
@@ -74,7 +74,7 @@ const ClientManagementData = () => {
         try {
             if (!storedToken) throw new Error('No token found in local storage');
 
-            const res = await fetch(`http://localhost:5000/Screeningstar/package`, {
+            const res = await fetch(`https://api.screeningstar.co.in/Screeningstar/package`, {
                 headers: {
                     'Authorization': `Bearer ${storedToken}`,
                 },

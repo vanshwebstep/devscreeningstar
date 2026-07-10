@@ -65,7 +65,7 @@ const PackageManagement = () => {
 
         try {
             const response = await axios.get(
-                `http://localhost:5000/package/list`,
+                `https://api.screeningstar.co.in/package/list`,
                 {
                     params: { admin_id, _token: storedToken },
                 }
@@ -141,7 +141,7 @@ const PackageManagement = () => {
             if (editingPackageId) {
                 // If editing, use the update API
                 response = await axios.put(
-                    "http://localhost:5000/package/update",
+                    "https://api.screeningstar.co.in/package/update",
                     requestBody,
                     { headers: { "Content-Type": "application/json" } }
                 );
@@ -149,7 +149,7 @@ const PackageManagement = () => {
             } else {
                 // If not editing, use the create API
                 response = await axios.post(
-                    "http://localhost:5000/package/create",
+                    "https://api.screeningstar.co.in/package/create",
                     requestBody,
                     { headers: { "Content-Type": "application/json" } }
                 );
@@ -198,7 +198,7 @@ const PackageManagement = () => {
                 const storedToken = localStorage.getItem("_token");
                 try {
                     const response = await axios.delete(
-                        `http://localhost:5000/package/delete`,
+                        `https://api.screeningstar.co.in/package/delete`,
                         {
                             params: { id, admin_id, _token: storedToken },
                         }

@@ -118,7 +118,7 @@ const ValuePitchManager = () => {
                 .join('');
         }
 
-        const baseUrl = `http://localhost:5000/client-master-tracker/list-valuepitch`;
+        const baseUrl = `https://api.screeningstar.co.in/client-master-tracker/list-valuepitch`;
         const queryParams = new URLSearchParams({
             admin_id: adminId,
             _token: token,
@@ -207,7 +207,7 @@ const ValuePitchManager = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/client-master-tracker/branch-list-by-customer?customer_id=${main_id}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -303,7 +303,7 @@ const ValuePitchManager = () => {
             setActiveId(id);
             try {
                 const response = await fetch(
-                    `http://localhost:5000/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+                    `https://api.screeningstar.co.in/customer/inactive?customer_id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
                     {
                         method: "GET",
                         redirect: "follow",

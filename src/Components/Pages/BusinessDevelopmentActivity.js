@@ -106,7 +106,7 @@ const BusinessDevelopmentActivity = () => {
       return;
     }
 
-    const url = `http://localhost:5000/internal-storage/daily-activity-tracker/list?admin_id=${admin_id}&_token=${storedToken}`;
+    const url = `https://api.screeningstar.co.in/internal-storage/daily-activity-tracker/list?admin_id=${admin_id}&_token=${storedToken}`;
 
     try {
       const response = await fetch(url, {
@@ -205,8 +205,8 @@ const BusinessDevelopmentActivity = () => {
     };
 
     const url = isEditing
-      ? "http://localhost:5000/internal-storage/daily-activity-tracker/update"
-      : "http://localhost:5000/internal-storage/daily-activity-tracker/create";
+      ? "https://api.screeningstar.co.in/internal-storage/daily-activity-tracker/update"
+      : "https://api.screeningstar.co.in/internal-storage/daily-activity-tracker/create";
 
     try {
       const response = await fetch(url, requestOptions);
@@ -303,7 +303,7 @@ const BusinessDevelopmentActivity = () => {
       if (willDelete) {
         setDeletingId(id);
         const response = await fetch(
-          `http://localhost:5000/internal-storage/daily-activity-tracker/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
+          `https://api.screeningstar.co.in/internal-storage/daily-activity-tracker/delete?id=${id}&admin_id=${admin_id}&_token=${storedToken}`,
           requestOptions
         );
 

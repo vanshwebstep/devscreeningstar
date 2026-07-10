@@ -90,7 +90,7 @@ const BulkApplication = () => {
 
     const { customer_id, branch_id } = branchData;
     const branch_token = localStorage.getItem("branch_token");
-    const url = `http://localhost:5000/branch/bulk/list?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
+    const url = `https://api.screeningstar.co.in/branch/bulk/list?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
 
     try {
       let response;
@@ -184,9 +184,9 @@ const BulkApplication = () => {
         setDeletingId(id);
         let url;
         if (branchData?.type == "sub_user" && branchData.id) {
-          url = `http://localhost:5000/branch/bulk/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${branchData.id}`;
+          url = `https://api.screeningstar.co.in/branch/bulk/delete?id=${id}&branch_id=${branch_id}&_token=${_token}&sub_user_id=${branchData.id}`;
         } else {
-          url = `http://localhost:5000/branch/bulk/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
+          url = `https://api.screeningstar.co.in/branch/bulk/delete?id=${id}&branch_id=${branch_id}&_token=${_token}`;
         }
 
         fetch(url, requestOptions)
@@ -267,7 +267,7 @@ const BulkApplication = () => {
         try {
           // Send the form data to the API first
           response = await axios.post(
-            `http://localhost:5000/branch/bulk/create`,
+            `https://api.screeningstar.co.in/branch/bulk/create`,
             customerLogoFormData,
             {
               headers: { "Content-Type": "multipart/form-data" },

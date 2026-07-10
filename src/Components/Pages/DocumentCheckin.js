@@ -87,7 +87,7 @@ const DocumentCheckin = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/document-check-in/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/document-check-in/applications-by-branch?branch_id=${branchId}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 setLoading(false);
@@ -124,7 +124,7 @@ const DocumentCheckin = () => {
 
         try {
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${reportDownload}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${encodeURIComponent(servicesList)}&report_download=${reportDownload}&application_id=${encodeURIComponent(applicationId)}&admin_id=${encodeURIComponent(adminId)}&_token=${encodeURIComponent(token)}`;
 
             // Perform the fetch request
             const response = await fetch(url, { method: "GET", redirect: "follow" });
@@ -349,7 +349,7 @@ const DocumentCheckin = () => {
         setApiLoading(true);
         try {
             const response = await axios.post(
-                "http://localhost:5000/utils/image-to-base",
+                "https://api.screeningstar.co.in/utils/image-to-base",
                 { image_urls: imageUrls },
                 { headers: { "Content-Type": "application/json" } }
             );

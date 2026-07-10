@@ -294,7 +294,7 @@ const GenerateServiceBGVForm = () => {
                 body: raw,
                 redirect: "follow",
             };
-            fetch("http://localhost:5000/json-form/background-verification/update", requestOptions)
+            fetch("https://api.screeningstar.co.in/json-form/background-verification/update", requestOptions)
                 .then((response) => response.json().catch(() => ({}))) // Prevent JSON parsing errors
                 .then((result) => {
                     console.log("Submission Response:", result);

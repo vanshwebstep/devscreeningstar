@@ -79,7 +79,7 @@ const CaseAllocationBulk = () => {
 
 
         const branch_token = localStorage.getItem("branch_token");
-        const url = `http://localhost:5000/internal-storage/ex-employment/list?admin_id=${adminId}&_token=${token}`;
+        const url = `https://api.screeningstar.co.in/internal-storage/ex-employment/list?admin_id=${adminId}&_token=${token}`;
 
         try {
             let response;
@@ -178,7 +178,7 @@ const CaseAllocationBulk = () => {
 
 
             const response = await fetch(
-                "http://localhost:5000/client-allocation/bulk/create",
+                "https://api.screeningstar.co.in/client-allocation/bulk/create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

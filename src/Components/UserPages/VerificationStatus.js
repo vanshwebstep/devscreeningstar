@@ -138,7 +138,7 @@ const VerificationStatus = () => {
                 .join('');
         }
 
-        let baseUrl = `http://localhost:5000/branch/report-case-status/list?branch_id=${branch_id}&customer_id=${customerId}&_token=${token}`;
+        let baseUrl = `https://api.screeningstar.co.in/branch/report-case-status/list?branch_id=${branch_id}&customer_id=${customerId}&_token=${token}`;
 
         const parameters = new URLSearchParams();
 
@@ -293,7 +293,7 @@ const VerificationStatus = () => {
         }
 
         try {
-            const baseUrl = `http://localhost:5000/branch/report-case-status/services-annexure-data`;
+            const baseUrl = `https://api.screeningstar.co.in/branch/report-case-status/services-annexure-data`;
             const params = new URLSearchParams({
                 application_id: applicationId,
                 service_ids: servicesList,
@@ -484,7 +484,7 @@ const VerificationStatus = () => {
 
             // Send the POST request to the API and wait for the response
             const response = await axios.post(
-                "http://localhost:5000/utils/image-to-base",
+                "https://api.screeningstar.co.in/utils/image-to-base",
                 raw,
                 { headers }
             );
@@ -2444,7 +2444,7 @@ const VerificationStatus = () => {
                     body: formdata,
                     redirect: "follow"
                 };
-                const url = `http://localhost:5000/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
+                const url = `https://api.screeningstar.co.in/client-master-tracker/application-delete?application_id=${id}&admin_id=${adminId}&_token=${token}`;
                 fetch(url, requestOptions)
                     .then((response) => {
                         if (!response.ok) {

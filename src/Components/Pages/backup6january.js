@@ -170,7 +170,7 @@ const GenerateReport = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -248,7 +248,7 @@ const GenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || '';
@@ -466,7 +466,7 @@ const GenerateReport = () => {
 
 
         // Construct the URL with query parameters
-        const url = `http://localhost:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://api.screeningstar.co.in/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',
@@ -575,7 +575,7 @@ const GenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    "http://localhost:5000/client-master-tracker/upload",
+                    "https://api.screeningstar.co.in/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -782,7 +782,7 @@ const GenerateReport = () => {
                 };
 
                 const response = await fetch(
-                    `http://localhost:5000/client-master-tracker/generate-report`,
+                    `https://api.screeningstar.co.in/client-master-tracker/generate-report`,
                     requestOptions
                 );
 

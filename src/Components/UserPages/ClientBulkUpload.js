@@ -75,7 +75,7 @@ const ClientBulkUpload = () => {
         const branch_id = branchData?.branch_id;
 
         const branch_token = localStorage.getItem("branch_token");
-        const url = `http://localhost:5000/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
+        const url = `https://api.screeningstar.co.in/branch/candidate-application/listings?customer_id=${customer_id}&branch_id=${branch_id}&_token=${branch_token}`;
 
         try {
             let response;
@@ -201,7 +201,7 @@ const ClientBulkUpload = () => {
                 requestBody.sub_user_id = `${branchData.id}`;
             }
             const response = await fetch(
-                "http://localhost:5000/branch/client-application/bulk-create",
+                "https://api.screeningstar.co.in/branch/client-application/bulk-create",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

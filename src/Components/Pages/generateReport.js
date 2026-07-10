@@ -72,6 +72,9 @@ const MultiSelect = ({ id, name, value, onChange, options, isDisabled }) => {
         />
     );
 };
+const isVendorConfidentialReport = (reportType) =>
+    String(reportType || '').trim().toUpperCase() === 'VENDOR CONFIDENTIAL SCREENING REPORT';
+
 const GenerateReport = () => {
     const tableScrollRef = useRef(null);
     const topScrollRef = useRef(null);
@@ -203,6 +206,7 @@ const GenerateReport = () => {
     const [cmtData, setCmtData] = useState([]);
     const [cmdDates, setCmdDates] = useState({
         dob: "",
+        doi: "",
         initiationDate: "",
     });
     const [isNotMandatory, setIsNotMandatory] = useState(false);
@@ -224,6 +228,7 @@ const GenerateReport = () => {
             father_name: '',
             spouse_name: '',
             dob: '',
+            doi: '',
             gender: '',
             marital_status: '',
             nationality: '',
@@ -446,7 +451,7 @@ const GenerateReport = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -560,7 +565,7 @@ const GenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/client-master-tracker/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 const newToken = result.token || result._token || localStorage.getItem("_token") || '';
@@ -588,17 +593,20 @@ const GenerateReport = () => {
                 setCmtData(cmtData);
 
                 let newdob = cmtData.dob;
+                let newdoi = cmtData.doi;
                 let newInitiationDate = cmtData.initiation_date;
 
                 // Convert to simple date format (YYYY-MM-DD)
 
 
                 const formattedDob = formatDate(newdob);
+                const formattedDoi = formatDate(newdoi);
                 const formattedInitiationDate = formatDate(newInitiationDate);
 
                 setCmdDates((prevState) => ({
                     ...prevState,
                     dob: formattedDob,
+                    doi: formattedDoi,
                     initiationDate: formattedInitiationDate,
                 }));
                 // It's essential to track the most updated `cmdDates`
@@ -630,7 +638,8 @@ const GenerateReport = () => {
                             : (prevFormData?.updated_json?.insuffDetails?.initiation_date
                                 ? new Date(prevFormData.updated_json.insuffDetails.initiation_date).toISOString().split('T')[0]
                                 : ''),
-                        dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob),
+                        dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob || prevFormData?.updated_json?.dob),
+                        doi: formatDateSafe(cmtData?.doi || prevFormData?.updated_json?.insuffDetails?.doi || prevFormData?.updated_json?.doi),
                         marital_status: cmtData.marital_status || prevFormData.updated_json.marital_status || '',
                         insuff: cmtData.insuff || prevFormData.updated_json.insuff || '',
                         address: {
@@ -873,7 +882,7 @@ const GenerateReport = () => {
 
 
         // Construct the URL with query parameters
-        const url = `http://localhost:5000/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
+        const url = `https://api.screeningstar.co.in/admin/list?admin_id=${admin_id}&_token=${storedToken}`;
 
         const requestOptions = {
             method: 'GET',
@@ -987,7 +996,7 @@ const GenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    "http://localhost:5000/client-master-tracker/upload",
+                    "https://api.screeningstar.co.in/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -1303,7 +1312,7 @@ const GenerateReport = () => {
                     body: raw,
                 };
                 const response = await fetch(
-                    `http://localhost:5000/client-master-tracker/generate-report`,
+                    `https://api.screeningstar.co.in/client-master-tracker/generate-report`,
                     requestOptions
                 );
 
@@ -1360,7 +1369,7 @@ const GenerateReport = () => {
 
     function changeLabel(label) {
 
-        if (genrateReportType !== 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+        if (!isVendorConfidentialReport(genrateReportType)) {
             return label;
         }
 
@@ -1520,9 +1529,9 @@ const GenerateReport = () => {
                     // ["VERIFICATION PURPOSE", (formData.updated_json.insuffDetails.final_verification_status || "EMPLOYMENT").toUpperCase(), "VERIFICATION STATUS", (formData.updated_json.insuffDetails.final_verification_status || "N/A").toUpperCase()],
                     ["REPORT TYPE", (formData.updated_json.insuffDetails.report_type || "EMPLOYMENT").replace(/_/g, " ").toUpperCase(), "REPORT STATUS", (formData.updated_json.insuffDetails.report_status || "N/A").toUpperCase()]
                 ];
-            } else if (genrateReportType == 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+            } else if (isVendorConfidentialReport(genrateReportType)) {
                 headerTableData = [
-                    ["REFERENCE ID", String(applicationRefID).toUpperCase(), "DATE OF INCORPORATION", formatDate(cmdDates.dob) || "N/A"],
+                    ["REFERENCE ID", String(applicationRefID).toUpperCase(), "DATE OF INCORPORATION", formatDate(cmdDates.doi || formData.updated_json.doi) || "N/A"],
                     ["EMPLOYEE ID", String(cmtData.employee_id || "N/A").toUpperCase(), "INSUFF CLEARED", formatDate(formData.updated_json.insuffDetails.first_insuff_reopened_date) || "N/A"],
                     ["VERIFICATION INITIATED", formatDate(cmdDates.initiationDate).toUpperCase() || "N/A", "FINAL REPORT DATE", formatDate(formData.updated_json.insuffDetails.report_date) || "N/A"],
                     // This row has only 2 cells (spans full row)
@@ -2142,7 +2151,7 @@ const GenerateReport = () => {
     function changeLabel(label) {
         //console.log('genrateReportType',genrateReportType)
 
-        if (genrateReportType !== 'VENDOR CONFIDENTIAL SCREENING REPORT') {
+        if (!isVendorConfidentialReport(genrateReportType)) {
             return label;
         }
 
@@ -2759,7 +2768,7 @@ const GenerateReport = () => {
             addresses: addresses,
         });
 
-        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-valuepitch`, {
+        const res = await fetch(`https://api.screeningstar.co.in/client-master-tracker/submit-valuepitch`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: raw,
@@ -2821,7 +2830,7 @@ const handleSurepassSubmit = useCallback(async (serviceData, dbTable) => {
             },
         });
 
-        const res = await fetch(`http://localhost:5000/client-master-tracker/submit-surepass`, {
+        const res = await fetch(`https://api.screeningstar.co.in/client-master-tracker/submit-surepass`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: raw,
@@ -3116,15 +3125,15 @@ const handleSurepassSubmit = useCallback(async (serviceData, dbTable) => {
                                             )}
                                         </div>
                                         <div className="mb-4">
-                                            <label htmlFor="dob">{genrateReportType.toLowerCase() == "vendor confidential screening report" ? "Date of Incorporation" : "Date Of Birth"}</label>
+                                            <label htmlFor={isVendorConfidentialReport(genrateReportType) ? "doi" : "dob"}>{isVendorConfidentialReport(genrateReportType) ? "Date of Incorporation" : "Date Of Birth / Incorporation"}</label>
                                             <DatePicker
-                                                id="dob"
-                                                selected={parseDate(formData.updated_json.dob)}
+                                                id={isVendorConfidentialReport(genrateReportType) ? "doi" : "dob"}
+                                                selected={parseDate(isVendorConfidentialReport(genrateReportType) ? formData.updated_json.doi : formData.updated_json.dob)}
                                                 onChange={(date) => {
                                                     const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
                                                     handleChange({
                                                         target: {
-                                                            name: "updated_json.dob",
+                                                            name: isVendorConfidentialReport(genrateReportType) ? "updated_json.doi" : "updated_json.dob",
                                                             value: formattedDate,
                                                             type: "date"
                                                         }

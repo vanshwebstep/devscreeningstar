@@ -42,7 +42,7 @@ const ClientCredentials = () => {
     setApiLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/external-login-credentials/list?admin_id=${admin_id}&_token=${storedToken}`,
+        `https://api.screeningstar.co.in/external-login-credentials/list?admin_id=${admin_id}&_token=${storedToken}`,
         { method: "GET", redirect: "follow" }
       );
       const data = await response.json();
@@ -125,7 +125,7 @@ const ClientCredentials = () => {
         throw new Error("Admin ID or Token not found in localStorage");
       }
 
-      const url = `http://localhost:5000/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
+      const url = `https://api.screeningstar.co.in/branch/list-by-customer?customer_id=${clientId}&admin_id=${adminId}&_token=${token}`;
 
       // Use the GET method with the new API
       const response = await fetch(url, {

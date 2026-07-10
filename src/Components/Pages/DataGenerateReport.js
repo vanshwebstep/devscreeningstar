@@ -11,11 +11,16 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format, parse } from "date-fns";
 import { useApiLoading } from '../ApiLoadingContext';
 
+const isVendorConfidentialReport = (reportType) =>
+    String(reportType || '').trim().toUpperCase() === 'VENDOR CONFIDENTIAL SCREENING REPORT';
+
 
 const DataGenerateReport = () => {
     const navigate = useNavigate();
     const { validateAdminLogin, setApiLoading, apiLoading } = useApiLoading();
     const [checkboxState, setCheckboxState] = useState({});
+    const [generateReportType, setGenerateReportType] = useState('');
+
     function formatDateSafe(dateValue) {
         if (!dateValue) return '';
 
@@ -101,6 +106,7 @@ const DataGenerateReport = () => {
             father_name: '',
             spouse_name: '',
             dob: '',
+            doi: '',
             gender: '',
             marital_status: '',
             Nationality: '',
@@ -244,7 +250,7 @@ const DataGenerateReport = () => {
             redirect: "follow"
         };
 
-        fetch(`http://localhost:5000/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
+        fetch(`https://api.screeningstar.co.in/data-management/application-by-id?application_id=${applicationId}&branch_id=${branchid}&admin_id=${adminId}&_token=${token}`, requestOptions)
             .then((response) => response.json())
             .then((result) => {
                 // Check if result is valid
@@ -259,6 +265,8 @@ const DataGenerateReport = () => {
                 }
 
                 const applicationData = result.application;
+                console.log("applicationDataqasa", applicationData)
+                setGenerateReportType(applicationData.generate_report_type || ''); // Set the generateReportType state
                 const cmtData = result.CMTData || [];
                 const services = applicationData.services;
                 setMyData_qc(applicationData.is_data_qc);
@@ -295,7 +303,7 @@ const DataGenerateReport = () => {
                         initiation_date: formatDateSafe(cmtData?.initiation_date || prevFormData?.updated_json?.insuffDetails?.initiation_date),
 
                         dob: formatDateSafe(cmtData?.dob || prevFormData?.updated_json?.insuffDetails?.dob),
-
+                        doi: formatDateSafe(cmtData?.doi || prevFormData?.updated_json?.insuffDetails?.doi),
                         marital_status: cmtData.marital_status || prevFormData.updated_json.marital_status || '',
                         insuff: cmtData.insuff || prevFormData.updated_json.insuff || '',
                         address: {
@@ -368,7 +376,7 @@ const DataGenerateReport = () => {
             };
 
             // Construct the URL with service IDs
-            const url = `http://localhost:5000/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
+            const url = `https://api.screeningstar.co.in/client-master-tracker/services-annexure-data?service_ids=${servicesList}&application_id=${applicationId}&admin_id=${adminId}&_token=${token}`;
 
             const response = await fetch(url, requestOptions);
 
@@ -531,7 +539,7 @@ const DataGenerateReport = () => {
 
             try {
                 const response = await axios.post(
-                    "http://localhost:5000/client-master-tracker/upload",
+                    "https://api.screeningstar.co.in/client-master-tracker/upload",
                     customerLogoFormData,
                     {
                         headers: {
@@ -627,7 +635,7 @@ const DataGenerateReport = () => {
                 };
 
                 const response = await fetch(
-                    `http://localhost:5000/data-management/submit`,
+                    `https://api.screeningstar.co.in/data-management/submit`,
                     requestOptions
                 );
 
@@ -952,26 +960,56 @@ const DataGenerateReport = () => {
                                             </select>
 
                                         </div>
-                                        <div className="mb-4">
-                                            <label htmlFor="dob">Date Of Birth</label>
-                                            <DatePicker
-                                                id="dob"
-                                                selected={parseDate(formData.updated_json.dob)}
-                                                onChange={(date) => {
-                                                    const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
-                                                    handleChange({
-                                                        target: {
-                                                            name: "updated_json.dob",
-                                                            value: formattedDate,
-                                                            type: "date"
-                                                        }
-                                                    });
-                                                }}
-                                                dateFormat="dd-MM-yyyy"
-                                                className="w-full border uppercase p-2 outline-none rounded-md mt-2"
-                                            />
+                                        {
+                                            isVendorConfidentialReport(generateReportType) ? (
+                                                <div className="mb-4">
+                                                    <label htmlFor="doi">Date Of Incorporation</label>
+                                                    <DatePicker
+                                                        id="doi"
+                                                        selected={parseDate(formData.updated_json.doi)}
+                                                        onChange={(date) => {
+                                                            const formattedDate = date
+                                                                ? format(date, "yyyy-MM-dd")
+                                                                : "";
 
-                                        </div>
+                                                            handleChange({
+                                                                target: {
+                                                                    name: "updated_json.doi",
+                                                                    value: formattedDate,
+                                                                    type: "date",
+                                                                },
+                                                            });
+                                                        }}
+                                                        dateFormat="dd-MM-yyyy"
+                                                        className="w-full border uppercase p-2 outline-none rounded-md mt-2"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="mb-4">
+                                                    <label htmlFor="dob">Date Of Birth</label>
+                                                    <DatePicker
+                                                        id="dob"
+                                                        selected={parseDate(formData.updated_json.dob)}
+                                                        onChange={(date) => {
+                                                            const formattedDate = date
+                                                                ? format(date, "yyyy-MM-dd")
+                                                                : "";
+
+                                                            handleChange({
+                                                                target: {
+                                                                    name: "updated_json.dob",
+                                                                    value: formattedDate,
+                                                                    type: "date",
+                                                                },
+                                                            });
+                                                        }}
+                                                        dateFormat="dd-MM-yyyy"
+                                                        className="w-full border uppercase p-2 outline-none rounded-md mt-2"
+                                                    />
+                                                </div>
+                                            )
+                                        }
+
                                         <div className="mb-4">
                                             <label htmlFor="marital_status">Marital Status</label>
                                             <select

@@ -89,7 +89,7 @@ console.log('localstorage',localStorage);
         redirect: 'follow',
       };
 
-      const response = await fetch('http://localhost:5000/branch/sub-user/create', requestOptions);
+      const response = await fetch('https://api.screeningstar.co.in/branch/sub-user/create', requestOptions);
 
       const newToken = response.token || response._token || branch_token ||'';
       if (newToken) {

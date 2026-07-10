@@ -40,7 +40,7 @@ export const BranchApiLoadingProvider = ({ children }) => {
         }
 
         const response = await axios.post(
-            "http://localhost:5000/branch/verify-branch-login",
+            "https://api.screeningstar.co.in/branch/verify-branch-login",
             payload
         );
 

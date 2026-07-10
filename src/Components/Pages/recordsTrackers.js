@@ -71,7 +71,7 @@ const RecordTrackers = () => {
       };
 
       const response = await fetch(
-        `http://localhost:5000/record-tracker?admin_id=${adminId}&_token=${token}&from_month=${finalFromMonth}&to_month=${finalToMonth}&from_year=${finalFromYear}&to_year=${finalToYear}`,
+        `https://api.screeningstar.co.in/record-tracker?admin_id=${adminId}&_token=${token}&from_month=${finalFromMonth}&to_month=${finalToMonth}&from_year=${finalFromYear}&to_year=${finalToYear}`,
         requestOptions
       );
 
@@ -218,7 +218,7 @@ const RecordTrackers = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/record-tracker/report?customer_id=${customerId}&admin_id=${adminId}&_token=${token}&from_month=${finalFromMonth}&to_month=${finalToMonth}&from_year=${finalFromYear}&to_year=${finalToYear}`,
+        `https://api.screeningstar.co.in/record-tracker/report?customer_id=${customerId}&admin_id=${adminId}&_token=${token}&from_month=${finalFromMonth}&to_month=${finalToMonth}&from_year=${finalFromYear}&to_year=${finalToYear}`,
         { method: "GET" }
       );
       const result = await response.json();
