@@ -12,6 +12,9 @@ import UserBar from "./Components/userBar.js";
 import AdminHeader from "./Components/adminHeader.js"
 import AdminLogin from "./Components/admin-Login";
 import UserLogin from "./Components/userLogin";
+import VendorLogin from "./Components/VendorLogin";
+import VendorDashboard from "./Components/VendorDashboard";
+import VendorLoginCheck from "./Components/VendorLoginCheck";
 import Dashboard from "./Components/Pages/dashboard";
 import AddClient from "./Components/Pages/addClient";
 import ScreeningstarAdmin from "./Components/Pages/screeningstarAdmin";
@@ -136,6 +139,8 @@ import CLientTrashed from "./Components/UserPages/CLientTrashed.js";
 import Universities from "./Components/Pages/Universities.js";
 import ExEmployements from "./Components/Pages/ExEmployments.js";
 import Vendors from "./Components/Pages/Vendors.js";
+import AdminVendorOnboarding from "./Components/Pages/AdminVendorOnboarding.js";
+import AdminVendorListing from "./Components/Pages/AdminVendorListing.js";
 import BusinessDevelopmentActivity from "./Components/Pages/BusinessDevelopmentActivity.js";
 import UniversitiesBulk from "./Components/Pages/UniversitiesBulk.js";
 import ExEmploymentBulk from "./Components/Pages/ExEmploymentBulk.js";
@@ -148,6 +153,7 @@ import CaseAllocationEdit from "./Components/Pages/CaseAllocationEdit.js";
 const Layout = () => {
   const location = useLocation();
   const isUserRoute = location.pathname.startsWith("/user");
+  const isVendorRoute = location.pathname.startsWith("/vendor");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname === "/";
   const hideSidebarAndHeader =
     location.pathname === "/admin-login" ||
@@ -159,6 +165,7 @@ const Layout = () => {
     location.pathname === "/userLogin"||
     location.pathname === "/admin-update-password"||
     location.pathname === "/user-update-password" ||
+    isVendorRoute ||
     location.pathname === "/background-form" ||
     location.pathname === "/digital-form"
     
@@ -187,6 +194,8 @@ const Layout = () => {
             <Route path="/digital-form" element={<DigitalAddressVerification />} />
          
               <Route path="/userLogin" element={<UserLogin />} />
+              <Route path="/vendor-login" element={<VendorLogin />} />
+              <Route path="/vendor-dashboard" element={<VendorLoginCheck><VendorDashboard /></VendorLoginCheck>} />
               <Route path="/" element={ <LoginCheck><Dashboard /></LoginCheck>} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/admin-forgot-password" element={<IsNotLogin><AdminForgotPassword /></IsNotLogin>} />
@@ -284,6 +293,8 @@ const Layout = () => {
               <Route path="/admin-Universities" element={<Universities />} />
               <Route path="/admin-ExEmployements" element={<ExEmployements />} />
               <Route path="/admin-Vendors" element={<Vendors />} />
+              <Route path="/admin-vendor-onboarding" element={<AdminVendorOnboarding />} />
+              <Route path="/admin-vendor-listing" element={<AdminVendorListing />} />
               <Route path="/admin-BusinessDevelopmentActivity" element={<BusinessDevelopmentActivity />} />
               <Route path="/admin-CaseAllocationEdit" element={<CaseAllocationEdit />} />
 

@@ -142,6 +142,18 @@ export const SidebarProvider = ({ children }) => {
   ];
 
 
+  const vendorManagementTabs = [
+    {
+      name: "Vendor Onboarding",
+      key: "vendorOnboarding",
+      href: "/admin-vendor-onboarding"
+    },
+    {
+      name: "Vendor Listing",
+      key: "vendorListing",
+      href: "/admin-vendor-listing"
+    }
+  ];
   const invoiceTabs = [
 
     {
@@ -577,6 +589,9 @@ export const SidebarProvider = ({ children }) => {
       } else if (section === "Client Overview") {
         localStorage.setItem('inHome', 'no');
         tabs = clientTabs;
+      } else if (section === "Vendor Management") {
+        localStorage.setItem('inHome', 'no');
+        tabs = vendorManagementTabs;
       } else if (section === "Billing Dashboard") {
         localStorage.setItem('inHome', 'no');
         tabs = invoiceTabs;

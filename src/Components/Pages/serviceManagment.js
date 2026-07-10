@@ -21,6 +21,7 @@ const ServiceManagement = () => {
   const [description, setDescription] = useState("");
   const [service_type, setServiceType] = useState([]);
   const [hsn_code, setHSNCode] = useState("");
+  const [showInVendorManagement, setShowInVendorManagement] = useState(false);
   const [isFormReady, setIsFormReady] = useState(true);
   const [service_code, setServiceCode] = useState("");
   const [services, setServices] = useState([]);
@@ -218,6 +219,7 @@ const ServiceManagement = () => {
       service_type: service_type.join(","), // Convert array to comma-separated string
       group_id: groupId,
       hsn_code: hsn_code,
+      show_in_vendor_management: showInVendorManagement ? 1 : 0,
       service_code: service_code,
       admin_id: admin_id,
       _token: storedToken,
@@ -244,6 +246,7 @@ const ServiceManagement = () => {
         setDescription("");
         setServiceType("");
         setHSNCode("");
+        setShowInVendorManagement(false);
         setServiceCode("");
         fetchServices();
 
@@ -398,6 +401,11 @@ const ServiceManagement = () => {
       : []
   );
     setHSNCode(service.hsn_code || "");
+    setShowInVendorManagement(
+      service.show_in_vendor_management === true ||
+      service.show_in_vendor_management === 1 ||
+      service.show_in_vendor_management === "1"
+    );
     setServiceCode(service.service_code || "");
     setEditingServiceId(service.id);
   };
@@ -553,6 +561,16 @@ const selectedLabels = Array.isArray(service_type)
                   className="w-full rounded-md p-2.5 border bg-[#f7f6fb] border-gray-300"
                 />
               </div>
+              <label className="flex items-center gap-3 text-left text-gray-700">
+                <input
+                  type="checkbox"
+                  name="show_in_vendor_management"
+                  checked={showInVendorManagement}
+                  onChange={(e) => setShowInVendorManagement(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span>Show in Vendor Management</span>
+              </label>
               <div className="text-left">
                 <button
                   type="submit"
@@ -633,6 +651,7 @@ const selectedLabels = Array.isArray(service_type)
                       </th>
                       <th className="uppercase border border-black  px-4 py-2">HSN Code</th>
                       <th className="uppercase border border-black  px-4 py-2">Service Type</th>
+                      <th className="uppercase border border-black  px-4 py-2">Vendor Management</th>
                       <th className="uppercase border border-black  px-4 py-2">Actions</th>
                     </tr>
                   </thead>
@@ -640,7 +659,7 @@ const selectedLabels = Array.isArray(service_type)
                     {loading ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={9}
                           className="py-4 text-center text-gray-500"
                         >
                           <Loader className="text-center" />
@@ -648,7 +667,7 @@ const selectedLabels = Array.isArray(service_type)
                       </tr>
                     ) : currentServices.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-4 text-center text-red-500">
+                        <td colSpan={9} className="py-4 text-center text-red-500">
                           {responseError && responseError !== ""
                             ? responseError
                             : "No data available in table"}
@@ -680,6 +699,13 @@ const selectedLabels = Array.isArray(service_type)
                             </td>
                             <td className="border border-black  px-4 py-2">
                               {service.service_type}
+                            </td>
+                            <td className="border border-black px-4 py-2">
+                              {service.show_in_vendor_management === true ||
+                              service.show_in_vendor_management === 1 ||
+                              service.show_in_vendor_management === "1"
+                                ? "Yes"
+                                : "No"}
                             </td>
                             <td className="border border-black  px-4 py-2">
                               <button

@@ -63,6 +63,8 @@ const AdminBar = () => {
 
     if (linkName === 'Client Overview') {
       localStorage.setItem('subMenu', 'clientOnboarding');
+    } else if (linkName === 'Vendor Management') {
+      localStorage.setItem('subMenu', 'vendorOnboarding');
     } else if (linkName === 'Go To Login') {
       localStorage.setItem('subMenu', 'enterSaleData');
     } else if (linkName === 'Admin Manager') {
@@ -217,6 +219,27 @@ const AdminBar = () => {
             </Link>
 
           </li>
+          <li className={`flex justify-center mx-[30px] border border-[#7d7d7d] min-h-[130px] transition duration-300 transform ease-in-out ${activeTab === 'Vendor Management' || localStorage.getItem('SideBarName') === 'Vendor Management'
+            ? 'bg-[#c1dff2] text-gray-800 activeSubmenu scale-105'
+            : 'bg-gradient-to-b from-gray-100 to-gray-300 text-[#4d606b] hover:bg-gradient-to-b hover:from-[#cde4f3] hover:to-[#cde4f3] hover:bg-[#cde4f3] hover:text-gray-800 hover:font-semibold hover:scale-105'} rounded-md shadow-md hover:shadow-lg`}>
+            <Link
+              to="/admin-vendor-onboarding"
+              className={`flex flex-wrap justify-center items-center p-2 ${activeTab === 'Vendor Management' || localStorage.getItem('SideBarName') === 'Vendor Management' ? 'font-semibold' : ''} ${apiLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+              onClick={(e) => {
+                if (apiLoading) {
+                  e.preventDefault();
+                } else {
+                  handleClick('Vendor Management');
+                }
+              }}
+            >
+              <div className="p-2 m-auto text-center">
+                <FaUsersCog className="text-4xl m-auto" />
+                VENDOR MANAGEMENT
+              </div>
+            </Link>
+          </li>
+
 
 
           {/* <li className={`flex justify-center mx-[30px] border border-[#7d7d7d] min-h-[130px] transition duration-300 transform ease-in-out ${activeTab === 'Go To Login' || localStorage.getItem('SideBarName') === 'Go To Login'
@@ -628,6 +651,23 @@ const AdminBar = () => {
               <div className=" flex gap-3 ">
                 <FaUser className="text-2xl" />
                 <span>{'CLIENT OVERVIEW'}</span>
+              </div>
+            </Link>
+          </li>
+          <li
+            className={`${apiLoading ? 'pointer-events-none opacity-50' : ''} flex items-center border border-gray-300 p-3 rounded-md transition duration-300 transform ${activeTab === 'Vendor Management' || localStorage.getItem('SideBarName') === 'Vendor Management'
+              ? 'bg-gray-200 text-gray-800 font-semibold scale-105'
+              : 'bg-white text-gray-600 hover:bg-gray-100 hover:scale-105'
+              } shadow-md hover:shadow-lg`}
+          >
+            <Link
+              to="/admin-vendor-onboarding"
+              className={`flex items-center space-x-2 w-full ${activeTab === 'Vendor Management' || localStorage.getItem('SideBarName') === 'Vendor Management' ? 'font-semibold' : ''}`}
+              onClick={() => handleClick('Vendor Management')}
+            >
+              <div className="flex gap-3">
+                <FaUsersCog className="text-2xl" />
+                <span>{'VENDOR MANAGEMENT'}</span>
               </div>
             </Link>
           </li>
