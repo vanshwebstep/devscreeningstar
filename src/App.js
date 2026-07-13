@@ -13,6 +13,8 @@ import AdminHeader from "./Components/adminHeader.js"
 import AdminLogin from "./Components/admin-Login";
 import UserLogin from "./Components/userLogin";
 import VendorLogin from "./Components/VendorLogin";
+import VendorForgotPassword from "./Components/VendorForgotPassword";
+import VendorResetPassword from "./Components/VendorResetPassword";
 import VendorDashboard from "./Components/VendorDashboard";
 import VendorLoginCheck from "./Components/VendorLoginCheck";
 import Dashboard from "./Components/Pages/dashboard";
@@ -195,6 +197,8 @@ const Layout = () => {
          
               <Route path="/userLogin" element={<UserLogin />} />
               <Route path="/vendor-login" element={<VendorLogin />} />
+              <Route path="/vendor-forgot-password" element={<VendorForgotPassword />} />
+              <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
               <Route path="/vendor-dashboard" element={<VendorLoginCheck><VendorDashboard /></VendorLoginCheck>} />
               <Route path="/" element={ <LoginCheck><Dashboard /></LoginCheck>} />
               <Route path="/admin-login" element={<AdminLogin />} />

@@ -32,7 +32,25 @@ const AdminVendorListing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingVendor, setEditingVendor] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [modalServices, setModalServices] = useState([]);
 
+
+const getServicesList = (vendor) => {
+  const groups = parseJson(vendor.services, []);
+  return groups.flatMap((group) => group.services || []);
+};
+
+
+const handleViewMore = (services) => {
+  setModalServices(services);
+  setIsModalOpen(true);
+};
+
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  setModalServices([]);
+};
   const syncScroll = (e) => {
     if (!topScrollRef.current || !tableScrollRef.current) return;
     if (e.target === topScrollRef.current) tableScrollRef.current.scrollLeft = e.target.scrollLeft;
@@ -166,8 +184,35 @@ const AdminVendorListing = () => {
                     <td className="border border-black px-4 py-2 whitespace-nowrap">{vendor.tat || "-"}</td>
                     <td className="border border-black px-4 py-2 whitespace-nowrap">{vendor.agreement_date ? String(vendor.agreement_date).slice(0, 10) : "-"}</td>
                     <td className="border border-black px-4 py-2 whitespace-nowrap">{vendor.email_id || "-"}</td>
-                    <td className="border border-black px-4 py-2 whitespace-nowrap"><span className="px-4 py-2 bg-blue-100 border border-blue-500 rounded-lg text-sm">{firstService(vendor)}</span></td>
-                    <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.vendor_spoc)}</td>
+<td className="border border-black px-4 py-2 whitespace-nowrap">
+  <div className="flex items-center gap-2 whitespace-nowrap">
+    {(() => {
+      const services = getServicesList(vendor);
+      if (!services.length) {
+        return (
+          <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg text-sm">
+            No Services
+          </span>
+        );
+      }
+      return (
+        <>
+          <span className="px-4 py-2 bg-blue-100 border border-blue-500 rounded-lg text-sm">
+            {services[0].serviceTitle}
+          </span>
+          {services.length > 1 && (
+            <button
+              className="text-blue-500 text-sm"
+              onClick={() => handleViewMore(services)}
+            >
+              View More
+            </button>
+          )}
+        </>
+      );
+    })()}
+  </div>
+</td>                    <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.vendor_spoc)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.escalation_manager)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.authorized_details)}</td>
                     <td className="border border-black px-4 py-2 whitespace-nowrap">
@@ -191,7 +236,34 @@ const AdminVendorListing = () => {
       <Modal isOpen={!!editingVendor} onRequestClose={() => setEditingVendor(null)} contentLabel="Edit Vendor" className="modal-content overflow-y-scroll max-h-[90vh] md:w-[90%]" overlayClassName="modal-overlay">
         {editingVendor && <VendorForm mode="edit" initialVendor={editingVendor} onSaved={() => { setEditingVendor(null); fetchVendors(); }} onCancel={() => setEditingVendor(null)} />}
       </Modal>
+      {isModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]">
+    <div className="bg-white rounded-lg shadow-lg p-4 md:mx-0 mx-4 md:w-1/3">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-bold">Services</h2>
+        <button className="text-red-500 text-2xl" onClick={handleCloseModal}>
+          &times;
+        </button>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2 w-full m-auto max-h-96 overflow-y-scroll">
+        {modalServices.length > 0 ? (
+          modalServices.map((service, idx) => (
+            <span
+              key={idx}
+              className="px-4 py-2 bg-blue-100 border max-h-max border-blue-500 rounded-lg text-sm"
+            >
+              {service.serviceTitle}
+            </span>
+          ))
+        ) : (
+          <span className="text-gray-500">No service available</span>
+        )}
+      </div>
     </div>
+  </div>
+)}
+    </div>
+    
   );
 };
 

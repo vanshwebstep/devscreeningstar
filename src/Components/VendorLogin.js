@@ -98,7 +98,7 @@ const VendorLogin = () => {
             </div>
             <div className="flex justify-between items-center mb-4 text-sm">
               <label className="flex items-center text-gray-500"><input type="checkbox" className="mr-2" />Keep me signed in</label>
-              <Link to="/vendor-login" className="text-[#073d88]">Reset Password?</Link>
+              <Link to="/vendor-forgot-password" className="text-[#073d88]">Reset Password?</Link>
             </div>
             <button
               type="submit"
