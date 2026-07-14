@@ -374,6 +374,13 @@ export const SidebarProvider = ({ children }) => {
       href: "/admin-team-management"
     }
   ]
+  const caseAllocationToVendor = [
+    {
+      name: "Case Allocation To Vendor",
+      key: "caseAllocationToVendor",
+      href: "/admin-case-allocation-to-vendor"
+    }
+  ]
   const seeMore = [
     // {
     //   name: "DASHBOARD",
@@ -677,6 +684,9 @@ export const SidebarProvider = ({ children }) => {
       } else if (section === "Team Management") {
         localStorage.setItem('inHome', 'no');
         tabs = teamManagement;
+      } else if (section === "Case Allocation To Vendor") {
+        localStorage.setItem('inHome', 'no');
+        tabs = caseAllocationToVendor;
       } else if (section === "MASTER DASHBOARD") {
         localStorage.setItem('inHome', 'no');
         tabs = masterDashboard;

@@ -97,6 +97,8 @@ const AdminBar = () => {
       localStorage.setItem('subMenu', 'importClientData');
     } else if (linkName === 'Team Management') {
       localStorage.setItem('subMenu', 'teamManagement');
+    } else if (linkName === 'Case Allocation To Vendor') {
+      localStorage.setItem('subMenu', 'caseAllocationToVendor');
     } else if (linkName === 'TICKETS') {
       localStorage.setItem('subMenu', 'createTickets');
     } else if (linkName === 'TAT Reminder') {
@@ -293,6 +295,7 @@ const AdminBar = () => {
                 { name: 'Data Management', icon: <FaDatabase className="text-4xl m-auto" />, link: '/admin-data-management' },
                 { name: 'Import Client Data', icon: <FaFileAlt className="text-4xl m-auto" />, link: '/admin-import-client-data' },
                 { name: 'Team Management', icon: <FaUsersCog className="text-4xl m-auto" />, link: '/admin-team-management' },
+                { name: 'Case Allocation To Vendor', icon: <FaTasks className="text-4xl m-auto" />, link: '/admin-case-allocation-to-vendor' },
                 { name: 'APPLICATION DOCUMENT', icon: <FaFileAlt className="text-4xl m-auto" />, link: '/admin-documents' },
                 { name: 'Candidate Manager', icon: <FaEdit className="text-4xl m-auto" />, link: '/admin-candidate-manager' },
                 { name: 'ValuePitch Manager', icon: <FaFileAlt className="text-4xl m-auto" />, link: '/admin-valuepitch-manager' }
@@ -715,11 +718,12 @@ const AdminBar = () => {
 
           {adminManagerOpen && (
             <div className="transition duration-300 ease-in-out transform origin-top">
-              {['Data Management', 'Import Client Data', 'Team Management', 'APPLICATION DOCUMENT', 'Candidate Manager'].map((tab, index) => {
+              {['Data Management', 'Import Client Data', 'Team Management', 'Case Allocation To Vendor', 'APPLICATION DOCUMENT', 'Candidate Manager'].map((tab, index) => {
                 const tabRoutes = {
                   'Data Management': '/admin-data-management',
                   'Import Client Data': '/admin-import-client-data',
                   'Team Management': '/admin-team-management',
+                  'Case Allocation To Vendor': '/admin-case-allocation-to-vendor',
                   'APPLICATION DOCUMENT': '/admin-documents',
                   'Candidate Manager': '/admin-candidate-manager',
                 };
@@ -745,6 +749,7 @@ const AdminBar = () => {
                         {tab === 'Data Management' && <FaDatabase className="text-lg" />}
                         {tab === 'Import Client Data' && <FaFileAlt className="text-lg" />}
                         {tab === 'Team Management' && <FaUsersCog className="text-lg" />}
+                        {tab === 'Case Allocation To Vendor' && <FaTasks className="text-lg" />}
                         {tab === 'APPLICATION DOCUMENT' && <FaFileAlt className="text-lg" />}
                         {tab === 'Candidate Manager' && <FaEdit className="text-lg" />}
                         <span className="text-xs">{tab.toUpperCase()}</span>

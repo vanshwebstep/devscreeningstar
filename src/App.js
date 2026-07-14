@@ -93,6 +93,7 @@ import  CandidateDAV from './Components/Pages/AdminCandidateDAV.js';
 
 
 import CaseAllocationList from "./Components/Pages/CaseAllocationList.js";
+import CaseAllocationToVendor from "./Components/Pages/CaseAllocationToVendor.js";
 import CaseAllocation from "./Components/Pages/CaseAllocation.js";
 
 
@@ -262,6 +263,7 @@ const Layout = () => {
               <Route path="/admin-TeamManagementCheckin" element={<TeamManagementCheckin />} />
               <Route path="/admin-ServiceReportForm" element={<ServiceReportForm />} />
               <Route path="/admin-CaseAllocationList" element={<CaseAllocationList/>} />
+              <Route path="/admin-case-allocation-to-vendor" element={<CaseAllocationToVendor/>} />
               <Route path="/admin-CaseAllocation" element={<CaseAllocation/>} />
               <Route path="/admin-LeaveManagement" element={<LeaveManagement/>} />
               <Route path="/admin-HumanResourceMenu" element={<HumanResourceMenu/>} />
