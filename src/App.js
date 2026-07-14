@@ -16,6 +16,7 @@ import VendorLogin from "./Components/VendorLogin";
 import VendorForgotPassword from "./Components/VendorForgotPassword";
 import VendorResetPassword from "./Components/VendorResetPassword";
 import VendorDashboard from "./Components/VendorDashboard";
+import VendorUpdatePassword from "./Components/VendorUpdatePassword";
 import VendorLoginCheck from "./Components/VendorLoginCheck";
 import Dashboard from "./Components/Pages/dashboard";
 import AddClient from "./Components/Pages/addClient";
@@ -144,6 +145,8 @@ import ExEmployements from "./Components/Pages/ExEmployments.js";
 import Vendors from "./Components/Pages/Vendors.js";
 import AdminVendorOnboarding from "./Components/Pages/AdminVendorOnboarding.js";
 import AdminVendorListing from "./Components/Pages/AdminVendorListing.js";
+import AdminInactiveVendorListing from "./Components/Pages/AdminInactiveVendorListing.js";
+import AdminVendorEdit from "./Components/Pages/AdminVendorEdit.js";
 import BusinessDevelopmentActivity from "./Components/Pages/BusinessDevelopmentActivity.js";
 import UniversitiesBulk from "./Components/Pages/UniversitiesBulk.js";
 import ExEmploymentBulk from "./Components/Pages/ExEmploymentBulk.js";
@@ -201,6 +204,7 @@ const Layout = () => {
               <Route path="/vendor-forgot-password" element={<VendorForgotPassword />} />
               <Route path="/vendor/reset-password" element={<VendorResetPassword />} />
               <Route path="/vendor-dashboard" element={<VendorLoginCheck><VendorDashboard /></VendorLoginCheck>} />
+              <Route path="/vendor-update-password" element={<VendorLoginCheck><VendorUpdatePassword /></VendorLoginCheck>} />
               <Route path="/" element={ <LoginCheck><Dashboard /></LoginCheck>} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/admin-forgot-password" element={<IsNotLogin><AdminForgotPassword /></IsNotLogin>} />
@@ -301,6 +305,8 @@ const Layout = () => {
               <Route path="/admin-Vendors" element={<Vendors />} />
               <Route path="/admin-vendor-onboarding" element={<AdminVendorOnboarding />} />
               <Route path="/admin-vendor-listing" element={<AdminVendorListing />} />
+              <Route path="/admin-inactive-vendor-listing" element={<AdminInactiveVendorListing />} />
+              <Route path="/admin-vendor-edit/:vendorId" element={<AdminVendorEdit />} />
               <Route path="/admin-BusinessDevelopmentActivity" element={<BusinessDevelopmentActivity />} />
               <Route path="/admin-CaseAllocationEdit" element={<CaseAllocationEdit />} />
 

@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Modal from "react-modal";
 import Swal from "sweetalert2";
 import swal from "sweetalert";
 import { useNavigate } from "react-router-dom";
 import { useApiLoading } from "../ApiLoadingContext";
-import { VendorForm } from "./AdminVendorOnboarding";
 
-Modal.setAppElement("#root");
 const API = "http://localhost:5000";
 
 const parseJson = (value, fallback) => {
@@ -18,7 +15,7 @@ const parseJson = (value, fallback) => {
   }
 };
 
-const AdminVendorListing = () => {
+const AdminVendorListing = ({ statusFilter = "active", title = "ACTIVE VENDORS" }) => {
   const { validateAdminLogin, setApiLoading } = useApiLoading();
   const navigate = useNavigate();
   const initializedRef = useRef(false);
@@ -30,8 +27,8 @@ const AdminVendorListing = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [editingVendor, setEditingVendor] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 const [isModalOpen, setIsModalOpen] = useState(false);
 const [modalServices, setModalServices] = useState([]);
 
@@ -64,7 +61,7 @@ const handleCloseModal = () => {
     const token = localStorage.getItem("_token");
     try {
       await validateAdminLogin();
-      const response = await fetch(`${API}/vendor/list?admin_id=${admin?.id}&_token=${token}`);
+      const response = await fetch(`${API}/vendor/list?admin_id=${admin?.id}&_token=${token}&status=${statusFilter}`);
       const data = await response.json();
       const newToken = data.token || data._token;
       if (newToken) localStorage.setItem("_token", newToken);
@@ -78,7 +75,7 @@ const handleCloseModal = () => {
       setLoading(false);
       setApiLoading(false);
     }
-  }, [navigate, setApiLoading, validateAdminLogin]);
+  }, [navigate, setApiLoading, statusFilter, validateAdminLogin]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -109,6 +106,35 @@ const handleCloseModal = () => {
       Swal.fire("Error", error.message || "Unable to delete vendor.", "error");
     } finally {
       setDeletingId(null);
+    }
+  };
+  const handleStatusToggle = async (vendor) => {
+    const nextStatus = Number(vendor.status) === 0 ? 1 : 0;
+    const actionText = nextStatus === 1 ? "activate" : "inactivate";
+    const confirm = await swal({ title: "Are you sure?", text: `Do you want to ${actionText} ${vendor.name_of_organization}?`, icon: "warning", buttons: true, dangerMode: nextStatus === 0 });
+    if (!confirm) return;
+
+    const admin = JSON.parse(localStorage.getItem("admin") || "{}");
+    const token = localStorage.getItem("_token");
+    setTogglingId(vendor.id);
+    setApiLoading(true);
+    try {
+      const response = await fetch(`${API}/vendor/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendor_id: vendor.id, vendor_status: nextStatus, admin_id: admin?.id, _token: token }),
+      });
+      const data = await response.json();
+      const newToken = data.token || data._token;
+      if (newToken) localStorage.setItem("_token", newToken);
+      if (!response.ok || !data.status) throw new Error(data.message || "Unable to update vendor status.");
+      setVendors((prev) => prev.filter((item) => item.id !== vendor.id));
+      Swal.fire("Success", data.message || "Vendor status updated successfully.", "success");
+    } catch (error) {
+      Swal.fire("Error", error.message || "Unable to update vendor status.", "error");
+    } finally {
+      setTogglingId(null);
+      setApiLoading(false);
     }
   };
 
@@ -164,14 +190,15 @@ const handleCloseModal = () => {
                   <th className="uppercase border border-black px-4 py-2">Vendor Spoc</th>
                   <th className="uppercase border border-black px-4 py-2">Escalation Manager</th>
                   <th className="uppercase border border-black px-4 py-2">Authorized Details</th>
+                                    <th className="uppercase border border-black px-4 py-2">Status</th>
                   <th className="uppercase border border-black px-4 py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={15} className="py-10 text-center"><div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin m-auto"></div></td></tr>
+                  <tr><td colSpan={16} className="py-10 text-center"><div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin m-auto"></div></td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan={15} className="text-center py-4 text-red-500">No data available in table</td></tr>
+                  <tr><td colSpan={16} className="text-center py-4 text-red-500">No data available in table</td></tr>
                 ) : paginated.map((vendor, index) => (
                   <tr key={vendor.id} className="border-b border-gray-300 text-left">
                     <td className="border border-black px-4 py-2 text-center">{(currentPage - 1) * rowsPerPage + index + 1}</td>
@@ -215,8 +242,12 @@ const handleCloseModal = () => {
 </td>                    <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.vendor_spoc)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.escalation_manager)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.authorized_details)}</td>
+                                        <td className="border border-black px-4 py-2 whitespace-nowrap">
+                      <span className={`px-3 py-1 rounded text-white ${Number(vendor.status) === 0 ? "bg-red-600" : "bg-green-600"}`}>{Number(vendor.status) === 0 ? "Inactive" : "Active"}</span>
+                    </td>
                     <td className="border border-black px-4 py-2 whitespace-nowrap">
-                      <button onClick={() => setEditingVendor(vendor)} className="bg-green-500 hover:scale-105 hover:bg-green-600 text-white px-4 py-2 rounded mr-2">Edit</button>
+                      <button onClick={() => navigate(`/admin-vendor-edit/${vendor.id}`, { state: { vendor } })} className="bg-green-500 hover:scale-105 hover:bg-green-600 text-white px-4 py-2 rounded mr-2">Edit</button>
+                      <button disabled={togglingId === vendor.id} onClick={() => handleStatusToggle(vendor)} className={`text-white px-4 py-2 rounded mr-2 ${Number(vendor.status) === 0 ? "bg-blue-600 hover:bg-blue-700" : "bg-yellow-600 hover:bg-yellow-700"} ${togglingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{togglingId === vendor.id ? "Updating..." : Number(vendor.status) === 0 ? "Activate" : "Inactivate"}</button>
                       <button disabled={deletingId === vendor.id} onClick={() => handleDelete(vendor)} className={`bg-red-500 hover:scale-105 hover:bg-red-600 text-white px-4 py-2 rounded ${deletingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{deletingId === vendor.id ? "Deleting..." : "Delete"}</button>
                     </td>
                   </tr>
@@ -232,10 +263,6 @@ const handleCloseModal = () => {
           <button onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))} disabled={currentPage === totalPages} className="px-4 py-2 bg-gray-300 text-gray-600 rounded hover:bg-gray-400">Next</button>
         </div>
       </div>
-
-      <Modal isOpen={!!editingVendor} onRequestClose={() => setEditingVendor(null)} contentLabel="Edit Vendor" className="modal-content overflow-y-scroll max-h-[90vh] md:w-[90%]" overlayClassName="modal-overlay">
-        {editingVendor && <VendorForm mode="edit" initialVendor={editingVendor} onSaved={() => { setEditingVendor(null); fetchVendors(); }} onCancel={() => setEditingVendor(null)} />}
-      </Modal>
       {isModalOpen && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]">
     <div className="bg-white rounded-lg shadow-lg p-4 md:mx-0 mx-4 md:w-1/3">

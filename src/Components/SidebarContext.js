@@ -149,9 +149,14 @@ export const SidebarProvider = ({ children }) => {
       href: "/admin-vendor-onboarding"
     },
     {
-      name: "Vendor Listing",
-      key: "vendorListing",
+      name: "Active Vendors",
+      key: "activeVendors",
       href: "/admin-vendor-listing"
+    },
+    {
+      name: "Inactive Vendors",
+      key: "inactiveVendors",
+      href: "/admin-inactive-vendor-listing"
     }
   ];
   const invoiceTabs = [

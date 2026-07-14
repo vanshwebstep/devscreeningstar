@@ -19,6 +19,16 @@ const display = (value) => {
   return value;
 };
 
+const getFileUrl = (path) => {
+  if (!path) return "";
+  const normalizedPath = String(path).trim().replace(/\\/g, "/");
+  if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+  return `${API}/${normalizedPath.replace(/^\/+/, "")}`;
+};
+
+const getReportUrl = (item) => getFileUrl(item.vendor_report_url || item.vendor_report_path);
+const getFileName = (path) => String(path || "vendor-report").replace(/\\/g, "/").split("/").pop() || "vendor-report";
+
 const getCaseStatus = (item) => item.overall_status || item.status || "NIL";
 
 const CaseAllocationToVendor = () => {
@@ -37,6 +47,7 @@ const CaseAllocationToVendor = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [allocatingId, setAllocatingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
   const syncScroll = (event) => {
     if (!topScrollRef.current || !tableScrollRef.current) return;
@@ -128,6 +139,8 @@ const CaseAllocationToVendor = () => {
         item.client_spoc_name,
         item.vendor_name,
         item.vendor_code,
+        item.vendor_report_path,
+        item.vendor_report_url,
         getCaseStatus(item),
       ];
       const matchesSearch = searchableValues
@@ -178,6 +191,8 @@ const CaseAllocationToVendor = () => {
       Status: display(getCaseStatus(item)),
       "Allocated Vendor": display(item.vendor_name),
       "Vendor Code": display(item.vendor_code),
+      "Vendor Report": display(item.vendor_report_url || item.vendor_report_path),
+      "Vendor Upload Access": Number(item.vendor_case_enabled) === 0 ? "Disabled" : "Enabled",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -232,6 +247,8 @@ const CaseAllocationToVendor = () => {
                 vendor_name: vendor.name_of_organization,
                 vendor_code: vendor.vendor_code,
                 vendor_allocated_at: new Date().toISOString(),
+                vendor_case_status: "assigned",
+                vendor_case_enabled: 1,
               }
             : item
         )
@@ -247,6 +264,41 @@ const CaseAllocationToVendor = () => {
     }
   };
 
+
+  const handleVendorCaseAccessToggle = async (application) => {
+    const admin = JSON.parse(localStorage.getItem("admin") || "{}");
+    const token = localStorage.getItem("_token");
+    const nextEnabled = Number(application.vendor_case_enabled) === 0 ? 1 : 0;
+
+    setTogglingId(application.id);
+    setApiLoading(true);
+
+    try {
+      const response = await fetch(`${API}/client-master-tracker/vendor-case-access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_application_id: application.id,
+          enabled: nextEnabled,
+          admin_id: admin.id,
+          _token: token,
+        }),
+      });
+      const result = await response.json();
+      const newToken = result.token || result._token;
+      if (newToken) localStorage.setItem("_token", newToken);
+      if (!response.ok || !result.status) throw new Error(result.message || "Unable to update vendor case access.");
+
+      setApplications((prev) => prev.map((item) => item.id === application.id ? { ...item, vendor_case_enabled: nextEnabled } : item));
+      Swal.fire("Success", result.message || "Vendor case access updated.", "success");
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", error.message || "Unable to update vendor case access.", "error");
+    } finally {
+      setTogglingId(null);
+      setApiLoading(false);
+    }
+  };
   return (
     <div className="bg-[#c1dff2] border border-black">
       <h2 className="md:text-2xl text-xl font-bold py-3 text-left text-[#4d606b] px-3 border">
@@ -337,19 +389,21 @@ const CaseAllocationToVendor = () => {
                   <th className="uppercase border border-black px-4 py-2">Services</th>
                   <th className="uppercase border border-black px-4 py-2">Overall Status</th>
                   <th className="uppercase border border-black px-4 py-2">Current Vendor</th>
+                  <th className="uppercase border border-black px-4 py-2">Vendor Report</th>
+                  <th className="uppercase border border-black px-4 py-2">Vendor Upload Access</th>
                   <th className="uppercase border border-black px-4 py-2">Select Vendor To Allocate</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={18} className="py-10 text-center">
+                    <td colSpan={20} className="py-10 text-center">
                       <div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin m-auto"></div>
                     </td>
                   </tr>
                 ) : paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={18} className="py-4 text-center text-red-500">
+                    <td colSpan={20} className="py-4 text-center text-red-500">
                       {responseError || "No data available in table"}
                     </td>
                   </tr>
@@ -385,6 +439,22 @@ const CaseAllocationToVendor = () => {
                         ) : (
                           "NIL"
                         )}
+                      </td>
+                      <td className="border border-black px-4 py-2">
+                        {item.vendor_report_path ? (
+                          <div className="flex justify-center gap-2">
+                            <a href={getReportUrl(item)} target="_blank" rel="noreferrer" className="bg-[#2c81ba] text-white px-3 py-2 rounded inline-block">View</a>
+                          </div>
+                        ) : "NIL"}
+                      </td>
+                      <td className="border border-black px-4 py-2">
+                        <button
+                          onClick={() => handleVendorCaseAccessToggle(item)}
+                          disabled={togglingId === item.id || !item.vendor_id}
+                          className={`px-4 py-2 rounded text-white ${Number(item.vendor_case_enabled) === 0 ? "bg-red-600" : "bg-green-600"} disabled:opacity-50`}
+                        >
+                          {Number(item.vendor_case_enabled) === 0 ? "Disabled" : "Enabled"}
+                        </button>
                       </td>
                       <td className="border border-black px-4 py-2">
                         <select

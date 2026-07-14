@@ -253,7 +253,8 @@ export const VendorForm = ({ mode = "create", initialVendor = null, onSaved, onC
   })).filter((group) => group.services.length);
 
   const validate = () => {
-    const required = ["name_of_organization", "vendor_code", "registered_address", "state", "pin_code", "tat", "agreement_date", "email_id", "password"];
+    const required = ["name_of_organization", "vendor_code", "registered_address", "state", "pin_code", "tat", "agreement_date", "email_id"];
+    if (mode !== "edit") required.push("password");
     const missing = required.filter((key) => !String(formData[key] || "").trim());
     if (!buildServicesPayload().length) missing.push("services");
     ["vendor_spoc", "escalation_manager", "authorized_details"].forEach((section) => {
@@ -330,7 +331,7 @@ export const VendorForm = ({ mode = "create", initialVendor = null, onSaved, onC
           <div><label>TAT<span className="text-red-500">*</span></label><input name="tat" value={formData.tat} onChange={handleFieldChange} placeholder="Enter TAT" className={inputClass} /></div>
           <div><label>Agreement Date<span className="text-red-500">*</span></label><input type="date" name="agreement_date" value={formData.agreement_date} onChange={handleFieldChange} className={inputClass} /></div>
           <div><label>Email ID<span className="text-red-500">*</span></label><input type="email" name="email_id" value={formData.email_id} onChange={handleFieldChange} placeholder="Enter Email" className={inputClass} /></div>
-          <div><label>Password<span className="text-red-500">*</span></label><input name="password" value={formData.password} onChange={handleFieldChange} placeholder="Enter Password" className={inputClass} /></div>
+          <div><label>Password{mode !== "edit" && <span className="text-red-500">*</span>}</label><input name="password" value={formData.password} onChange={handleFieldChange} placeholder={mode === "edit" ? "Leave blank to keep current password" : "Enter Password"} className={inputClass} /></div>
         </div>
 
         {personSections.map(([section, title]) => (
