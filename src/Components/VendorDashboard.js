@@ -55,6 +55,18 @@ const personRows = (prefix, data) => {
   ];
 };
 
+const flattenVendorServices = (services) => {
+  const groups = parseJson(services, []);
+  if (!Array.isArray(groups)) return [];
+  return groups.flatMap((group) => (group.services || []).map((service) => ({
+    group: group.group_title || group.symbol || "NA",
+    serviceCode: service.serviceCode || service.service_code || "NA",
+    serviceTitle: service.serviceTitle || service.service_title || service.title || "NA",
+    price: service.price || "NA",
+    packages: Array.isArray(service.packages) ? service.packages.map((pkg) => pkg.name || pkg.label || pkg.title || pkg).join(", ") : "",
+  })));
+};
+
 const getVendorSpocName = (value) => {
   const spoc = parseJson(value, {});
   return spoc.name || spoc.email || spoc.mobile || "NA";
@@ -158,12 +170,13 @@ const VendorDashboard = () => {
 
   const filteredCases = useMemo(() => {
     const search = searchTerm.toLowerCase();
-    return cases.filter((item) => [item.application_id, item.name, item.service_names,  item.screeningstar_spoc, item.vendor_spoc_name, item.verification_status]
+    return cases.filter((item) => [item.application_id, item.name, item.service_names, item.mobile_number, item.email, item.screeningstar_spoc, item.vendor_spoc_name, item.verification_status]
       .filter(Boolean).some((value) => String(value).toLowerCase().includes(search)));
   }, [cases, searchTerm]);
 
   const visibleColumns = activeCaseTab === "assigned" ? assignedColumns : activeCaseTab === "accepted" ? acceptedColumns : completedColumns;
   const activeItem = menuItems.find((item) => item.key === activeSection) || menuItems[0];
+  const vendorServices = useMemo(() => flattenVendorServices(vendor.services), [vendor.services]);
 
   const exportCases = () => {
     const rows = filteredCases.map((item, index) => ({
@@ -303,7 +316,7 @@ const VendorDashboard = () => {
       const reportUrl = getReportUrl(item);
       return <div className="flex flex-col gap-2 min-w-[220px]">
         <span className={item.vendor_report_path ? "text-green-700" : "text-gray-500"}>{item.vendor_report_path ? "Uploaded" : "Not Uploaded"}</span>
-        {reportUrl && <div className="flex justify-center gap-2"><a href={reportUrl} target="_blank" rel="noreferrer" className="bg-blue-600 text-white px-3 py-1 rounded">View</a></div>}
+        {reportUrl && <div className="flex justify-center gap-2"><a href={reportUrl} target="_blank" rel="noreferrer" className="bg-blue-600 text-white px-3 py-1 rounded">View</a><button type="button" onClick={() => downloadReport(item.vendor_report_url || item.vendor_report_path)} className="bg-green-600 text-white px-3 py-1 rounded">Download</button></div>}
         <label className={`inline-flex justify-center items-center gap-2 px-3 py-2 rounded text-white ${Number(item.vendor_case_enabled) === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#2c81ba] cursor-pointer"}`}>
           <FaUpload /> Upload
           <input type="file" className="hidden" disabled={Number(item.vendor_case_enabled) === 0 || actionId === item.id} onChange={(event) => uploadReport(item, event.target.files?.[0])} />
@@ -357,7 +370,7 @@ const VendorDashboard = () => {
     </div></aside>
 
     <main className="flex-grow w-full overflow-hidden h-full"><div className="w-full mx-auto"><div className="bg-white"><div className="m-auto md:flex items-center w-full md:w-auto justify-between mb-4"><div className="md:py-3 flex-wrap gap-y-4 flex items-center md:pb-1"><button className="text-lg font-bold text-white" onClick={() => handleMenuClick("profile")}><div className="tab bg-[#d1d1d1] relative z-999 px-6 py-[7px]"><FaHome className="text-[rgb(44,129,186)] text-3xl hover:text-black" /><RiArrowRightWideLine className="absolute right-[-46px] top-[-28px] text-[100px] uppercase text-white z-50" /></div></button><div className="w-full md:w-auto tab bg-[#c1dff2] transition-all duration-300 ease-in-out relative polygon"><button className="tab-link transition-all duration-300 ease-in-out uppercase font-bold text-black bg-[#c1dff2]" onClick={() => handleMenuClick(activeItem.key)}>{activeItem.label}</button></div></div></div></div></div>
-      <section className="border border-black bg-white">{activeSection === "profile" ? <><h2 className="text-center md:text-4xl text-2xl font-bold pb-8 md:pt-7 md:pb-4">MY PROFILE</h2><div className="table-container rounded-lg"><div className="table-scroll rounded-lg overflow-x-auto"><table className="min-w-full border bg-white overflow-auto shadow-md rounded-md p-3"><tbody><tr className="bg-[#c1dff2] text-[#4d606b]"><th className="py-2 px-4 border border-black whitespace-nowrap text-center font-bold">PARTICULARS</th><td className="py-2 px-4 border border-black text-center whitespace-nowrap uppercase font-bold">INFORMATION</td></tr><ProfileRow label="Name of the Organization" value={vendor.name_of_organization} /><ProfileRow label="Vendor Code" value={vendor.vendor_code} /><ProfileRow label="Registered Address" value={vendor.registered_address} /><ProfileRow label="State" value={vendor.state} /><ProfileRow label="Pin Code" value={vendor.pin_code} /><ProfileRow label="GSTIN" value={vendor.gst} /><ProfileRow label="TAT" value={vendor.tat} /><ProfileRow label="Agreement Date" value={vendor.agreement_date ? String(vendor.agreement_date).slice(0, 10) : "NA"} /><ProfileRow label="Email ID" value={vendor.email_id} />{personRows("Vendor SPOC", vendor.vendor_spoc)}{personRows("Escalation Manager", vendor.escalation_manager)}{personRows("Authorized Detail", vendor.authorized_details)}<ProfileRow label="Status" value={vendor.status === 0 ? "Inactive" : "Active"} valueClass={vendor.status === 0 ? "text-red-500" : "text-green-500"} /></tbody></table></div></div></> : renderCases()}</section>
+      <section className="border border-black bg-white">{activeSection === "profile" ? <><h2 className="text-center md:text-4xl text-2xl font-bold pb-8 md:pt-7 md:pb-4">MY PROFILE</h2><div className="table-container rounded-lg"><div className="table-scroll rounded-lg overflow-x-auto"><table className="min-w-full border bg-white overflow-auto shadow-md rounded-md p-3"><tbody><tr className="bg-[#c1dff2] text-[#4d606b]"><th className="py-2 px-4 border border-black whitespace-nowrap text-center font-bold">PARTICULARS</th><td className="py-2 px-4 border border-black text-center whitespace-nowrap uppercase font-bold">INFORMATION</td></tr><ProfileRow label="Name of the Organization" value={vendor.name_of_organization} /><ProfileRow label="Vendor Code" value={vendor.vendor_code} /><ProfileRow label="Registered Address" value={vendor.registered_address} /><ProfileRow label="State" value={vendor.state} /><ProfileRow label="Pin Code" value={vendor.pin_code} /><ProfileRow label="GSTIN" value={vendor.gst} /><ProfileRow label="TAT" value={vendor.tat} /><ProfileRow label="Agreement Date" value={vendor.agreement_date ? String(vendor.agreement_date).slice(0, 10) : "NA"} /><ProfileRow label="Email ID" value={vendor.email_id} />{personRows("Vendor SPOC", vendor.vendor_spoc)}{personRows("Escalation Manager", vendor.escalation_manager)}{personRows("Authorized Detail", vendor.authorized_details)}<ProfileRow label="Status" value={vendor.status === 0 ? "Inactive" : "Active"} valueClass={vendor.status === 0 ? "text-red-500" : "text-green-500"} /></tbody></table></div></div><h3 className="text-center md:text-2xl text-xl font-bold py-5 text-[#4d606b]">SERVICES AND PRICES</h3><div className="table-container rounded-lg px-3 pb-6"><div className="table-scroll rounded-lg overflow-x-auto"><table className="min-w-full border bg-white overflow-auto shadow-md rounded-md p-3"><thead><tr className="bg-[#c1dff2] text-[#4d606b]"><th className="py-2 px-4 border border-black uppercase">SL No</th><th className="py-2 px-4 border border-black uppercase">Group</th><th className="py-2 px-4 border border-black uppercase">Service Code</th><th className="py-2 px-4 border border-black uppercase">Services</th><th className="py-2 px-4 border border-black uppercase">Pricing</th><th className="py-2 px-4 border border-black uppercase">Packages</th></tr></thead><tbody>{vendorServices.length ? vendorServices.map((service, index) => <tr key={`${service.serviceCode}-${index}`}><td className="py-2 px-4 border border-black text-center">{index + 1}</td><td className="py-2 px-4 border border-black">{service.group}</td><td className="py-2 px-4 border border-black">{service.serviceCode}</td><td className="py-2 px-4 border border-black">{service.serviceTitle}</td><td className="py-2 px-4 border border-black text-center">{service.price}</td><td className="py-2 px-4 border border-black">{service.packages || "No Packages"}</td></tr>) : <tr><td colSpan={6} className="py-5 text-center border border-black text-red-500">No services found</td></tr>}</tbody></table></div></div></> : renderCases()}</section>
     </main></div>
   </div>;
 };

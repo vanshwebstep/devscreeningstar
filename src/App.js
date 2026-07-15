@@ -147,6 +147,7 @@ import AdminVendorOnboarding from "./Components/Pages/AdminVendorOnboarding.js";
 import AdminVendorListing from "./Components/Pages/AdminVendorListing.js";
 import AdminInactiveVendorListing from "./Components/Pages/AdminInactiveVendorListing.js";
 import AdminVendorEdit from "./Components/Pages/AdminVendorEdit.js";
+import AdminVendorValidationSheet from "./Components/Pages/AdminVendorValidationSheet.js";
 import BusinessDevelopmentActivity from "./Components/Pages/BusinessDevelopmentActivity.js";
 import UniversitiesBulk from "./Components/Pages/UniversitiesBulk.js";
 import ExEmploymentBulk from "./Components/Pages/ExEmploymentBulk.js";
@@ -307,6 +308,7 @@ const Layout = () => {
               <Route path="/admin-vendor-listing" element={<AdminVendorListing />} />
               <Route path="/admin-inactive-vendor-listing" element={<AdminInactiveVendorListing />} />
               <Route path="/admin-vendor-edit/:vendorId" element={<AdminVendorEdit />} />
+              <Route path="/admin-vendor-validation-sheet" element={<AdminVendorValidationSheet />} />
               <Route path="/admin-BusinessDevelopmentActivity" element={<BusinessDevelopmentActivity />} />
               <Route path="/admin-CaseAllocationEdit" element={<CaseAllocationEdit />} />
 

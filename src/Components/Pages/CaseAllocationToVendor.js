@@ -19,6 +19,20 @@ const display = (value) => {
   return value;
 };
 
+const parseJson = (value, fallback) => {
+  try {
+    if (!value) return fallback;
+    return typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    return fallback;
+  }
+};
+
+const getVendorSpocName = (vendor) => {
+  const spoc = parseJson(vendor?.vendor_spoc, {});
+  return spoc.name || spoc.email || spoc.mobile || "NIL";
+};
+
 const getFileUrl = (path) => {
   if (!path) return "";
   const normalizedPath = String(path).trim().replace(/\\/g, "/");
@@ -114,6 +128,12 @@ const CaseAllocationToVendor = () => {
     fetchData();
   }, [fetchData]);
 
+  const vendorById = useMemo(() => {
+    const map = new Map();
+    vendors.forEach((vendor) => map.set(String(vendor.id), vendor));
+    return map;
+  }, [vendors]);
+
   const statusOptions = useMemo(() => {
     const values = applications
       .map((item) => getCaseStatus(item))
@@ -125,6 +145,7 @@ const CaseAllocationToVendor = () => {
     const search = searchTerm.toLowerCase();
     return applications.filter((item) => {
       const matchesStatus = !selectedStatus || getCaseStatus(item) === selectedStatus;
+      const allocatedVendor = vendorById.get(String(item.vendor_id));
       const searchableValues = [
         item.client_unique_id,
         item.customer_name,
@@ -139,6 +160,7 @@ const CaseAllocationToVendor = () => {
         item.client_spoc_name,
         item.vendor_name,
         item.vendor_code,
+        getVendorSpocName(allocatedVendor),
         item.vendor_report_path,
         item.vendor_report_url,
         getCaseStatus(item),
@@ -148,7 +170,7 @@ const CaseAllocationToVendor = () => {
         .some((value) => String(value).toLowerCase().includes(search));
       return matchesStatus && matchesSearch;
     });
-  }, [applications, searchTerm, selectedStatus]);
+  }, [applications, searchTerm, selectedStatus, vendorById]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -191,6 +213,7 @@ const CaseAllocationToVendor = () => {
       Status: display(getCaseStatus(item)),
       "Allocated Vendor": display(item.vendor_name),
       "Vendor Code": display(item.vendor_code),
+      "Vendor SPOC": display(getVendorSpocName(vendorById.get(String(item.vendor_id)))),
       "Vendor Report": display(item.vendor_report_url || item.vendor_report_path),
       "Vendor Upload Access": Number(item.vendor_case_enabled) === 0 ? "Disabled" : "Enabled",
     }));
@@ -435,6 +458,7 @@ const CaseAllocationToVendor = () => {
                           <div className="text-left">
                             <div>{item.vendor_name}</div>
                             {item.vendor_code && <div className="text-xs text-gray-500">{item.vendor_code}</div>}
+                            <div className="text-xs text-gray-600">SPOC: {getVendorSpocName(vendorById.get(String(item.vendor_id)))}</div>
                           </div>
                         ) : (
                           "NIL"
@@ -444,6 +468,7 @@ const CaseAllocationToVendor = () => {
                         {item.vendor_report_path ? (
                           <div className="flex justify-center gap-2">
                             <a href={getReportUrl(item)} target="_blank" rel="noreferrer" className="bg-[#2c81ba] text-white px-3 py-2 rounded inline-block">View</a>
+                            <a href={getReportUrl(item)} download={getFileName(item.vendor_report_path)} className="bg-green-600 text-white px-3 py-2 rounded inline-block">Download</a>
                           </div>
                         ) : "NIL"}
                       </td>
@@ -468,6 +493,7 @@ const CaseAllocationToVendor = () => {
                             <option key={vendor.id} value={vendor.id}>
                               {vendor.name_of_organization}
                               {vendor.vendor_code ? ` (${vendor.vendor_code})` : ""}
+                              {` - SPOC: ${getVendorSpocName(vendor)}`}
                             </option>
                           ))}
                         </select>

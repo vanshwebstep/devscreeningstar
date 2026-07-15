@@ -25,6 +25,8 @@ const AdminVendorListing = ({ statusFilter = "active", title = "ACTIVE VENDORS" 
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [serviceFilter, setServiceFilter] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingId, setDeletingId] = useState(null);
@@ -110,7 +112,7 @@ const handleCloseModal = () => {
   };
   const handleStatusToggle = async (vendor) => {
     const nextStatus = Number(vendor.status) === 0 ? 1 : 0;
-    const actionText = nextStatus === 1 ? "activate" : "inactivate";
+    const actionText = nextStatus === 1 ? "Unblock" : "Block";
     const confirm = await swal({ title: "Are you sure?", text: `Do you want to ${actionText} ${vendor.name_of_organization}?`, icon: "warning", buttons: true, dangerMode: nextStatus === 0 });
     if (!confirm) return;
 
@@ -138,23 +140,28 @@ const handleCloseModal = () => {
     }
   };
 
-  const filtered = vendors.filter((vendor) => [vendor.name_of_organization, vendor.vendor_code, vendor.email_id, vendor.state]
-    .filter(Boolean)
-    .some((value) => String(value).toLowerCase().includes(searchTerm.toLowerCase())));
-  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
-  const paginated = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-
-  const firstService = (vendor) => {
-    const groups = parseJson(vendor.services, []);
-    const services = groups.flatMap((group) => group.services || []);
-    if (!services.length) return "No Services";
-    return services.length > 1 ? `${services[0].serviceTitle} +${services.length - 1}` : services[0].serviceTitle;
-  };
-
   const personText = (value) => {
     const person = parseJson(value, {});
     return [person.name, person.email, person.mobile, person.designation].filter(Boolean).join(" | ") || "-";
   };
+
+  const stateOptions = [...new Set(vendors.map((vendor) => vendor.state).filter(Boolean))].sort();
+  const filtered = vendors.filter((vendor) => {
+    const services = getServicesList(vendor);
+    const serviceText = services.map((service) => [service.serviceTitle, service.serviceCode, service.price].filter(Boolean).join(" ")).join(" ");
+    const personSearch = [personText(vendor.vendor_spoc), personText(vendor.escalation_manager), personText(vendor.authorized_details)].join(" ");
+    const statusText = Number(vendor.status) === 0 ? "inactive" : "active";
+    const matchesSearch = [vendor.name_of_organization, vendor.vendor_code, vendor.email_id, vendor.state, vendor.pin_code, vendor.gst, serviceText, personSearch, statusText]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesState = !selectedState || vendor.state === selectedState;
+    const matchesService = !serviceFilter || serviceText.toLowerCase().includes(serviceFilter.toLowerCase());
+    return matchesSearch && matchesState && matchesService;
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+  const paginated = filtered.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+
 
   return (
     <div className="w-full bg-[#c1dff2] overflow-hidden">
@@ -165,8 +172,13 @@ const handleCloseModal = () => {
               {[10, 50, 100, 200, 500, 1000].map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </div>
-          <div className="mb-4 md:w-1/2 text-right">
-            <input type="text" placeholder="Search by Vendor Name, Code, Email or State" className="w-full rounded-md p-2.5 border border-gray-300" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
+          <div className="mb-4 md:w-2/3 text-right grid grid-cols-1 md:grid-cols-3 gap-2">
+            <select value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setCurrentPage(1); }} className="w-full rounded-md p-2.5 border border-gray-300 bg-white">
+              <option value="">All States</option>
+              {stateOptions.map((state) => <option key={state} value={state}>{state}</option>)}
+            </select>
+            <input type="text" placeholder="Filter by service" className="w-full rounded-md p-2.5 border border-gray-300" value={serviceFilter} onChange={(e) => { setServiceFilter(e.target.value); setCurrentPage(1); }} />
+            <input type="text" placeholder="Search vendor, SPOC, status" className="w-full rounded-md p-2.5 border border-gray-300" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
           </div>
         </div>
 
@@ -190,8 +202,7 @@ const handleCloseModal = () => {
                   <th className="uppercase border border-black px-4 py-2">Vendor Spoc</th>
                   <th className="uppercase border border-black px-4 py-2">Escalation Manager</th>
                   <th className="uppercase border border-black px-4 py-2">Authorized Details</th>
-                                    <th className="uppercase border border-black px-4 py-2">Status</th>
-                  <th className="uppercase border border-black px-4 py-2 text-center">Actions</th>
+                  <th className="uppercase border border-black px-4 py-2 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,13 +253,13 @@ const handleCloseModal = () => {
 </td>                    <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.vendor_spoc)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.escalation_manager)}</td>
                     <td className="border border-black px-4 py-2 min-w-[260px]">{personText(vendor.authorized_details)}</td>
-                                        <td className="border border-black px-4 py-2 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded text-white ${Number(vendor.status) === 0 ? "bg-red-600" : "bg-green-600"}`}>{Number(vendor.status) === 0 ? "Inactive" : "Active"}</span>
-                    </td>
+                               
                     <td className="border border-black px-4 py-2 whitespace-nowrap">
+                    <div className="flex  gap-1">
                       <button onClick={() => navigate(`/admin-vendor-edit/${vendor.id}`, { state: { vendor } })} className="bg-green-500 hover:scale-105 hover:bg-green-600 text-white px-4 py-2 rounded mr-2">Edit</button>
-                      <button disabled={togglingId === vendor.id} onClick={() => handleStatusToggle(vendor)} className={`text-white px-4 py-2 rounded mr-2 ${Number(vendor.status) === 0 ? "bg-blue-600 hover:bg-blue-700" : "bg-yellow-600 hover:bg-yellow-700"} ${togglingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{togglingId === vendor.id ? "Updating..." : Number(vendor.status) === 0 ? "Activate" : "Inactivate"}</button>
-                      <button disabled={deletingId === vendor.id} onClick={() => handleDelete(vendor)} className={`bg-red-500 hover:scale-105 hover:bg-red-600 text-white px-4 py-2 rounded ${deletingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{deletingId === vendor.id ? "Deleting..." : "Delete"}</button>
+                      <button disabled={togglingId === vendor.id} onClick={() => handleStatusToggle(vendor)} className={`text-white px-4 py-2 rounded mr-2 ${Number(vendor.status) === 0 ? "bg-red-500 hover:bg-red-600" : "bg-red-500 hover:bg-red-600"} ${togglingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{togglingId === vendor.id ? "Updating..." : Number(vendor.status) === 0 ? "Unblock" : "Block"}</button>
+                      <button disabled={deletingId === vendor.id} onClick={() => handleDelete(vendor)} className={`bg-blue-900 hover:scale-105 hover:bg-blue-900 text-white px-4 py-2 rounded ${deletingId === vendor.id ? "opacity-50 cursor-not-allowed" : ""}`}>{deletingId === vendor.id ? "Deleting..." : "Delete"}</button>
+                  </div>
                     </td>
                   </tr>
                 ))}
