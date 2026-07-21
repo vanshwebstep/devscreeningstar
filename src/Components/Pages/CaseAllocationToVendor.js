@@ -19,6 +19,12 @@ const display = (value) => {
   return value;
 };
 
+const formatStatus = (value) => {
+  const normalizedValue = display(value);
+  if (normalizedValue === "NIL") return normalizedValue;
+  return String(normalizedValue).replace(/_/g, " ").replace(/\s+/g, " ").trim().toUpperCase();
+};
+
 const parseJson = (value, fallback) => {
   try {
     if (!value) return fallback;
@@ -43,6 +49,10 @@ const getFileUrl = (path) => {
 const getReportUrl = (item) => getFileUrl(item.vendor_report_url || item.vendor_report_path);
 const getFileName = (path) => String(path || "vendor-report").replace(/\\/g, "/").split("/").pop() || "vendor-report";
 
+const getServiceItems = (value) => String(value || "")
+  .split(",")
+  .map((service) => service.trim())
+  .filter(Boolean);
 const getCaseStatus = (item) => item.overall_status || item.status || "NIL";
 
 const CaseAllocationToVendor = () => {
@@ -62,6 +72,9 @@ const CaseAllocationToVendor = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allocatingId, setAllocatingId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
+  const [bulkAllocating, setBulkAllocating] = useState(false);
+  const [serviceModalItems, setServiceModalItems] = useState([]);
 
   const syncScroll = (event) => {
     if (!topScrollRef.current || !tableScrollRef.current) return;
@@ -164,6 +177,7 @@ const CaseAllocationToVendor = () => {
         item.vendor_report_path,
         item.vendor_report_url,
         getCaseStatus(item),
+        formatStatus(getCaseStatus(item)),
       ];
       const matchesSearch = searchableValues
         .filter(Boolean)
@@ -174,6 +188,11 @@ const CaseAllocationToVendor = () => {
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+  const selectedCaseIdSet = useMemo(() => new Set(selectedCaseIds.map((id) => String(id))), [selectedCaseIds]);
+  const selectablePageIds = useMemo(() => paginatedData.map((item) => String(item.id)), [paginatedData]);
+  const selectedPageCount = selectablePageIds.filter((id) => selectedCaseIdSet.has(id)).length;
+  const isPageFullySelected = selectablePageIds.length > 0 && selectedPageCount === selectablePageIds.length;
+  const isBulkMode = selectedCaseIds.length > 0;
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -189,6 +208,40 @@ const CaseAllocationToVendor = () => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const toggleCaseSelection = (caseId) => {
+    const normalizedId = String(caseId);
+    setSelectedCaseIds((prev) => prev.includes(normalizedId)
+      ? prev.filter((id) => id !== normalizedId)
+      : [...prev, normalizedId]);
+  };
+
+  const togglePageSelection = () => {
+    setSelectedCaseIds((prev) => {
+      const current = new Set(prev.map((id) => String(id)));
+      if (isPageFullySelected) {
+        selectablePageIds.forEach((id) => current.delete(id));
+      } else {
+        selectablePageIds.forEach((id) => current.add(id));
+      }
+      return [...current];
+    });
+  };
+
+  const clearSelectedCases = () => setSelectedCaseIds([]);
+  const openServiceModal = (services) => setServiceModalItems(services);
+  const closeServiceModal = () => setServiceModalItems([]);
+
+  const renderServices = (value) => {
+    const services = getServiceItems(value);
+    if (!services.length) {
+      return <span className="px-4 py-2 bg-red-100 border border-red-500 rounded-lg text-sm">No Services</span>;
+    }
+    return <div className="flex items-center gap-2 whitespace-nowrap">
+      <span className="px-4 py-2 bg-blue-100 border border-blue-500 rounded-lg text-sm max-w-[260px] truncate inline-block" title={services[0]}>{services[0]}</span>
+      {services.length > 1 && <button type="button" className="text-blue-600 text-sm font-semibold" onClick={() => openServiceModal(services)}>View More</button>}
+    </div>;
   };
 
   const exportToExcel = () => {
@@ -210,7 +263,7 @@ const CaseAllocationToVendor = () => {
       "Ticket ID": display(item.ticket_id),
       "Employee ID": display(item.employee_id),
       Services: display(item.service_names),
-      Status: display(getCaseStatus(item)),
+      Status: formatStatus(getCaseStatus(item)),
       "Allocated Vendor": display(item.vendor_name),
       "Vendor Code": display(item.vendor_code),
       "Vendor SPOC": display(getVendorSpocName(vendorById.get(String(item.vendor_id)))),
@@ -287,6 +340,77 @@ const CaseAllocationToVendor = () => {
     }
   };
 
+  const handleBulkVendorAllocate = async (vendorId) => {
+    if (!vendorId) return;
+    if (!selectedCaseIds.length) {
+      Swal.fire("Select Cases", "Please select cases before bulk allocation.", "info");
+      return;
+    }
+
+    const vendor = vendors.find((item) => String(item.id) === String(vendorId));
+    if (!vendor) {
+      Swal.fire("Error", "Selected vendor was not found.", "error");
+      return;
+    }
+
+    const confirm = await Swal.fire({
+      title: "Allocate selected cases?",
+      text: `${selectedCaseIds.length} selected case(s) will be allocated to ${vendor.name_of_organization}.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Allocate",
+      cancelButtonText: "Cancel",
+    });
+    if (!confirm.isConfirmed) return;
+
+    const admin = JSON.parse(localStorage.getItem("admin") || "{}");
+    const token = localStorage.getItem("_token");
+
+    setBulkAllocating(true);
+    setApiLoading(true);
+
+    try {
+      const response = await fetch(`${API}/client-master-tracker/allocate-vendor-bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_application_ids: selectedCaseIds,
+          vendor_id: vendor.id,
+          admin_id: admin.id,
+          _token: token,
+        }),
+      });
+
+      const result = await response.json();
+      const newToken = result.token || result._token;
+      if (newToken) localStorage.setItem("_token", newToken);
+
+      if (!response.ok || !result.status) {
+        throw new Error(result.message || "Unable to allocate selected cases.");
+      }
+
+      const selectedSet = new Set(selectedCaseIds.map((id) => String(id)));
+      setApplications((prev) => prev.map((item) => selectedSet.has(String(item.id))
+        ? {
+            ...item,
+            vendor_id: vendor.id,
+            vendor_name: vendor.name_of_organization,
+            vendor_code: vendor.vendor_code,
+            vendor_allocated_at: new Date().toISOString(),
+            vendor_case_status: "assigned",
+            vendor_case_enabled: 1,
+          }
+        : item));
+      setSelectedCaseIds([]);
+      Swal.fire("Success", result.message || "Selected cases allocated successfully.", "success");
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", error.message || "Unable to allocate selected cases.", "error");
+    } finally {
+      setBulkAllocating(false);
+      setApiLoading(false);
+    }
+  };
 
   const handleVendorCaseAccessToggle = async (application) => {
     const admin = JSON.parse(localStorage.getItem("admin") || "{}");
@@ -337,6 +461,27 @@ const CaseAllocationToVendor = () => {
             >
               Export to Excel
             </button>
+            <div className="mt-3 flex flex-wrap gap-2 items-center">
+              <select
+                value=""
+                disabled={!isBulkMode || bulkAllocating || vendors.length === 0}
+                onChange={(event) => handleBulkVendorAllocate(event.target.value)}
+                className="border rounded-md px-3 py-2 min-w-[320px] bg-white disabled:bg-gray-100 disabled:text-gray-500"
+              >
+                <option value="">
+                  {isBulkMode ? `Allocate ${selectedCaseIds.length} selected case(s) to vendor` : "Select cases to bulk allocate"}
+                </option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name_of_organization}
+                    {vendor.vendor_code ? ` (${vendor.vendor_code})` : ""}
+                    {` - SPOC: ${getVendorSpocName(vendor)}`}
+                  </option>
+                ))}
+              </select>
+              {isBulkMode && <button type="button" onClick={clearSelectedCases} disabled={bulkAllocating} className="bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50">Clear Selection</button>}
+              {bulkAllocating && <span className="text-sm text-[#2c81ba]">Allocating selected cases...</span>}
+            </div>
             <div className="mt-4">
               <select
                 value={rowsPerPage}
@@ -363,12 +508,12 @@ const CaseAllocationToVendor = () => {
                   setSelectedStatus(event.target.value);
                   setCurrentPage(1);
                 }}
-                className="border md:w-56 w-full mb-2 p-2.5 rounded bg-white uppercase"
+                className="border md:w-56 w-full  p-2.5 rounded bg-white uppercase"
               >
                 <option value="">Select Status</option>
                 {statusOptions.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {formatStatus(status)}
                   </option>
                 ))}
               </select>
@@ -395,6 +540,14 @@ const CaseAllocationToVendor = () => {
             <table className="min-w-full border-collapse border border-black overflow-scroll rounded-lg whitespace-nowrap">
               <thead className="rounded-lg">
                 <tr className="bg-[#c1dff2] text-[#4d606b]">
+                  <th className="uppercase border border-black px-4 py-2">
+                    <input
+                      type="checkbox"
+                      checked={isPageFullySelected}
+                      disabled={bulkAllocating || paginatedData.length === 0}
+                      onChange={togglePageSelection}
+                    />
+                  </th>
                   <th className="uppercase border border-black px-4 py-2">SL No</th>
                   <th className="uppercase border border-black px-4 py-2">Client ID</th>
                   <th className="uppercase border border-black px-4 py-2">Client Name</th>
@@ -420,19 +573,27 @@ const CaseAllocationToVendor = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={20} className="py-10 text-center">
+                    <td colSpan={21} className="py-10 text-center">
                       <div className="loader border-t-4 border-[#2c81ba] rounded-full w-10 h-10 animate-spin m-auto"></div>
                     </td>
                   </tr>
                 ) : paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan={20} className="py-4 text-center text-red-500">
+                    <td colSpan={21} className="py-4 text-center text-red-500">
                       {responseError || "No data available in table"}
                     </td>
                   </tr>
                 ) : (
                   paginatedData.map((item, index) => (
                     <tr key={item.id} className="text-center">
+                      <td className="border border-black px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedCaseIdSet.has(String(item.id))}
+                          disabled={bulkAllocating || allocatingId === item.id}
+                          onChange={() => toggleCaseSelection(item.id)}
+                        />
+                      </td>
                       <td className="border border-black px-4 py-2">
                         {index + 1 + (currentPage - 1) * rowsPerPage}
                       </td>
@@ -449,10 +610,10 @@ const CaseAllocationToVendor = () => {
                       <td className="border border-black px-4 py-2">{display(item.employee_id)}</td>
                       <td className="border border-black px-4 py-2">{formatDate(item.initiation_date || item.created_at)}</td>
                       <td className="border border-black px-4 py-2">{formatDate(item.deadline_date)}</td>
-                      <td className="border border-black px-4 py-2 min-w-[260px] text-left">
-                        {display(item.service_names)}
+                      <td className="border border-black px-4 py-2 text-left">
+                        {renderServices(item.service_names)}
                       </td>
-                      <td className="border border-black px-4 py-2 uppercase">{display(getCaseStatus(item))}</td>
+                      <td className="border border-black px-4 py-2 uppercase">{formatStatus(getCaseStatus(item))}</td>
                       <td className="border border-black px-4 py-2">
                         {item.vendor_name ? (
                           <div className="text-left">
@@ -468,7 +629,6 @@ const CaseAllocationToVendor = () => {
                         {item.vendor_report_path ? (
                           <div className="flex justify-center gap-2">
                             <a href={getReportUrl(item)} target="_blank" rel="noreferrer" className="bg-[#2c81ba] text-white px-3 py-2 rounded inline-block">View</a>
-                            <a href={getReportUrl(item)} download={getFileName(item.vendor_report_path)} className="bg-green-600 text-white px-3 py-2 rounded inline-block">Download</a>
                           </div>
                         ) : "NIL"}
                       </td>
@@ -484,7 +644,7 @@ const CaseAllocationToVendor = () => {
                       <td className="border border-black px-4 py-2">
                         <select
                           value={item.vendor_id || ""}
-                          disabled={allocatingId === item.id || vendors.length === 0}
+                          disabled={allocatingId === item.id || vendors.length === 0 || isBulkMode || bulkAllocating}
                           onChange={(event) => handleVendorAllocate(item, event.target.value)}
                           className="border rounded-md p-2 min-w-[240px] bg-white"
                         >
@@ -509,7 +669,22 @@ const CaseAllocationToVendor = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-4">
+
+        {serviceModalItems.length > 0 && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-lg shadow-lg p-4 md:mx-0 mx-4 md:w-1/3 max-w-[95vw]">
+              <div className="flex justify-between items-center border-b pb-2">
+                <h2 className="text-lg font-bold text-[#4d606b]">Services</h2>
+                <button type="button" className="text-red-500 text-2xl" onClick={closeServiceModal}>&times;</button>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2 w-full m-auto max-h-96 overflow-y-auto">
+                {serviceModalItems.map((service, index) => (
+                  <span key={`${service}-${index}`} className="px-4 py-2 bg-blue-100 border border-blue-500 rounded-lg text-sm">{service}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}        <div className="flex justify-between items-center mt-4">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}

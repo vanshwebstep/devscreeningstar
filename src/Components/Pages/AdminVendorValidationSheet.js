@@ -172,7 +172,7 @@ const AdminVendorValidationSheet = () => {
             </select>
           </div>
           <div className="md:flex gap-3 md:w-1/2 mt-3 md:mt-0">
-            <select value={selectedVendor} onChange={(event) => { setSelectedVendor(event.target.value); setCurrentPage(1); }} className="border md:w-56 w-full mb-2 p-2.5 rounded bg-white">
+            <select value={selectedVendor} onChange={(event) => { setSelectedVendor(event.target.value); setCurrentPage(1); }} className="border md:w-56 w-full p-2.5 rounded bg-white">
               <option value="">All Vendors</option>
               {vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name_of_organization}</option>)}
             </select>

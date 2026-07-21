@@ -157,17 +157,18 @@ export const SidebarProvider = ({ children }) => {
       name: "Inactive Vendors",
       key: "inactiveVendors",
       href: "/admin-inactive-vendor-listing"
-    },
-    {
-      name: "Case Allocation To Vendor",
-      key: "caseAllocationToVendor",
-      href: "/admin-case-allocation-to-vendor"
-    },
-    {
-      name: "Vendor Validation Sheet",
-      key: "vendorValidationSheet",
-      href: "/admin-vendor-validation-sheet"
     }
+    // ,
+    // {
+    //   name: "Case Allocation To Vendor",
+    //   key: "caseAllocationToVendor",
+    //   href: "/admin-case-allocation-to-vendor"
+    // }
+    // {
+    //   name: "Vendor Validation Sheet",
+    //   key: "vendorValidationSheet",
+    //   href: "/admin-vendor-validation-sheet"
+    // }
   ];
   const invoiceTabs = [
 
